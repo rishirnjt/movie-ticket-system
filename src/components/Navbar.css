@@ -1,0 +1,45 @@
+.navbar{
+    background-color: #7f1425;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3rem 2rem;
+    color: white;
+}
+
+.navbar a, .navbar .home-link{
+    color: bisque;
+    text-decoration: none;
+}
+
+.logo{
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+
+.cube{
+    font-weight: normal;
+}
+
+.navlinks{
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.navlinks li a{
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-btn{
+    background-color: #fff;
+    color: #7f1425;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 10px;
+}
