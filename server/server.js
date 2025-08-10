@@ -19,10 +19,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 const movieRoutes = require('./routes/movieRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes)
 app.use('/api/upload', uploadRoutes); 
 
 app.get('/', (req, res) => {

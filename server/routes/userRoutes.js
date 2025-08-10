@@ -1,5 +1,5 @@
 const express = require('express');
-const Admin = require('../models/Admin');
+const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
 const router = express.Router();
@@ -8,35 +8,36 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
 
-// Register Admin
+// Register User
 router.post('/register', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const adminExists = await Admin.findOne({ email });
-    if (adminExists) return res.status(400).json({ message: 'Admin already exists' });
+    const userExists = await User.findOne({ email });
+    if (userExists) return res.status(400).json({ message: 'User already exists' });
 
-    const admin = await Admin.create({ email, password });
+    const user = await User.create({ email, password });
 
     res.status(201).json({
-      token: generateToken(admin._id),
-      user: { id: admin._id, email: admin.email, role: 'admin' }
+      token: generateToken(user._id),
+      user: { id: user._id, email: user.email, role: 'user' }
     });
   } catch (err) {
+    console.error("Error registering user: ", err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Login Admin
+// Login User
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const admin = await Admin.findOne({ email });
-    if (admin && (await admin.matchPassword(password))) {
+    const user = await User.findOne({ email });
+    if (user && (await user.matchPassword(password))) {
       res.json({
-        token: generateToken(admin._id),
-        user: { id: admin._id, email: admin.email, role: 'admin' }
+        token: generateToken(user._id),
+        user: { id: user._id, email: user.email, role: 'user' }
       });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });

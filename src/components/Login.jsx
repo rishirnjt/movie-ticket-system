@@ -3,7 +3,7 @@ import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Login = ({ onClose, setIsLoggedIn }) => {
+const Login = ({ onClose, setIsLoggedIn, onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
@@ -48,6 +48,21 @@ const Login = ({ onClose, setIsLoggedIn }) => {
         />
         <button className="go-btn" onClick={handleLogin}>GO</button>
         <a href="#" className="forgot-link">Forgot Your Password?</a>
+
+        <p className="register-link">
+          Don't have an account?{" "}
+          <span
+            onClick={() => {
+              onClose(); // close login modal
+              onSwitchToRegister(); // open register modal
+            }}
+            style={{ color: "white", cursor: "pointer" }}
+          >
+            Register here
+          </span>
+        </p>
+
+
       </div>
     </div>
   );

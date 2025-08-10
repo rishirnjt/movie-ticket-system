@@ -11,11 +11,22 @@ const NowShowing = () => {
   const [startIndex, setStartIndex] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    axios.get('http://localhost:5000/api/movies')
-      .then(res => {
-        console.log('Movies fetched:', res.data);
-        const movies = res.data;
+useEffect(() => {
+  axios.get('http://localhost:5000/api/movies')
+    .then(res => {
+      console.log('Movies fetched:', res.data);
+      const movies = res.data;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      //filtering movies with releasedate
+      const upComingMovies = movies.filter(movie => {
+        const release = new Date(movie.releaseDate);
+        release.setHours(0, 0, 0, 0);
+        return release >= today;
+      })
+
 
         // Group movies by release date
         const grouped = {};
@@ -28,8 +39,10 @@ const NowShowing = () => {
         const dates = Object.keys(grouped).sort();
         setGroupedByDate(grouped);
 
-        const today = new Date().toLocaleDateString('en-CA');
-        const defaultDate = dates.includes(today) ? today : dates[0];
+        const defaultDate = dates.includes(today.toLocaleDateString('en-CA')) 
+        ? today.toLocaleDateString('en-CA')
+        : dates [0];
+        
         setAllDates(dates);
         setSelectedDate(defaultDate);
       })

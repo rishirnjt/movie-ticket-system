@@ -6,10 +6,10 @@ import NowShowing from "./components/NowShowing";
 import ComingSoon from "./components/ComingSoon";
 import Footer from "./components/Footer";
 import SeatSelection from "./components/SeatSelection";
-import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import TicketRates from "./components/TicketRates";
 import AddMovie from "./components/AddMovie";
+import AuthModal from "./components/AuthModel";
 
 import './App.css';
 
@@ -36,7 +36,15 @@ function App() {
           }
         />
         <Route path="/seats/:movieId" element={<SeatSelection />} />
-        <Route path="/login" element={<Login setIsLoggedIn={setIsLoggedIn} />} />
+         <Route
+          path="/auth"
+          element={
+            <AuthModal
+              setIsLoggedIn={setIsLoggedIn}
+              onClose={() => window.history.back()}
+            />
+          }
+        />
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/add-movie" element={<AddMovie />} />
         <Route path="/ticket-rates" element={<TicketRates />} />

@@ -39,7 +39,8 @@ const AddMovie = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const token = localStorage.getItem('token'); // ensure admin is logged in
+            const token = localStorage.getItem('token');
+            
             await axios.post('http://localhost:5000/api/movies/add', formData, {
                 headers: {
                     Authorization: `Bearer ${token}`

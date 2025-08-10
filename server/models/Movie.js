@@ -17,9 +17,12 @@ const movieSchema = new mongoose.Schema({
       hall: String,
       time: String
     }
-  ]
-}, {
-  timestamps: true
+  ],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+    expires: 10
+  }
 });
 
 module.exports = mongoose.model('Movie', movieSchema);
