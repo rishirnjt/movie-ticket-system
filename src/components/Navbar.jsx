@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import './Navbar.css';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
   const [showLogin, setShowLogin] = useState(false);
@@ -16,7 +17,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
     <nav className="navbar">
       <div className="logo">
         <Link className="home-link" to="/">
-          R<span className="cube">CUBE</span>Cinemas
+          <img src={logo} alt="CinemaX" className="logo-img" />
         </Link>
       </div>
       <ul className="navlinks">

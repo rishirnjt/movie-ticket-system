@@ -6,13 +6,13 @@ import { useNavigate  } from "react-router-dom";
 const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("signin"); // purely visual
-  // sign-in state
+  const [activeTab, setActiveTab] = useState("signin"); 
+  // sign-in 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPwd, setShowLoginPwd] = useState(false);
 
-  // sign-up state
+  // sign-up
   const [reg, setReg] = useState({
     countryCode: "+977",
     phone: "",
@@ -29,7 +29,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/users/login", {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
         email: loginEmail,
         password: loginPassword,
       });
@@ -53,7 +53,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
       return alert("Please accept Terms & Conditions");
     }
     try {
-      const res = await axios.post("http://localhost:5000/api/users/register", {
+      const res = await axios.post("http://localhost:5000/api/auth/register", {
         phone: reg.countryCode + reg.phone,
         email: reg.email,
         dob: reg.dob,
@@ -61,7 +61,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
         lastName: reg.lastName,
         password: reg.password,
       });
-      // if your register endpoint returns token
+    
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user", JSON.stringify(res.data.user || {}));

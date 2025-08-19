@@ -1,117 +1,199 @@
 import React, { useState } from "react";
 import axios from "axios";
 import './AddMovie.css';
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const AddMovie = () => {
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        genre: '',
-        posterUrl: '',
-        releaseDate: '',
-        duration: '',
-        rating: '',
-        language: '',
-        showtimes: [{ hall: '', time: '' }]
-    });
+const AddMovies = () => {
+    const [movies, setMovies] = useState([
+        {
+            title: '',
+            description: '',
+            genre: '',
+            posterUrl: '',
+            releaseDate: '',
+            duration: '',
+            rating: '',
+            language: '',
+            showtimes: [{ hall: '', time: '' }]
+        }
+    ]);
 
     const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Handle input change for movie fields
+    const handleMovieChange = (index, field, value) => {
+        const updatedMovies = [...movies];
+        updatedMovies[index][field] = value;
+        setMovies(updatedMovies);
     };
 
-    const handlePosterUpload = async (e) => {
-        const file = e.target.files[0];
+    // Handle showtime change
+    const handleShowtimeChange = (movieIndex, showtimeIndex, field, value) => {
+        const updatedMovies = [...movies];
+        updatedMovies[movieIndex].showtimes[showtimeIndex][field] = value;
+        setMovies(updatedMovies);
+    };
+
+    // Add new movie block
+    const addMovie = () => {
+        setMovies([
+            ...movies,
+            {
+                title: '',
+                description: '',
+                genre: '',
+                posterUrl: '',
+                releaseDate: '',
+                duration: '',
+                rating: '',
+                language: '',
+                showtimes: [{ hall: '', time: '' }]
+            }
+        ]);
+    };
+
+    // Remove movie block
+    const removeMovie = (index) => {
+        if (movies.length > 1) {
+            const updated = [...movies];
+            updated.splice(index, 1);
+            setMovies(updated);
+        }
+    };
+
+    // Add showtime for a movie
+    const addShowtime = (movieIndex) => {
+        const updatedMovies = [...movies];
+        updatedMovies[movieIndex].showtimes.push({ hall: '', time: '' });
+        setMovies(updatedMovies);
+    };
+
+    // Remove showtime for a movie
+    const removeShowtime = (movieIndex, showtimeIndex) => {
+        const updatedMovies = [...movies];
+        updatedMovies[movieIndex].showtimes.splice(showtimeIndex, 1);
+        setMovies(updatedMovies);
+    };
+
+    // Handle poster upload for a specific movie
+    const handlePosterUpload = async (movieIndex, file) => {
         const data = new FormData();
         data.append('image', file);
 
         try {
             const res = await axios.post('http://localhost:5000/api/upload', data);
-            setFormData({ ...formData, posterUrl: res.data.url });
+            const updatedMovies = [...movies];
+            updatedMovies[movieIndex].posterUrl = res.data.url;
+            setMovies(updatedMovies);
         } catch (err) {
             alert("Poster upload failed");
             console.error(err);
         }
     };
 
+    // Submit all movies
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            
-            await axios.post('http://localhost:5000/api/movies/add', formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            await axios.post('http://localhost:5000/api/movies/add-multiple', movies, {
+                headers: { Authorization: `Bearer ${token}` }
             });
-            alert("Movie added successfully!");
+            alert("Movies added successfully!");
             navigate('/admin/dashboard');
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to add movie');
+            alert(err.response?.data?.message || 'Failed to add movies');
         }
     };
 
     return (
         <div className="add-movie-cont">
-            <h2>Add Movie</h2>
+            <h2>Add Multiple Movies</h2>
             <form onSubmit={handleSubmit} className="add-movie-form">
-                <input name="title" placeholder="Title" value={formData.title} onChange={handleChange} required />
-                <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} />
-                <input name="genre" placeholder="Genre" value={formData.genre} onChange={handleChange} />
+                {movies.map((movie, movieIndex) => (
+                    <div key={movieIndex} className="movie-block">
+                        <h3>Movie {movieIndex + 1}</h3>
 
-                <input type="file" accept="image/*" onChange={handlePosterUpload} />
-                {formData.posterUrl && (
-                    <img
-                        src={`http://localhost:5000${formData.posterUrl}`}
-                        alt="Poster Preview"
-                        style={{ width: '150px', marginTop: '10px' }}
-                    />
-
-                )}
-
-                <input name="releaseDate" type="date" placeholder="Release Date" value={formData.releaseDate} onChange={handleChange} />
-                <input name="duration" placeholder="Duration" value={formData.duration} onChange={handleChange} />
-                <input name="ratings" placeholder="Rating" value={formData.ratings} onChange={handleChange} />
-                <input name="language" placeholder="Language" value={formData.language} onChange={handleChange} />
-                <label>Showtimes:</label>
-                {formData.showtimes.map((showtime, index) => (
-                    <div key={index} className="showtime-group">
                         <input
-                            placeholder="Hall"
-                            value={showtime.hall}
-                            onChange={(e) => {
-                                const updated = [...formData.showtimes];
-                                updated[index].hall = e.target.value;
-                                setFormData({ ...formData, showtimes: updated });
-                            }}
+                            placeholder="Title"
+                            value={movie.title}
+                            onChange={(e) => handleMovieChange(movieIndex, 'title', e.target.value)}
+                            required
+                        />
+                        <textarea
+                            placeholder="Description"
+                            value={movie.description}
+                            onChange={(e) => handleMovieChange(movieIndex, 'description', e.target.value)}
                         />
                         <input
-                            placeholder="Time (e.g. 12:00 PM)"
-                            value={showtime.time}
-                            onChange={(e) => {
-                                const updated = [...formData.showtimes];
-                                updated[index].time = e.target.value;
-                                setFormData({ ...formData, showtimes: updated });
-                            }}
+                            placeholder="Genre"
+                            value={movie.genre}
+                            onChange={(e) => handleMovieChange(movieIndex, 'genre', e.target.value)}
                         />
-                        <button type="button" onClick={() => {
-                            const updated = [...formData.showtimes];
-                            updated.splice(index, 1);
-                            setFormData({ ...formData, showtimes: updated });
-                        }}>Remove</button>
+
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handlePosterUpload(movieIndex, e.target.files[0])}
+                        />
+                        {movie.posterUrl && (
+                            <img
+                                src={`http://localhost:5000${movie.posterUrl}`}
+                                alt="Poster Preview"
+                                style={{ width: '150px', marginTop: '10px' }}
+                            />
+                        )}
+
+                        <input
+                            type="date"
+                            placeholder="Release Date"
+                            value={movie.releaseDate}
+                            onChange={(e) => handleMovieChange(movieIndex, 'releaseDate', e.target.value)}
+                        />
+                        <input
+                            placeholder="Duration"
+                            value={movie.duration}
+                            onChange={(e) => handleMovieChange(movieIndex, 'duration', e.target.value)}
+                        />
+                        <input
+                            placeholder="Rating"
+                            value={movie.rating}
+                            onChange={(e) => handleMovieChange(movieIndex, 'rating', e.target.value)}
+                        />
+                        <input
+                            placeholder="Language"
+                            value={movie.language}
+                            onChange={(e) => handleMovieChange(movieIndex, 'language', e.target.value)}
+                        />
+
+                        <label>Showtimes:</label>
+                        {movie.showtimes.map((showtime, showtimeIndex) => (
+                            <div key={showtimeIndex} className="showtime-group">
+                                <input
+                                    placeholder="Hall"
+                                    value={showtime.hall}
+                                    onChange={(e) => handleShowtimeChange(movieIndex, showtimeIndex, 'hall', e.target.value)}
+                                />
+                                <input
+                                    placeholder="Time (e.g. 12:00 PM)"
+                                    value={showtime.time}
+                                    onChange={(e) => handleShowtimeChange(movieIndex, showtimeIndex, 'time', e.target.value)}
+                                />
+                                <button type="button" onClick={() => removeShowtime(movieIndex, showtimeIndex)}>Remove</button>
+                            </div>
+                        ))}
+                        <button type="button" onClick={() => addShowtime(movieIndex)}>Add Showtime</button>
+
+                        <button type="button" onClick={() => removeMovie(movieIndex)}>Remove Movie</button>
+                        <hr />
                     </div>
                 ))}
-                <button type="button" onClick={() => {
-                    setFormData({ ...formData, showtimes: [...formData.showtimes, { hall: '', time: '' }] });
-                }}>Add Showtime</button>
 
-                <button type="submit">Add Movie</button>
+                <button type="button" onClick={addMovie}>Add Another Movie</button>
+                <button type="submit">Submit All Movies</button>
             </form>
-
         </div>
     );
 };
 
-export default AddMovie;
+export default AddMovies;

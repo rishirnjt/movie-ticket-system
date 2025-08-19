@@ -1,20 +1,77 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import axios from "axios";
 import "./SeatSelection.css";
-import background from '../assets/cinema.jpg'; 
 
-const rows = 19;
+const rows = 13;
 const cols = 10;
-const bookedSeats = ["A2", "B4", "C6"];
 
 const SeatSelection = () => {
+  const { movieId } = useParams();
+  const location = useLocation();
+
+  const [selectedShowtime, setSelectedShowtime] = useState(location.state?.selectedShowtime || null);
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const [bookedSeats, setBookedSeats] = useState([]);
+  const [movie, setMovie] = useState(null);
+
+  useEffect(() => {
+    const fetchMovie = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/movies/${movieId}`);
+        setMovie(res.data);
+
+        if (selectedShowtime) {
+          const bookingRes = await axios.get(
+            `http://localhost:5000/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
+          );
+          setBookedSeats(bookingRes.data.bookedSeats || []);
+        }
+      } catch (err) {
+        console.error("Error fetching movie or bookings:", err);
+      }
+    };
+    fetchMovie();
+  }, [movieId, selectedShowtime]);
 
   const handleSeatClick = (seatId) => {
     if (bookedSeats.includes(seatId)) return;
-    if (selectedSeats.includes(seatId)) {
-      setSelectedSeats(selectedSeats.filter((s) => s !== seatId));
-    } else {
-      setSelectedSeats([...selectedSeats, seatId]);
+    setSelectedSeats(selectedSeats.includes(seatId)
+      ? selectedSeats.filter((s) => s !== seatId)
+      : [...selectedSeats, seatId]
+    );
+  };
+
+  const handleBooking = async () => {
+    if (!selectedShowtime || selectedSeats.length === 0) {
+      alert("Please select a showtime and at least one seat");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const totalPrice = selectedSeats.length * 300;
+
+      await axios.post(
+        "http://localhost:5000/api/bookings/reserve",
+        {
+          movieId,
+          showtime: selectedShowtime._id,
+          seats: selectedSeats,
+          totalPrice,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Booking Successful!");
+      setSelectedSeats([]);
+      const bookingRes = await axios.get(
+        `http://localhost:5000/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
+      );
+      setBookedSeats(bookingRes.data.bookedSeats || []);
+    } catch (err) {
+      console.error("Booking error:", err.response?.data || err.message);
+      alert("Booking failed");
     }
   };
 
@@ -30,7 +87,7 @@ const SeatSelection = () => {
         seats.push(
           <div
             key={seatId}
-            className={`seat ${isBooked ? "booked" : isSelected ? "selected" : ""}`}
+            className={`seat ${isBooked ? "booked" : isSelected ? "selected" : "available"}`}
             onClick={() => handleSeatClick(seatId)}
           >
             {seatId}
@@ -42,36 +99,36 @@ const SeatSelection = () => {
   };
 
   return (
-    <div
-      className="seat-selection"
-      style={{
-        backgroundImage: `url(${background})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        minHeight: '100vh',
-        padding: '2rem',
-        color: '#fff'
-      }}
-    >
-      <h2>Select Your Seats</h2>
-      <div className="screen">SCREEN</div>
+    <div className="seat-selection">
+  <h2>Select Your Seats</h2>
+  {movie && <h3>{movie.title}</h3>}
 
-      <div className="legend">
-        <div><div className="seat booked"></div> Booked</div>
-        <div><div className="seat selected"></div> Selected</div>
-        <div><div className="seat available"></div> Available</div>
-      </div>
+  {selectedShowtime && (
+    <p>
+      Showtime: <strong>{selectedShowtime.hall} - {selectedShowtime.time}</strong>
+    </p>
+  )}
 
-      <div className="seats-grid">{renderSeats()}</div>
+  <div className="screen">SCREEN</div>
 
-      {selectedSeats.length > 0 && (
-        <div className="summary">
-          <p>Selected Seats: {selectedSeats.join(", ")}</p>
-          <button className="proceed-btn">Book</button>
-        </div>
-      )}
+  <div className="seats-grid">{renderSeats()}</div>
+
+  <div className="legend">
+    <div><div className="seat booked"></div> Booked</div>
+    <div><div className="seat selected"></div> Selected</div>
+    <div><div className="seat available"></div> Available</div>
+  </div>
+
+  {selectedSeats.length > 0 && (
+    <div className="summary">
+      <p>Selected Seats: {selectedSeats.join(", ")}</p>
+      <button className="proceed-btn" onClick={handleBooking}>
+        Book
+      </button>
     </div>
+  )}
+</div>
+
   );
 };
 

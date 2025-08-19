@@ -8,7 +8,6 @@ const NowShowing = () => {
   const [groupedByDate, setGroupedByDate] = useState({});
   const [allDates, setAllDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
-  const [startIndex, setStartIndex] = useState(0);
   const navigate = useNavigate();
 
 useEffect(() => {
@@ -53,8 +52,16 @@ useEffect(() => {
 
   const movies = groupedByDate[selectedDate] || [];
 
-  const handleBuyNow = (movieId) => {
-    navigate(`/seats/${movieId}`);
+  const handleShowtime= (movieId, showtime) => {
+    const token = localStorage.getItem("token");
+
+    if(!token){
+      localStorage.setItem("redirectAfterLogin", `/seats/${movieId}`);
+      navigate("/auth");
+      return;
+    }
+
+    navigate(`/seats/${movieId}`, { state: { selectedShowtime: showtime}});
   };
 
   return (
@@ -104,16 +111,17 @@ useEffect(() => {
                 <div className="showtimes">
                   {movie.showtimes && movie.showtimes.length > 0 ? (
                     movie.showtimes.map((showtime, index) => (
-                      <span key={index}>
+                      <button
+                        key={index}
+                        onClick={ () => handleShowtime(movie._id, showtime)}
+                        >
                         {showtime.hall} - {showtime.time}
-                      </span>
+                        </button>
                     ))
                   ) : (
                     <span>No showtimes available</span>
                   )}
                 </div>
-
-                <button onClick={() => handleBuyNow(movie._id)}>Buy Now</button>
               </div>
             </div>
           ))
