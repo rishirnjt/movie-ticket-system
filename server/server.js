@@ -11,7 +11,14 @@ const app = express();
 // Connect to Mongo
 connectDB();
 
-// Middleware
+// Register models
+require("./models/Showtime");
+require("./models/Movie");
+require("./models/Booking");
+require("./models/User");
+
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

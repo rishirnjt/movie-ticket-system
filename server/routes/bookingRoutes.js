@@ -6,16 +6,18 @@ const { protect } = require("../middleware/authMiddleware");
 // Create a new booking
 router.post("/reserve", protect("user"), async (req, res) => {
   try {
-    const { movie, showtime, seats, totalPrice } = req.body;
+    const { movieId, showtime, seats, totalPrice } = req.body;
+    console.log("Incoming booking request body: ", req.body);
 
-    if (!movie || !showtime || !seats || seats.length === 0) {
+
+    if (!movieId|| !showtime || !seats || seats.length === 0) {
       return res.status(400).json({ message: "Please provide all booking details" });
     }
 
     // Check if seats are already booked
     const existing = await Booking.find({
-      movie: movie,
-      showtime: showtime,
+      movie: movieId,
+      showtime,
       seats: { $in: seats },
       status: { $in: ["reserved", "confirmed"] }
     });
@@ -26,7 +28,7 @@ router.post("/reserve", protect("user"), async (req, res) => {
 
     const booking = new Booking({
       user: req.user._id,
-      movie,
+      movie: movieId,
       showtime,
       seats,
       totalPrice,

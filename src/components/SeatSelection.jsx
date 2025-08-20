@@ -52,19 +52,24 @@ const SeatSelection = () => {
       const token = localStorage.getItem("token");
       const totalPrice = selectedSeats.length * 300;
 
+      const payload = {
+        movieId,
+        showtime: selectedShowtime._id,
+        seats: selectedSeats,
+        totalPrice,
+      };
+
+      console.log("Booking payload:", payload);
+
       await axios.post(
         "http://localhost:5000/api/bookings/reserve",
-        {
-          movieId,
-          showtime: selectedShowtime._id,
-          seats: selectedSeats,
-          totalPrice,
-        },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       alert("Booking Successful!");
       setSelectedSeats([]);
+      //refresh booked seats
       const bookingRes = await axios.get(
         `http://localhost:5000/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
       );
