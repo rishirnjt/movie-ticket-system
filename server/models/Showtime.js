@@ -6,4 +6,4 @@ const showtimeSchema = new mongoose.Schema({
     time: { type: Date, required:true}
 });
 
-module.exports = mongoose.model("Showtime", showtimeSchema);
+module.exports = mongoose.models.Showtime || mongoose.model("Showtime", showtimeSchema);

@@ -104,37 +104,58 @@ const SeatSelection = () => {
   };
 
   return (
-    <div className="seat-selection">
-  <h2>Select Your Seats</h2>
-  {movie && <h3>{movie.title}</h3>}
+  <div className="seat-selection">
+    <h2>Select Your Seats</h2>
+    {movie && <h3>{movie.title}</h3>}
 
-  {selectedShowtime && (
-    <p>
-      Showtime: <strong>{selectedShowtime.hall} - {selectedShowtime.time}</strong>
-    </p>
-  )}
+    {selectedShowtime && (
+      <p>
+        Showtime: <strong>{selectedShowtime.hall} - {selectedShowtime.time}</strong>
+      </p>
+    )}
 
-  <div className="screen">SCREEN</div>
+    <div className="screen">SCREEN</div>
 
-  <div className="seats-grid">{renderSeats()}</div>
+    <div className="seats-grid">{renderSeats()}</div>
 
-  <div className="legend">
-    <div><div className="seat booked"></div> Booked</div>
-    <div><div className="seat selected"></div> Selected</div>
-    <div><div className="seat available"></div> Available</div>
-  </div>
+    <div className="legend">
+      <div><div className="seat booked"></div> Booked</div>
+      <div><div className="seat soldout"></div> Sold Out</div>
+      <div><div className="seat selected"></div> Selected</div>
+      <div><div className="seat available"></div> Available</div>
+    </div>
 
-  {selectedSeats.length > 0 && (
-    <div className="summary">
-      <p>Selected Seats: {selectedSeats.join(", ")}</p>
-      <button className="proceed-btn" onClick={handleBooking}>
+    <div className="actions">
+      <button
+        className="book-btn"
+        onClick={() => handleBooking("reserved")}
+        disabled={selectedSeats.length === 0}
+      >
         Book
       </button>
+
+      <button
+        className="buy-btn"
+        onClick={() => handleBooking("confirmed")}
+        disabled={selectedSeats.length === 0}
+      >
+        Buy
+      </button>
+
+      <button
+        className="reset-btn"
+        onClick={() => setSelectedSeats([])}
+      >
+        Reset
+      </button>
     </div>
-  )}
-</div>
 
-  );
+    {selectedSeats.length > 0 && (
+      <div className="summary">
+        <p>Selected Seats: {selectedSeats.join(", ")}</p>
+      </div>
+    )}
+  </div>
+);
 };
-
 export default SeatSelection;

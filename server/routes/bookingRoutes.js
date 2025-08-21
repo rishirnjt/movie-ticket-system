@@ -71,4 +71,45 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
   }
 });
 
+//Get user's reservations
+router.get("/my-reservations", protect("user"), async (req, res) => {
+  try{
+    const bookings = await Booking.find({ 
+      user: req.user._id,
+      status: "reserved"
+    })
+    .populate("movie", "title")
+    .populate("showtime", "hall time")
+    .sort({ createdAt: -1});
+
+    res.json(bookings);
+  } catch (err) {
+    console.error("Error fetching reservations: ", err);
+    res.status(500).json({ message: "Server error "});
+  }
+});
+
+//User's history
+router.get("/my-history", protect("user"), async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+
+    const bookings = await Booking.find({ user: userId })
+      .populate("movie")
+      .populate("showtime", "hall time");
+
+    // Filter past showtimes
+    const history = bookings.filter(
+      (b) => b.showtime?.time && new Date(b.showtime.time) < now
+    );
+
+    res.json(history);
+  } catch (err) {
+    console.error("Error fetching history:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+});
+
+
 module.exports = router;

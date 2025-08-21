@@ -10,6 +10,7 @@ import Dashboard from "./components/Dashboard";
 import TicketRates from "./components/TicketRates";
 import AddMovie from "./components/AddMovie";
 import AuthModal from "./components/AuthModel";
+import MyAccount from "./components/MyAccount";
 
 import './App.css';
 
@@ -48,6 +49,7 @@ function App() {
         <Route path="/admin/dashboard" element={<Dashboard />} />
         <Route path="/admin/add-movie" element={<AddMovie />} />
         <Route path="/ticket-rates" element={<TicketRates />} />
+        <Route path="/myaccount" element={<MyAccount />} />
       </Routes>
       <Footer />
     </Router>

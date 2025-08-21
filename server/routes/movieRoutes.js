@@ -39,4 +39,24 @@ router.post('/add-multiple', async (req, res) => {
     }
 });
 
+//UPDATE
+router.put("/:id", async (req, res) => {
+    try{
+        const movie = await Movie.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json(movie);
+    } catch (err) {
+        res.status(500).json({ message: "Server Error "});
+    }
+});
+
+//Delete
+router.delete("/:id", async (req, res) => {
+    try{
+        await Movie.findByIdAndDelete(req.params.id);
+        res.json({ message: "Movie deleted" });
+    } catch (err) {
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
 module.exports = router;
