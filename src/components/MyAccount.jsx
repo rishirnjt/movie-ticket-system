@@ -4,7 +4,6 @@ import profileImg from "../assets/profileIcon.png";
 import axios from "axios";
 
 const MyAccount = () => {
-  // ====== Top-level state ======
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("reservations");
   const [reservations, setReservations] = useState([]);
@@ -38,7 +37,8 @@ const MyAccount = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setReservations(res.data);
+
+       setReservations(res.data);
       } catch (err) {
         console.error("Failed to fetch reservations", err);
       }

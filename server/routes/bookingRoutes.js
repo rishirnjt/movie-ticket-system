@@ -6,7 +6,7 @@ const { protect } = require("../middleware/authMiddleware");
 // Create a new booking
 router.post("/reserve", protect("user"), async (req, res) => {
   try {
-    const { movieId, showtime, seats, totalPrice } = req.body;
+    let { movieId, showtime, seats, totalPrice } = req.body;
     console.log("Incoming booking request body: ", req.body);
 
 
@@ -14,10 +14,13 @@ router.post("/reserve", protect("user"), async (req, res) => {
       return res.status(400).json({ message: "Please provide all booking details" });
     }
 
+    const showtimeId = typeof showtime === "object" ? showtime._id : showtime;
+
+
     // Check if seats are already booked
     const existing = await Booking.find({
       movie: movieId,
-      showtime,
+      showtime: showtime._id,
       seats: { $in: seats },
       status: { $in: ["reserved", "confirmed"] }
     });
@@ -29,7 +32,7 @@ router.post("/reserve", protect("user"), async (req, res) => {
     const booking = new Booking({
       user: req.user._id,
       movie: movieId,
-      showtime,
+      showtime: showtimeId,
       seats,
       totalPrice,
       status: "reserved"
@@ -72,22 +75,53 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
 });
 
 //Get user's reservations
+// router.get("/my-reservations", protect("user"), async (req, res) => {
+//   try {
+//     const now = new Date();
+
+//     const bookings = await Booking.find({ 
+//       user: req.user._id,
+//       status: "reserved"
+//     })
+//       .populate("movie", "title")
+//       .populate("showtime", "hall time time") // include time explicitly
+//       // .sort({ "showtime.time": 1 });
+//       console.log("All reservations for user:", bookings);
+
+
+//     const upcoming = bookings.filter(b => {
+//         if (!b.showtime?.time) return false;
+//         console.log("Checking showtime:", b.showtime);
+//         return b.showtime?.time && new Date(b.showtime.time) >= now;
+//       });
+
+
+//     res.json(upcoming); 
+//   } catch (err) {
+//     console.error("Error fetching reservations: ", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
+
+// Get user's reservations
 router.get("/my-reservations", protect("user"), async (req, res) => {
-  try{
+  try {
     const bookings = await Booking.find({ 
       user: req.user._id,
       status: "reserved"
     })
-    .populate("movie", "title")
-    .populate("showtime", "hall time")
-    .sort({ createdAt: -1});
+      .populate("movie", "title")
+      .populate("showtime", "hall time"); // get hall + time fields
 
-    res.json(bookings);
+    console.log("All reservations for user:", bookings);
+
+    res.json(bookings); 
   } catch (err) {
     console.error("Error fetching reservations: ", err);
-    res.status(500).json({ message: "Server error "});
+    res.status(500).json({ message: "Server error" });
   }
 });
+
 
 //User's history
 router.get("/my-history", protect("user"), async (req, res) => {
@@ -95,14 +129,20 @@ router.get("/my-history", protect("user"), async (req, res) => {
     const userId = req.user.id;
     const now = new Date();
 
-    const bookings = await Booking.find({ user: userId })
+    const bookings = await Booking.find({ 
+      user: userId,
+      status: { $in: ["reserved", "confirmed"] }
+    })
       .populate("movie")
-      .populate("showtime", "hall time");
+      .populate("showtime", "hall time")
+      .sort({ "showtime.time": -1});
 
-    // Filter past showtimes
-    const history = bookings.filter(
-      (b) => b.showtime?.time && new Date(b.showtime.time) < now
-    );
+    // Filter only past showtimes
+    const history = bookings.filter(b => {
+      if (!b.showtime?.time) return false;
+      const showtimeDate = new Date(b.showtime.time);
+      return showtimeDate < now;
+    });
 
     res.json(history);
   } catch (err) {

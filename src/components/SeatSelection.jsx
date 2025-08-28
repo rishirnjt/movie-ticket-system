@@ -53,8 +53,8 @@ const SeatSelection = () => {
       const totalPrice = selectedSeats.length * 300;
 
       const payload = {
-        movieId,
-        showtime: selectedShowtime._id,
+        movieId: movieId,
+        showtime: selectedShowtime,
         seats: selectedSeats,
         totalPrice,
       };
