@@ -6,6 +6,44 @@ const Admin = require("../models/Admin");
 
 const router = express.Router();
 
+//Register
+router.post("/register", async(req, res) => {
+    const{ firstName, lastName, email, password } = req.body;
+
+    try{
+        //check if user exists
+        let existingUser = await User.findOne({ email });
+        if(existingUser) {
+            return res.status(400).json({ message: "User already exists" });
+        }
+
+        const fullName =`${firstName} ${lastName}` .trim();
+        const user = await User.create({ firstName, lastName, email, password });
+
+        //Generate token
+        const token = jwt.sign(
+            { id: user._id, role: "user" },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d"}
+        );
+
+        res.status(201).json({
+            token,
+            user:{
+                id:user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email:user.email,
+                role: "user",
+            },
+        });
+    } catch(err){
+        console.error("Register error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+//Login
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -37,8 +75,10 @@ router.post("/login", async (req, res) => {
             token,
             user: {
                 id: account._id,
+                firstName: account.firstName,
+                lastName: account.lastName,
                 email: account.email,
-                role
+                role,
             }
         });
     } catch (err){
@@ -46,5 +86,6 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ message: "Server error "});
     }
 });
+
 
 module.exports = router;

@@ -1,4 +1,4 @@
-.account-container{
+/* .account-container{
     display: flex;
     min-height: 100vh;
     background: linear-gradient(135deg,#000, #3f0b14, #7f1425);
@@ -60,7 +60,7 @@
     background: rgba(255,255,2555,0.05);
     padding: 25px;
     border-radius: 12px;
-    box-shadow: 0 4x 10px rgba(255,255,2555,0.05);
+    box-shadow: 0 4px 10px rgba(255,255,2555,0.05);
 }
 
 .account-card h3{
@@ -152,4 +152,231 @@
   margin-top: 10px;
   font-weight: 500;
   color: green;
+}
+ */
+
+ /* Container */
+.account-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Sidebar */
+.account-sidebar {
+  width: 250px;
+  background:linear-gradient(135deg,#000, #3f0b14, #7f1425);
+  color: #fff;
+  padding: 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-info {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 2px solid #fff;
+}
+
+.profile-info h3 {
+  margin: 5px 0;
+  font-size: 18px;
+}
+
+.profile-info p {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.sidebar-menu button {
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 12px 15px;
+  margin-bottom: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.2s;
+}
+
+.sidebar-menu button:hover,
+.sidebar-menu button:focus {
+  background-color: #1b324a;
+}
+
+/* Main Content */
+.account-main {
+  flex-grow: 1;
+  padding: 30px;
+  background-color: #ecf0f1;
+}
+
+/* Tables */
+.account-table,
+.dropdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.account-table th,
+.account-table td,
+.dropdown-table th,
+.dropdown-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.account-table th {
+  background-color: #5b0606;
+  color: #fff;
+}
+
+.dropdown-table th {
+  background-color: #630707;
+  color: #fff;
+}
+
+.reservation-row {
+  cursor: pointer;
+}
+
+.dropdown-row td {
+  background-color: #f7f7f7;
+}
+
+/* Buttons */
+button.dropdown-toggle {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #000;
+}
+
+.dropdown-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cancel-btn,
+.buy-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.cancel-btn {
+  background-color: #7b1307;
+  color: #fff;
+}
+
+.cancel-btn:hover {
+  background-color: #9c2114;
+}
+
+.buy-btn {
+  background-color: #10763a;
+  color: #fff;
+}
+
+.buy-btn:hover {
+  background-color: #1e8449;
+}
+
+/* Settings Form */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 400px;
+  margin-top: 15px;
+}
+
+.settings-form label {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.settings-form input {
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.settings-form button {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #c61a1a;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.settings-form button:hover {
+  background-color: #2471a3;
+}
+
+/* History list */
+.history-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.history-list li {
+  background-color: #fff;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+/* Responsive */
+@media screen and (max-width: 900px) {
+  .account-container {
+    flex-direction: column;
+  }
+
+  .account-sidebar {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 10px 0;
+  }
+
+  .sidebar-menu {
+    flex-direction: row;
+  }
+
+  .sidebar-menu button {
+    font-size: 14px;
+    padding: 8px 10px;
+  }
 }

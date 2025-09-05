@@ -74,35 +74,6 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
   }
 });
 
-//Get user's reservations
-// router.get("/my-reservations", protect("user"), async (req, res) => {
-//   try {
-//     const now = new Date();
-
-//     const bookings = await Booking.find({ 
-//       user: req.user._id,
-//       status: "reserved"
-//     })
-//       .populate("movie", "title")
-//       .populate("showtime", "hall time time") // include time explicitly
-//       // .sort({ "showtime.time": 1 });
-//       console.log("All reservations for user:", bookings);
-
-
-//     const upcoming = bookings.filter(b => {
-//         if (!b.showtime?.time) return false;
-//         console.log("Checking showtime:", b.showtime);
-//         return b.showtime?.time && new Date(b.showtime.time) >= now;
-//       });
-
-
-//     res.json(upcoming); 
-//   } catch (err) {
-//     console.error("Error fetching reservations: ", err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// });
-
 // Get user's reservations
 router.get("/my-reservations", protect("user"), async (req, res) => {
   try {
@@ -150,6 +121,55 @@ router.get("/my-history", protect("user"), async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 });
+
+// Cancel booking
+router.post("/cancel/:id", protect("user"), async (req, res) => {
+  try {
+    console.log("Cancel request params:", req.params);
+    console.log("Cancel request body:", req.body);
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      console.log("Booking not found");
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    console.log("Old seats:", booking.seats);
+    console.log("Old total:", booking.totalPrice);
+
+    const { seats } = req.body;
+    if (!seats || seats.length === 0) {
+      return res.status(400).json({ message: "No seats provided for cancellation." });
+    }
+
+    const oldSeatCount = booking.seats.length;
+    if (oldSeatCount === 0) {
+      return res.status(400).json({ message: "Booking has no seats" });
+    }
+
+    const pricePerSeat = booking.totalPrice / oldSeatCount;
+
+    // remove seats
+    booking.seats = booking.seats.filter((s) => !seats.includes(s));
+    console.log("Updated seats:", booking.seats);
+
+    if (booking.seats.length === 0) {
+      await Booking.findByIdAndDelete(req.params.id);
+      console.log("Booking deleted completely");
+      return res.json({ message: "Booking cancelled completely" });
+    }
+
+    booking.totalPrice = booking.seats.length * pricePerSeat;
+    await booking.save();
+    console.log("Booking updated:", booking);
+
+    res.json({ message: "Selected seats cancelled successfully", booking });
+  } catch (err) {
+    console.error("Cancel booking error:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
 
 
 module.exports = router;

@@ -9,11 +9,18 @@ const MyAccount = () => {
   const [reservations, setReservations] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [history, setHistory] = useState([]);
+  const [selectedSeats, setSelectedSeats] = useState({});
 
-  // Account Settings state
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+
+  // For dropdown expansion
+  const [expandedRow, setExpandedRow] = useState(null);
+
+  const toggleRow = (id) => {
+    setExpandedRow(expandedRow === id ? null : id);
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -37,8 +44,7 @@ const MyAccount = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-
-       setReservations(res.data);
+        setReservations(res.data);
       } catch (err) {
         console.error("Failed to fetch reservations", err);
       }
@@ -88,6 +94,46 @@ const MyAccount = () => {
     }
   };
 
+  //Cancel booking
+  // Toggle seat selection for cancel/buy
+const toggleSeatSelection = (reservationId, seat) => {
+  setSelectedSeats((prev) => {
+    const current = prev[reservationId] || [];
+    if (current.includes(seat)) {
+      return { ...prev, [reservationId]: current.filter((s) => s !== seat) };
+    } else {
+      return { ...prev, [reservationId]: [...current, seat] };
+    }
+  });
+};
+
+  const handleCancel = async (reservationId) => {
+  try {
+    const cancelSeats = selectedSeats[reservationId] || [];
+
+    if(cancelSeats.length === 0) {
+      alert("Please select at least one seat to cancel.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const { data } = await axios.post(
+      `http://localhost:5000/api/bookings/cancel/${reservationId}`,
+      { seats: cancelSeats },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    //Updata UI after cancellation
+    setReservations((prev) => prev.map((r) => r._id === reservationId ? data.booking : r));
+
+    alert("Booking cancelled successfully!");
+  } catch (err) {
+    console.error("Failed to cancel booking", err);
+    alert("Failed to cancel booking. Try again!");
+  }
+};
+
+
   const renderContent = () => {
     switch (activeTab) {
       case "reservations":
@@ -107,27 +153,90 @@ const MyAccount = () => {
                     <th>Price / Ticket</th>
                     <th>Total</th>
                     <th>Reserved On</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {reservations.map((r) => (
-                    <tr key={r._id}>
-                      <td>{r.movie?.title || "N/A"}</td>
-                      <td>
-                        {r.showtime?.hall || "N/A"} -{" "}
-                        {r.showtime?.time
-                          ? new Date(r.showtime.time).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "N/A"}
-                      </td>
-                      <td>{r.seats.join(", ")}</td>
-                      <td>{r.seats.length}</td>
-                      <td>Rs. {Math.floor(r.totalPrice / r.seats.length)}</td>
-                      <td>Rs. {r.totalPrice}</td>
-                      <td>{new Date(r.createdAt).toLocaleDateString()}</td>
-                    </tr>
+                    <React.Fragment key={r._id}>
+                      <tr
+                        onClick={() => toggleRow(r._id)}
+                        className="reservation-row"
+                      >
+                        <td>{r.movie?.title || "N/A"}</td>
+                        <td>
+                          {r.showtime?.hall || "N/A"} -{" "}
+                          {r.showtime?.time
+                            ? new Date(r.showtime.time).toLocaleString()
+                            : "N/A"}
+                        </td>
+                        <td>{r.seats.join(", ")}</td>
+                        <td>{r.seats.length}</td>
+                        <td>Rs. {Math.floor(r.totalPrice / r.seats.length)}</td>
+                        <td>Rs. {r.totalPrice}</td>
+                        <td>{new Date(r.createdAt).toLocaleDateString()}</td>
+                        <td>
+                          <button className="dropdown-toggle">
+                            {expandedRow === r._id ? "▲" : "▼"}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {expandedRow === r._id && (
+                        <tr className="dropdown-row">
+                          <td colSpan="8">
+                            <table className="dropdown-table">
+                              <thead>
+                                <tr>
+                                  <th>Seat No.</th>
+                                  <th>Expiry Date</th>
+                                  <th>Expiry Time</th>
+                                  <th>Select</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {r.seats.map((seat, idx) => (
+                                  <tr key={idx}>
+                                    <td>{seat}</td>
+                                    <td>
+                                      {new Date(r.expiryDate).toLocaleDateString("en-US", {
+                                        weekday: "long",
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                      })}
+                                    </td>
+                                    <td>
+                                      {new Date(r.expiryDate).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </td>
+                                    <td>
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedSeats[r._id]?.includes(seat) || false}
+                                        onChange={() => toggleSeatSelection(r._id, seat)}
+                                      />
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+
+                            </table>
+
+                            <div className="dropdown-actions">
+                              <button className="cancel-btn" onClick={() => handleCancel(r._id, selectedSeats[r._id] || [])}>
+                                Cancel Selected
+                              </button>
+                              <button className="buy-btn">
+                                Buy Selected
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>

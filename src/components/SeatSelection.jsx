@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./SeatSelection.css";
 
@@ -9,11 +9,13 @@ const cols = 10;
 const SeatSelection = () => {
   const { movieId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [selectedShowtime, setSelectedShowtime] = useState(location.state?.selectedShowtime || null);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [bookedSeats, setBookedSeats] = useState([]);
   const [movie, setMovie] = useState(null);
+  const [successModal, setSuccessModal] = useState({ open: false, message: ""});
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -67,7 +69,11 @@ const SeatSelection = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert("Booking Successful!");
+     setSuccessModal({
+      open: true,
+      message: "Your booking was successful!"
+     });
+
       setSelectedSeats([]);
       //refresh booked seats
       const bookingRes = await axios.get(
@@ -155,6 +161,26 @@ const SeatSelection = () => {
         <p>Selected Seats: {selectedSeats.join(", ")}</p>
       </div>
     )}
+
+     {/* Success Modal */}
+    {successModal.open && (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <h2>Success</h2>
+          <p>{successModal.message}</p>
+          <button
+            onClick={() => {
+              setSuccessModal({ open: false, message: ""});
+              navigate("/myaccount");
+            }}
+          >
+            OK
+          </button>
+
+          </div>
+        </div>
+    )}
+
   </div>
 );
 };

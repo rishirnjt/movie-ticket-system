@@ -7,11 +7,24 @@ import profileImg from "../assets/profileIcon.png";
 const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
   // const [showLogin, setShowLogin] = useState(false);
   const[dropdownOpen, setDropdownOpen] = useState(false);
+  const [userName, setUserName] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    //get user info
+    const storedUser = localStorage.getItem("user");
+    if(storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      const fullName = `${parsedUser.firstName || ""} ${parsedUser.lastName || ""}` .trim();
+      setUserName(fullName || "User");
+    }
+  }, [isLoggedIn]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
+    setUserName("");
     navigate("/");
   };
 
@@ -36,7 +49,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
           onClick={() => setDropdownOpen(!dropdownOpen)}
         >
           <img src={profileImg} alt="profile" className="profile-icon" />
-          <span className="profile-name">Richie</span>
+          <span className="profile-name">{userName}</span>
 
           {dropdownOpen && (
             <div className="dropdown">
