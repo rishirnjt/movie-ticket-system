@@ -11,6 +11,8 @@ import TicketRates from "./components/TicketRates";
 import AddMovie from "./components/AddMovie";
 import AuthModal from "./components/AuthModel";
 import MyAccount from "./components/MyAccount";
+import Foods from "./components/Foods";
+import Checkout from "./components/Checkout";
 
 import './App.css';
 
@@ -37,6 +39,9 @@ function App() {
           }
         />
         <Route path="/seats/:movieId" element={<SeatSelection />} />
+        <Route path="/foods/:bookingId" element={<Foods />} />
+        <Route path="/checkout/:bookingId" element={<Checkout />} />
+        
          <Route
           path="/auth"
           element={

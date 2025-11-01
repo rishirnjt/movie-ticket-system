@@ -13,7 +13,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/stats");
+        const res = await fetch("http://localhost:5001/api/admin/stats");
         const data = await res.json();
         setStats(data);
       } catch (err) {
@@ -21,7 +21,7 @@ const Dashboard = () => {
       }
     };
     fetchStats();
-    const interval = setInterval(fetchStats, 5000); //5s
+    const interval = setInterval(fetchStats, 5001); //5s
     return () => clearInterval(interval);
   }, []);
 

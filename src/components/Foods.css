@@ -1,0 +1,194 @@
+.foods-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+  background: linear-gradient(145deg, #0d0d0d, #1a1a1a);
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.15);
+}
+
+/* Left section - food list */
+.foods-left {
+  flex: 2;
+}
+
+.foods-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.foods-header h1 {
+  font-size: 1.8rem;
+  color: #ff4444;
+}
+
+.skip-btn {
+  background: transparent;
+  border: 1px solid #ff4444;
+  color: #ff4444;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+.skip-btn:hover {
+  background: #ff4444;
+  color: #fff;
+}
+
+.booking-summary {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.booking-summary strong {
+  color: #ff4444;
+}
+
+.foods-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+.food-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.food-item h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.food-item p {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+.food-item:hover {
+  transform: translateY(-4px);
+  border-color: #ff4444;
+}
+
+.food-item.selected {
+  background: rgba(255, 68, 68, 0.1);
+  border-color: #ff4444;
+}
+
+.food-item.selected h3,
+.food-item.selected p {
+  color: #ff4444;
+}
+
+/* Right section - bill summary */
+.foods-right {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.bill-header {
+  margin-bottom: 20px;
+}
+
+.bill-header h2 {
+  font-size: 1.4rem;
+  color: #ff4444;
+}
+
+.bill-items {
+  flex-grow: 1;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.bill-items::-webkit-scrollbar {
+  width: 5px;
+}
+
+.bill-items::-webkit-scrollbar-thumb {
+  background: #ff4444;
+  border-radius: 5px;
+}
+
+.bill-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+}
+
+.bill-item-name {
+  font-size: 1rem;
+}
+
+.bill-item-price {
+  font-weight: 600;
+  color: #ff4444;
+}
+
+.bill-total {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 15px;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #ff4444;
+}
+
+.checkout-btn {
+  background: #ff4444;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 25px;
+  width: 100%;
+}
+
+.checkout-btn:hover {
+  background: #ff6666;
+  transform: scale(1.05);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .foods-container {
+    flex-direction: column;
+  }
+
+  .foods-right {
+    margin-top: 30px;
+  }
+}

@@ -81,7 +81,7 @@ const AddMovies = () => {
         data.append('image', file);
 
         try {
-            const res = await axios.post('http://localhost:5000/api/upload', data);
+            const res = await axios.post('http://localhost:5001/api/upload', data);
             const updatedMovies = [...movies];
             updatedMovies[movieIndex].posterUrl = res.data.url;
             setMovies(updatedMovies);
@@ -96,7 +96,7 @@ const AddMovies = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('token');
-            await axios.post('http://localhost:5000/api/movies/add-multiple', movies, {
+            await axios.post('http://localhost:5001/api/movies/add-multiple', movies, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert("Movies added successfully!");
@@ -138,7 +138,7 @@ const AddMovies = () => {
                         />
                         {movie.posterUrl && (
                             <img
-                                src={`http://localhost:5000${movie.posterUrl}`}
+                                src={`http://localhost:5001${movie.posterUrl}`}
                                 alt="Poster Preview"
                                 style={{ width: '150px', marginTop: '10px' }}
                             />

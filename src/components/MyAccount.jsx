@@ -26,7 +26,7 @@ const MyAccount = () => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/users/me", {
+        const res = await axios.get("http://localhost:5001/api/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(res.data);
@@ -39,7 +39,7 @@ const MyAccount = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          "http://localhost:5000/api/bookings/my-reservations",
+          "http://localhost:5001/api/bookings/my-reservations",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -54,7 +54,7 @@ const MyAccount = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          "http://localhost:5000/api/bookings/my-history",
+          "http://localhost:5001/api/bookings/my-history",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -82,7 +82,7 @@ const MyAccount = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.put(
-        "http://localhost:5000/api/users/update",
+        "http://localhost:5001/api/users/update",
         { name, phone },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -118,7 +118,7 @@ const toggleSeatSelection = (reservationId, seat) => {
 
     const token = localStorage.getItem("token");
     const { data } = await axios.post(
-      `http://localhost:5000/api/bookings/cancel/${reservationId}`,
+      `http://localhost:5001/api/bookings/cancel/${reservationId}`,
       { seats: cancelSeats },
       { headers: { Authorization: `Bearer ${token}` } }
     );

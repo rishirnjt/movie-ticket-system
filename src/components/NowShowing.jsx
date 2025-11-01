@@ -11,7 +11,7 @@ const NowShowing = () => {
   const navigate = useNavigate();
 
 useEffect(() => {
-  axios.get('http://localhost:5000/api/movies')
+  axios.get('http://localhost:5001/api/movies')
     .then(res => {
       console.log('Movies fetched:', res.data);
       const movies = res.data;
@@ -98,7 +98,7 @@ useEffect(() => {
           movies.map((movie) => (
             <div className='movie-card' key={movie._id}>
               <img
-                src={`http://localhost:5000/${movie.posterUrl}`}
+                src={`http://localhost:5001/${movie.posterUrl}`}
                 alt={`${movie.title} poster`}
               />
 
@@ -135,3 +135,5 @@ useEffect(() => {
 
 
 export default NowShowing;
+
+

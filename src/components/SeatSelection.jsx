@@ -20,12 +20,12 @@ const SeatSelection = () => {
   useEffect(() => {
     const fetchMovie = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/movies/${movieId}`);
+        const res = await axios.get(`http://localhost:5001/api/movies/${movieId}`);
         setMovie(res.data);
 
         if (selectedShowtime) {
           const bookingRes = await axios.get(
-            `http://localhost:5000/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
+            `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
           );
           setBookedSeats(bookingRes.data.bookedSeats || []);
         }
@@ -64,7 +64,7 @@ const SeatSelection = () => {
       console.log("Booking payload:", payload);
 
       await axios.post(
-        "http://localhost:5000/api/bookings/reserve",
+        "http://localhost:5001/api/bookings/reserve",
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -77,12 +77,44 @@ const SeatSelection = () => {
       setSelectedSeats([]);
       //refresh booked seats
       const bookingRes = await axios.get(
-        `http://localhost:5000/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
+        `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
       );
       setBookedSeats(bookingRes.data.bookedSeats || []);
     } catch (err) {
       console.error("Booking error:", err.response?.data || err.message);
       alert("Booking failed");
+    }
+  };
+
+  const handleBuy = async () => {
+    if(selectedSeats.length === 0) {
+      alert("Please select at least one seat.");
+      return;
+    }
+
+    try{
+      const token = localStorage.getItem("token");
+      const totalPrice = selectedSeats.length * 300;
+
+      const res = await axios.post(
+        "http://localhost:5001/api/bookings/reserve",
+        {
+          movieId,
+          showtime: selectedShowtime._id,
+          seats: selectedSeats,
+          totalPrice,
+          foods: []
+        },
+        {
+          headers: { Authorization: `Bearer ${token}`},
+        }
+      );
+
+      const bookingId = res.data.booking._id;
+      navigate(`/foods/${bookingId}`);
+    } catch (err) {
+      console.error("Error creating temporary booking:", err);
+      alert("Something went wrong while proceeding to food selection.")
     }
   };
 
@@ -142,7 +174,7 @@ const SeatSelection = () => {
 
       <button
         className="buy-btn"
-        onClick={() => handleBooking("confirmed")}
+        onClick={handleBuy}
         disabled={selectedSeats.length === 0}
       >
         Buy

@@ -6,7 +6,7 @@ const { protect } = require("../middleware/authMiddleware");
 // Create a new booking
 router.post("/reserve", protect("user"), async (req, res) => {
   try {
-    let { movieId, showtime, seats, totalPrice } = req.body;
+    let { movieId, showtime, seats, totalPrice, foods } = req.body;
     console.log("Incoming booking request body: ", req.body);
 
 
@@ -29,17 +29,24 @@ router.post("/reserve", protect("user"), async (req, res) => {
       return res.status(400).json({ message: "Some seats are already taken" });
     }
 
+    /// Calculate food total
+    const foodTotal = Array.isArray(foods)
+      ? foods.reduce((sum, f) => sum + f.price * f.quantity, 0)
+      : 0;
+
+      totalPrice += foodTotal;
+
     const booking = new Booking({
       user: req.user._id,
       movie: movieId,
       showtime: showtimeId,
       seats,
+      foods,
       totalPrice,
       status: "reserved"
     });
 
     await booking.save();
-    console.log("Booking saved:", booking);
 
     //populate 
     const populatedBooking = await Booking.findById(booking._id)
@@ -170,6 +177,61 @@ router.post("/cancel/:id", protect("user"), async (req, res) => {
   }
 });
 
+// GET a single booking by ID
+router.get("/:bookingId", protect("user"), async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+
+    const booking = await Booking.findById(bookingId)
+      .populate("movie", "title")
+      .populate("showtime", "hall time")
+      .populate("user", "name email");
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    res.json(booking);
+  } catch (err) {
+    console.error("Error fetching booking:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+//add foods 
+router.post("/add-foods/:bookingId", protect("user"), async(req, res) => {
+  try{
+    const{ bookingId } = req.params;
+    const{ items } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+    if(!booking) {
+      return res.status(404).json({ message: "Booking not found"});
+    }
+
+    //add foods into booking
+    const newFoods = items.map(item => ({
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity || 1
+    }));
+
+    //merge foods
+    booking.foods = [...(booking.foods || []), ...newFoods];
+
+    //update price
+    const foodTotal = newFoods.reduce((sum, f) => sum + f.price * f.quantity, 0);
+    booking.totalPrice += foodTotal;
+
+    await booking.save();
+
+    res.json({ message: "Foods added successfully", booking });
+  } catch (err) {
+    console.error("Add foods error: ",err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
 
 
 module.exports = router;

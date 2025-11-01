@@ -29,7 +29,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      const res = await axios.post("http://localhost:5001/api/auth/login", {
         email: loginEmail,
         password: loginPassword,
       });
@@ -53,7 +53,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
       return alert("Please accept Terms & Conditions");
     }
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
+      const res = await axios.post("http://localhost:5001/api/auth/register", {
         phone: reg.countryCode + reg.phone,
         email: reg.email,
         dob: reg.dob,
@@ -243,3 +243,5 @@ return (
 };
 
 export default AuthModal;
+
+
