@@ -57,7 +57,7 @@ const Checkout = () => {
 
     setTimeout(() => {
       alert(`Payment successful via ${paymentMethod}!`);
-      navigate("/myaccount");
+      navigate("/myaccount", { state: { tab: "tickets" }});
     }, 1500);
   };
 

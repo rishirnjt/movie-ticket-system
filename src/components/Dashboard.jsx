@@ -53,6 +53,11 @@ const Dashboard = () => {
               List Bookings
             </NavLink>
           </li>
+          <li>
+            <NavLink to="/admin/foods" className={({ isActive }) => isActive ? "active" : ""}>
+              Food & Drinks
+            </NavLink>
+          </li>
         </ul>
       </aside>
 

@@ -28,10 +28,15 @@ router.get('/:id', async (req, res) => {
 //add movies
 router.post('/add-multiple', async (req, res) => {
     try{
-        const movies = req.body;
-        if(!Array.isArray(movies)) {
-            return res.status(400).json({ message: 'Invalid data format: expected an array'});
-        }
+        let movies = req.body;
+
+        movies = movies.map(movie => {
+            if (movie.posterURL && !movie.posterURL.startsWith('http')) {
+            movie.posterUrl = `${req.protocol}://${req.get("host")}${movie.posterUrl}`;
+            }
+            return movie;
+        })
+        
         await Movie.insertMany(movies);
         res.status(201).json({ message: 'Movie added Successfully '});
     } catch (err) {

@@ -5,9 +5,8 @@ const Admin = require("../models/Admin");
 
 const router = express.Router();
 
-// =========================
+
 // REGISTER
-// =========================
 router.post("/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -44,9 +43,9 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// =========================
+
 // LOGIN
-// =========================
+
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   console.log("Login request received: ", { email, password });

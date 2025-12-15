@@ -10,21 +10,21 @@ const NowShowing = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const navigate = useNavigate();
 
-useEffect(() => {
-  axios.get('http://localhost:5001/api/movies')
-    .then(res => {
-      console.log('Movies fetched:', res.data);
-      const movies = res.data;
+  useEffect(() => {
+    axios.get('http://localhost:5001/api/movies')
+      .then(res => {
+        console.log('Movies fetched:', res.data);
+        const movies = res.data;
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-      //filtering movies with releasedate
-      const upComingMovies = movies.filter(movie => {
-        const release = new Date(movie.releaseDate);
-        release.setHours(0, 0, 0, 0);
-        return release >= today;
-      })
+        //filtering movies with releasedate
+        const upComingMovies = movies.filter(movie => {
+          const release = new Date(movie.releaseDate);
+          release.setHours(0, 0, 0, 0);
+          return release >= today;
+        })
 
 
         // Group movies by release date
@@ -38,10 +38,10 @@ useEffect(() => {
         const dates = Object.keys(grouped).sort();
         setGroupedByDate(grouped);
 
-        const defaultDate = dates.includes(today.toLocaleDateString('en-CA')) 
-        ? today.toLocaleDateString('en-CA')
-        : dates [0];
-        
+        const defaultDate = dates.includes(today.toLocaleDateString('en-CA'))
+          ? today.toLocaleDateString('en-CA')
+          : dates[0];
+
         setAllDates(dates);
         setSelectedDate(defaultDate);
       })
@@ -52,16 +52,16 @@ useEffect(() => {
 
   const movies = groupedByDate[selectedDate] || [];
 
-  const handleShowtime= (movieId, showtime) => {
+  const handleShowtime = (movieId, showtime) => {
     const token = localStorage.getItem("token");
 
-    if(!token){
+    if (!token) {
       localStorage.setItem("redirectAfterLogin", `/seats/${movieId}`);
       navigate("/auth");
       return;
     }
 
-    navigate(`/seats/${movieId}`, { state: { selectedShowtime: showtime}});
+    navigate(`/seats/${movieId}`, { state: { selectedShowtime: showtime } });
   };
 
   return (
@@ -98,9 +98,10 @@ useEffect(() => {
           movies.map((movie) => (
             <div className='movie-card' key={movie._id}>
               <img
-                src={`http://localhost:5001/${movie.posterUrl}`}
-                alt={`${movie.title} poster`}
+                src={`http://localhost:5001${movie.posterUrl}`}
+                alt={movie.title}
               />
+
 
               <div className="movie-details">
                 <h4>{movie.title}</h4>
@@ -113,10 +114,10 @@ useEffect(() => {
                     movie.showtimes.map((showtime, index) => (
                       <button
                         key={index}
-                        onClick={ () => handleShowtime(movie._id, showtime)}
-                        >
+                        onClick={() => handleShowtime(movie._id, showtime)}
+                      >
                         {showtime.hall} - {showtime.time}
-                        </button>
+                      </button>
                     ))
                   ) : (
                     <span>No showtimes available</span>

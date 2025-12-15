@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "./MyAccount.css";
 import profileImg from "../assets/profileIcon.png";
 import axios from "axios";
@@ -21,6 +22,20 @@ const MyAccount = () => {
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
+
+  const location = useLocation();
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
+  
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab);
+    }
+  }, [location.state]);
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -50,6 +65,19 @@ const MyAccount = () => {
       }
     };
 
+    const fetchTickets = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "http://localhost:5001/api/tickets/mytickets",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setTickets(res.data.tickets)
+      } catch (err) {
+        console.error("Failed to fetch tickets", err);
+      }
+    };
+
     const fetchHistory = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -67,6 +95,7 @@ const MyAccount = () => {
 
     fetchUser();
     fetchReservations();
+    fetchTickets();
     fetchHistory();
   }, []);
 
@@ -96,42 +125,42 @@ const MyAccount = () => {
 
   //Cancel booking
   // Toggle seat selection for cancel/buy
-const toggleSeatSelection = (reservationId, seat) => {
-  setSelectedSeats((prev) => {
-    const current = prev[reservationId] || [];
-    if (current.includes(seat)) {
-      return { ...prev, [reservationId]: current.filter((s) => s !== seat) };
-    } else {
-      return { ...prev, [reservationId]: [...current, seat] };
-    }
-  });
-};
+  const toggleSeatSelection = (reservationId, seat) => {
+    setSelectedSeats((prev) => {
+      const current = prev[reservationId] || [];
+      if (current.includes(seat)) {
+        return { ...prev, [reservationId]: current.filter((s) => s !== seat) };
+      } else {
+        return { ...prev, [reservationId]: [...current, seat] };
+      }
+    });
+  };
 
   const handleCancel = async (reservationId) => {
-  try {
-    const cancelSeats = selectedSeats[reservationId] || [];
+    try {
+      const cancelSeats = selectedSeats[reservationId] || [];
 
-    if(cancelSeats.length === 0) {
-      alert("Please select at least one seat to cancel.");
-      return;
+      if (cancelSeats.length === 0) {
+        alert("Please select at least one seat to cancel.");
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(
+        `http://localhost:5001/api/bookings/cancel/${reservationId}`,
+        { seats: cancelSeats },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      //Updata UI after cancellation
+      setReservations((prev) => prev.map((r) => r._id === reservationId ? data.booking : r));
+
+      alert("Booking cancelled successfully!");
+    } catch (err) {
+      console.error("Failed to cancel booking", err);
+      alert("Failed to cancel booking. Try again!");
     }
-
-    const token = localStorage.getItem("token");
-    const { data } = await axios.post(
-      `http://localhost:5001/api/bookings/cancel/${reservationId}`,
-      { seats: cancelSeats },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    //Updata UI after cancellation
-    setReservations((prev) => prev.map((r) => r._id === reservationId ? data.booking : r));
-
-    alert("Booking cancelled successfully!");
-  } catch (err) {
-    console.error("Failed to cancel booking", err);
-    alert("Failed to cancel booking. Try again!");
-  }
-};
+  };
 
 
   const renderContent = () => {
