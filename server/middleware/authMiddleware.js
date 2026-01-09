@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
-const Admin = require('../models/Admin');
 const User = require('../models/User');
 
-const protect = (role) => async (req, res, next) => {
+const protect = (roles = []) => async (req, res, next) => {
   let token;
 
   if (
@@ -10,18 +9,30 @@ const protect = (role) => async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     try {
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(" ")[1];
+      //verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      if (role === 'admin') {
-        req.admin = await Admin.findById(decoded.id).select('-password');
-        if (!req.admin) return res.status(401).json({ message: 'Not authorized as admin' });
-      } else {
-        req.user = await User.findById(decoded.id).select('-password');
-        if (!req.user) return res.status(401).json({ message: 'Not authorized as user' });
-      }
+      //get user + role from DB
+      const user = await User
+        .findById(decoded.id)
+        .populate("userType")
+        .select("-password");
 
-      next();
+        if(!user){
+          return res.status(401).json({ message: "User not found" });
+        }
+
+        //role check
+        if(
+          roles.length > 0 &&
+          !roles.includes(user.userType.type)
+        ){
+          return res.status(403).json({ message: "Access denied" });
+        }
+
+        req.user = user;
+        next();
     } catch (error) {
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }

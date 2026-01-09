@@ -7,7 +7,7 @@ const AdminRoutes = ({ children}) => {
 
 
     //if not logged in as admin
-    if(!token || !user || user.role !== "admin") {
+    if(!token || !user || user.role.toLowerCase() !== "admin") {
         return <Navigate to="/" replace />
     }
 

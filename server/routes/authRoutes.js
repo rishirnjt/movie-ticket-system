@@ -1,7 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const Admin = require("../models/Admin");
+const UserType = require("../models/UserType");
 
 const router = express.Router();
 
@@ -17,14 +17,26 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create user (password will be hashed automatically by pre-save hook)
-    const user = await User.create({ firstName, lastName, email, password });
+    //get customer role
+    const customerType = await UserType.findOne({ type: "Customer" });
+    if(!customerType){
+      return res.status(500).json({ message: "Customer role not found"});
+    }
 
-    // Generate JWT token
+    //create user with userType
+    const user = await User.create({
+      firstName,
+      lastName,
+      email,
+      password,
+      userType: customerType._id
+    });
+
+    //jwt
     const token = jwt.sign(
-      { id: user._id, role: "user" },
+      { id: user._id, role: user.userType.type },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d"}
     );
 
     res.status(201).json({
@@ -34,7 +46,7 @@ router.post("/register", async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        role: "user",
+        role: user.userType.type,
       },
     });
   } catch (err) {
@@ -51,24 +63,14 @@ router.post("/login", async (req, res) => {
   console.log("Login request received: ", { email, password });
 
   try {
-    // Check Admin first
-    let account = await Admin.findOne({ email });
-    let role = "admin";
-
-    // If not admin, check User
-    if (!account) {
-      account = await User.findOne({ email });
-      role = "user";
-    }
-
-    console.log("Found account:", account ? account.email : "none");
-
-    if (!account) {
-      return res.status(400).json({ message: "Invalid credentials" });
+    //find user
+    const user = await User.findOne({ email }).populate("userType");
+    if(!user){
+      return res.status(400).json({ message: "Invalid credentials"});
     }
 
     // Use the model method for password comparison
-    const isMatch = await account.matchPassword(password);
+    const isMatch = await user.matchPassword(password);
     console.log("Password match result:", isMatch);
 
     if (!isMatch) {
@@ -77,7 +79,7 @@ router.post("/login", async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: account._id, role },
+      { id: user._id, role: user.userType.type },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -85,11 +87,11 @@ router.post("/login", async (req, res) => {
     res.json({
       token,
       user: {
-        id: account._id,
-        firstName: account.firstName,
-        lastName: account.lastName,
-        email: account.email,
-        role,
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.userType.type,
       },
     });
   } catch (err) {

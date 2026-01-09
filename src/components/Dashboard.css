@@ -1,96 +1,136 @@
-.dashboard-container {
-  display: flex;
-  height: 100vh;
-  font-family: Arial, sans-serif;
+/* ====== Dashboard Layout ====== */
+.dashboard-wrapper {
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #fff;
+  font-family: "Inter", sans-serif;
 }
 
-/* Sidebar */
+/* ====== Sidebar ====== */
 .sidebar {
-  width: 250px;
-  background-color: #1e293b;
-  color: white;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: #120808;
+  min-height: 100vh;
+  padding-top: 1rem;
+  border-right: 1px solid #2b0000;
 }
-
-.profile {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.avatar-circle {
-  background-color:  rgb(85, 2, 2);
-  color: white;
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  font-size: 32px;
+.sidebar a {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin: auto;
-}
-
-.menu {
-  list-style: none;
-  padding: 0;
-  width: 100%;
-}
-
-.menu li {
-  padding: 12px 20px;
-  margin-bottom: 10px;
-  background-color: #334155;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.menu li a{
-  color: white;
+  gap: 10px;
+  color: #bfbfbf;
+  padding: 10px 20px;
   text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+.sidebar a.active,
+.sidebar a:hover {
+  background: #a10000;
+  color: #fff;
 }
 
-.menu li.active,
-.menu li:hover {
-  background-color:  rgb(85, 2, 2);
-  color: white;
-}
-
-/* Main Content */
+/* ====== Main ====== */
 .main-content {
-  flex-grow: 1;
-  padding: 40px;
-  background-color: #010c18da;
+  background: #1a0a0a;
+  border-radius: 16px;
+  box-shadow: inset 0 0 10px #1a0000;
 }
 
-.dashboard-title {
-  font-size: 28px;
-  margin-bottom: 30px;
+/* ====== Stats Cards ====== */
+.glass-card,
+.stats-card {
+  background: rgba(30, 10, 10, 0.8);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease;
+}
+.stats-card:hover {
+  transform: translateY(-4px);
 }
 
-.dashboard-title span {
-  color:  rgb(85, 2, 2);
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  
-}
-
-.stat-box {
-  background-color: rgb(85, 2, 2);
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+.stats-card {
   text-align: center;
-  font-size: 16px;
+  padding: 1.5rem;
+  color: #fff;
+}
+.stats-card .icon {
+  background: #a10000;
+  border-radius: 12px;
+  padding: 8px;
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  display: inline-block;
+}
+.stats-card h5 {
+  font-size: 0.9rem;
+  color: #bbb;
+}
+.stats-card h3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+.stats-card .growth {
+  color: #29cc61;
+  font-size: 0.9rem;
+  margin-top: 4px;
 }
 
-.stat-box strong {
-  font-size: 24px;
-  color: #f9fafa;
+/* ====== Tables ====== */
+.table {
+  color: #fff;
+  background: rgba(20, 5, 5, 0.7);
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+.table thead th {
+  color: #ccc;
+  font-weight: 600;
+  background: rgba(60, 0, 0, 0.6);
+  border: none;
+}
+.table tbody tr {
+  background: rgba(40, 10, 10, 0.6);
+  transition: background 0.2s ease;
+}
+.table tbody tr:hover {
+  background: rgba(80, 20, 20, 0.8);
+}
+.status-pending {
+  background: #e6a700;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.status-active {
+  background: #1c8c4c;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.status-inactive {
+  background: #a10000;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* ====== Status Badges ====== */
+.status-active {
+  background: #1c8c4c;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+.status-inactive {
+  background: #a10000;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* ====== Footer ====== */
+footer {
+  color: #888;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }

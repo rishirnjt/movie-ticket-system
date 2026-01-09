@@ -6,10 +6,9 @@ const { protect } = require("../middleware/authMiddleware");
 
 // @desc    Get logged-in user profile
 // @route   GET /api/users/me
-// @access  Private
 router.get("/me", protect("user"), async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password"); // exclude password
+    const user = await User.findById(req.user._id).select("-password"); 
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.json(user);
@@ -21,7 +20,6 @@ router.get("/me", protect("user"), async (req, res) => {
 
 // @desc    Update user profile
 // @route   PUT /api/users/update
-// @access  Private
 router.put("/update", protect("user"), async (req, res) => {
   try {
     const { name, phone } = req.body;
@@ -46,3 +44,4 @@ router.put("/update", protect("user"), async (req, res) => {
 });
 
 module.exports = router;
+ 

@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
-import './Dashboard.css';
-import { NavLink } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import StatsCard from "./StatsCard";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
+import "./Dashboard.css";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -10,79 +20,162 @@ const Dashboard = () => {
     users: 0,
   });
 
+  const [recentMovies, setRecentMovies] = useState([]);
+  const [recentBookings, setRecentBookings] = useState([]);
+  const [salesData, setSalesData] = useState([]);
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch("http://localhost:5001/api/admin/stats");
-        const data = await res.json();
-        setStats(data);
-      } catch (err) {
-        console.error("Error fetching stats", err);
-      }
-    };
-    fetchStats();
-    const interval = setInterval(fetchStats, 5001); //5s
-    return () => clearInterval(interval);
+    // Example data (replace with API)
+    setStats({ bookings: 124, revenue: 123456, movies: 12, users: 345 });
+
+    setRecentMovies([
+      { _id: 1, title: "Interstellar", status: "Active", releaseDate: "2025-02-10" },
+      { _id: 2, title: "Inception", status: "Active", releaseDate: "2025-01-15" },
+      { _id: 3, title: "Avengers", status: "Inactive", releaseDate: "2024-12-20" },
+    ]);
+
+    setRecentBookings([
+      { _id: 1, user: "John", movie: "Interstellar", seats: ["A1", "A2"], amount: 1200, status: "Confirmed" },
+      { _id: 2, user: "Alice", movie: "Inception", seats: ["B1"], amount: 600, status: "Cancelled" },
+      { _id: 3, user: "Mike", movie: "Avengers", seats: ["C1", "C2", "C3"], amount: 1800, status: "Reserved" },
+    ]);
+
+    setSalesData([
+      { month: "Jan", sales: 15000 },
+      { month: "Feb", sales: 18000 },
+      { month: "Mar", sales: 21000 },
+      { month: "Apr", sales: 25000 },
+      { month: "May", sales: 20000 },
+      { month: "Jun", sales: 28000 },
+      { month: "Jul", sales: 31000 },
+    ]);
   }, []);
 
   return (
-    <div className="dashboard-cont">
-      <aside className="sidebar">
-        <div className="profile">
-          <div className="avatar-circle">R</div>
-          <h3>Richie</h3>
-        </div>
-        <ul className="menu">
-          <li>
-            <NavLink to="/admin" className={({ isActive }) => isActive ? "active" : ""}>
-              Dashboard
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/admin/add-movie" className={({ isActive }) => isActive ? "active" : ""}>
-              Add Movies
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/admin/list-shows" className={({ isActive }) => isActive ? "active" : ""}>
-              List Shows
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/admin/list-bookings" className={({ isActive }) => isActive ? "active" : ""}>
-              List Bookings
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/admin/foods" className={({ isActive }) => isActive ? "active" : ""}>
-              Food & Drinks
-            </NavLink>
-          </li>
-        </ul>
-      </aside>
+    <div className="container-fluid dashboard-wrapper">
+      <div className="row">
+        <Sidebar />
 
-      <main className="main-content">
-        <h2 className="dashboard-title">Admin <span>Dashboard</span></h2>
+        <main className="col-md-9 col-lg-10 main-content p-4">
+          <h2 className="mb-4">
+            Admin <span style={{ color: "#ff4d4f" }}>Dashboard</span>
+          </h2>
 
-        <div className="stats">
-          <div className="stat-box">
-            <strong>Total Bookings</strong>
-            <br /> {stats.bookings}
+          {/* Stats Cards */}
+          <div className="row g-3 mb-4">
+            <StatsCard title="Total Bookings" value={stats.bookings} icon="🛒" growth={8.2} />
+            <StatsCard title="Total Revenue" value={`Rs. ${stats.revenue}`} icon="💰" growth={23.1} />
+            <StatsCard title="Active Movies" value={stats.movies} icon="🎬" growth={5.4} />
+            <StatsCard title="Total Users" value={stats.users} icon="👤" growth={12.5} />
           </div>
-          <div className="stat-box">
-            <strong>Total Revenue</strong>
-            <br /> Rs.{stats.revenue}
+
+          {/* Recent Bookings & Movies side by side */}
+          <div className="row g-3 mb-4">
+            {/* Recent Bookings */}
+            <div className="col-md-6">
+              <div className="glass-card p-3">
+                <h5>Recent Bookings</h5>
+                <table className="table table-dark table-striped mt-2">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Movie</th>
+                      <th>Seats</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentBookings.map((b) => (
+                      <tr key={b._id}>
+                        <td>{b.user}</td>
+                        <td>{b.movie}</td>
+                        <td>{b.seats.join(", ")}</td>
+                        <td>Rs. {b.amount}</td>
+                        <td>
+                          <span
+                            className={
+                              b.status === "Confirmed"
+                                ? "status-active"
+                                : b.status === "Cancelled"
+                                  ? "status-inactive"
+                                  : "status-pending"
+                            }
+                          >
+                            {b.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Movies */}
+            <div className="col-md-6">
+              <div className="glass-card p-3">
+                <h5>Recent Movies</h5>
+                <table className="table table-dark table-striped mt-2">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Status</th>
+                      <th>Release Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentMovies.map((m) => (
+                      <tr key={m._id}>
+                        <td>{m.title}</td>
+                        <td>
+                          <span
+                            className={
+                              m.status === "Active" ? "status-active" : "status-inactive"
+                            }
+                          >
+                            {m.status}
+                          </span>
+                        </td>
+                        <td>{m.releaseDate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div className="stat-box">
-            <strong>Active Movies</strong>
-            <br /> {stats.movies}
+
+          {/* Monthly Sales Performance */}
+          <div className="glass-card p-3">
+            <h5>📈 Monthly Sales Performance</h5>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={salesData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#322" />
+                <XAxis dataKey="month" stroke="#ccc" />
+                <YAxis stroke="#ccc" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1a0a0a",
+                    border: "1px solid #a10000",
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="sales"
+                  stroke="#198304ff"
+                  strokeWidth={3}
+                  dot={{ fill: "#119e2dff" }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
-          <div className="stat-box">
-            <strong>Total Users</strong>
-            <br /> {stats.users}
-          </div>
-        </div>
-      </main>
+
+          <footer className="mt-5 text-center text-light py-2">
+            &copy; 2025 Cinemax
+          </footer>
+        </main>
+      </div>
     </div>
   );
 };

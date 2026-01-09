@@ -30,6 +30,7 @@ require("./models/Movie");
 require("./models/Booking");
 require("./models/User");
 require("./models/Ticket");
+require("./models/UserType");
 
 // Routes
 app.use('/api/movies', require('./routes/movieRoutes'));
@@ -40,7 +41,8 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/foods', require('./routes/foodRoutes'));
 app.use('/api/tickets', require('./routes/ticketRoutes'));
-app.use('/api/sms', require('./routes/smsRoutes'));
+// app.use("/api/email", require("./routes/emailRoutes"));
+
 
 
 // Test route

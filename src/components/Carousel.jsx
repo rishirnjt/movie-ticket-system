@@ -4,7 +4,7 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import './Carousel.css';
 
-import poster1 from '../assets/Saiyaara.jpg';
+import poster1 from '../assets/Avatar.webp';
 import poster2 from '../assets/FantasticFour.jpg';
 import poster3 from '../assets/Saamrajya.jpg';
 
@@ -22,7 +22,7 @@ const Carousel = () => {
     };
 
     const posters = [
-        {src : poster1, title: 'Saiyaara (PG)'},
+        {src : poster1, title: 'Avatar:Fire and Ash'},
         {src : poster2, title: 'Fantastic Four'},
         {src: poster3, title: 'Saamrajya'}
     ];
