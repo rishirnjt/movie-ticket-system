@@ -16,13 +16,14 @@ const movieSchema = new mongoose.Schema({
     {
       hall: String,
       time: String
-    }
+    },
   ],
-  createdAt: {
+  expiresAt: {
     type: Date,
-    default: Date.now,
-    expires: 60 * 60 * 24
-  }
-});
+    required: true,
+  },
+},
+  { timestamps: true }
+);
 
 module.exports = mongoose.models.Movie || mongoose.model("Movie", movieSchema);

@@ -23,33 +23,71 @@ const Dashboard = () => {
   const [recentMovies, setRecentMovies] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [salesData, setSalesData] = useState([]);
-
   useEffect(() => {
-    // Example data (replace with API)
-    setStats({ bookings: 124, revenue: 123456, movies: 12, users: 345 });
-
-    setRecentMovies([
-      { _id: 1, title: "Interstellar", status: "Active", releaseDate: "2025-02-10" },
-      { _id: 2, title: "Inception", status: "Active", releaseDate: "2025-01-15" },
-      { _id: 3, title: "Avengers", status: "Inactive", releaseDate: "2024-12-20" },
-    ]);
-
-    setRecentBookings([
-      { _id: 1, user: "John", movie: "Interstellar", seats: ["A1", "A2"], amount: 1200, status: "Confirmed" },
-      { _id: 2, user: "Alice", movie: "Inception", seats: ["B1"], amount: 600, status: "Cancelled" },
-      { _id: 3, user: "Mike", movie: "Avengers", seats: ["C1", "C2", "C3"], amount: 1800, status: "Reserved" },
-    ]);
-
-    setSalesData([
-      { month: "Jan", sales: 15000 },
-      { month: "Feb", sales: 18000 },
-      { month: "Mar", sales: 21000 },
-      { month: "Apr", sales: 25000 },
-      { month: "May", sales: 20000 },
-      { month: "Jun", sales: 28000 },
-      { month: "Jul", sales: 31000 },
-    ]);
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const res = await fetch("http://localhost:5001/api/movies/recent");
+      if (!res.ok) {
+        throw new Error("Failed to fetch recent movies");
+      }
+      const moviesData = await res.json();
+
+      const movies = Array.isArray(moviesData) ? moviesData : [];
+      setRecentMovies(movies);
+
+      // Stats (can be dynamic later)
+      setStats({
+        bookings: 124,
+        revenue: 123456,
+        movies: movies.length,
+        users: 345,
+      });
+
+      // Static for now (replace with API later)
+      setRecentBookings([
+        {
+          _id: 1,
+          user: "John",
+          movie: "Interstellar",
+          seats: ["A1", "A2"],
+          amount: 1200,
+          status: "Confirmed",
+        },
+        {
+          _id: 2,
+          user: "Alice",
+          movie: "Inception",
+          seats: ["B1"],
+          amount: 600,
+          status: "Cancelled",
+        },
+        {
+          _id: 3,
+          user: "Mike",
+          movie: "Avengers",
+          seats: ["C1", "C2", "C3"],
+          amount: 1800,
+          status: "Reserved",
+        },
+      ]);
+
+      setSalesData([
+        { month: "Jan", sales: 15000 },
+        { month: "Feb", sales: 18000 },
+        { month: "Mar", sales: 21000 },
+        { month: "Apr", sales: 25000 },
+        { month: "May", sales: 20000 },
+        { month: "Jun", sales: 28000 },
+        { month: "Jul", sales: 31000 },
+      ]);
+    } catch (error) {
+      console.error("Dashboard fetch error:", error);
+    }
+  };
+
 
   return (
     <div className="container-fluid dashboard-wrapper">
@@ -57,19 +95,18 @@ const Dashboard = () => {
         <Sidebar />
 
         <main className="col-md-9 col-lg-10 main-content p-4">
-          <h2 className="mb-4">
+          <h1 className="mb-4">
             Admin <span style={{ color: "#ff4d4f" }}>Dashboard</span>
-          </h2>
+          </h1>
 
           {/* Stats Cards */}
           <div className="row g-3 mb-4">
             <StatsCard title="Total Bookings" value={stats.bookings} icon="🛒" growth={8.2} />
-            <StatsCard title="Total Revenue" value={`Rs. ${stats.revenue}`} icon="💰" growth={23.1} />
+            <StatsCard title="Total Revenue" value={`Rs.`} icon="💰" growth={23.1} />
             <StatsCard title="Active Movies" value={stats.movies} icon="🎬" growth={5.4} />
             <StatsCard title="Total Users" value={stats.users} icon="👤" growth={12.5} />
           </div>
 
-          {/* Recent Bookings & Movies side by side */}
           <div className="row g-3 mb-4">
             {/* Recent Bookings */}
             <div className="col-md-6">
@@ -130,13 +167,12 @@ const Dashboard = () => {
                         <td>{m.title}</td>
                         <td>
                           <span
-                            className={
-                              m.status === "Active" ? "status-active" : "status-inactive"
-                            }
+                            className={m.isActive ? "status-active" : "status-inactive"}
                           >
-                            {m.status}
+                            {m.isActive ? "Active" : "Inactive"}
                           </span>
                         </td>
+
                         <td>{m.releaseDate}</td>
                       </tr>
                     ))}

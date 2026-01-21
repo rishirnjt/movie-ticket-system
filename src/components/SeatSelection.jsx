@@ -341,7 +341,6 @@ const SeatSelection = () => {
 
   // Confirm inside popup
   const handleConfirmBuy = async () => {
-  // Step 1: Terms validation
   if (!agreeTerms) {
     alert("You must agree to the terms and conditions.");
     return;
@@ -352,7 +351,6 @@ const SeatSelection = () => {
 
     const totalPrice = selectedSeats.length * 300;
 
-    // Step 2: Reserve seats (NOT buy yet)
     const res = await axios.post(
       "http://localhost:5001/api/bookings/reserve",
       {
@@ -369,7 +367,6 @@ const SeatSelection = () => {
 
     const bookingId = res.data.booking._id;
 
-    // Step 3: Close popup → go to food selection
     setBuyPopup(false);
     navigate(`/foods/${bookingId}`);
 

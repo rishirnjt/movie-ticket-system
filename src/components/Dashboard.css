@@ -25,9 +25,10 @@
 }
 .sidebar a.active,
 .sidebar a:hover {
-  background: #a10000;
+  background: #670101;
   color: #fff;
 }
+.sidebar
 
 /* ====== Main ====== */
 .main-content {

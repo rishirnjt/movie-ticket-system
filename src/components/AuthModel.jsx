@@ -89,6 +89,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
 
         <div className="auth-tabs">
           <button
+            id="btn-sign-in"
             className={`auth-tab ${activeTab === "signin" ? "active" : ""}`}
             onClick={() => setActiveTab("signin")}
           >
@@ -108,6 +109,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
               <form onSubmit={handleLogin} className="auth-form">
                 <input
                   type="email"
+                  id="input-email"
                   placeholder="Email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
@@ -116,6 +118,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                 <div className="password-wrapper">
                   <input
                     type={showLoginPwd ? "text" : "password"}
+                    id="input-password"
                     placeholder="Password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
@@ -129,7 +132,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     {showLoginPwd ? "🙈" : "👁"}
                   </button>
                 </div>
-                <button className="primary-btn" type="submit">
+                <button id="btn-go" className="primary-btn" type="submit">
                   GO
                 </button>
                 <a className="forgot-link" href="#">

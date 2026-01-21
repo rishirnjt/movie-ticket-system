@@ -60,6 +60,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
         </div>
       ) : (
         <button
+          id="btn-sign-in"
           className="login-btn"
           onClick={() => navigate("/auth?tab=signin")}
         >

@@ -12,6 +12,24 @@ router.get('/', async(req, res) => {
     }
 });
 
+//get recent movies
+router.get("/recent", async (req, res) => {
+  try {
+    const movies = await Movie.find({})
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    res.status(200).json(movies); 
+  } catch (error) {
+    console.error("Recent movies error:", error);
+    res.status(500).json({ message: "Failed to fetch recent movies" });
+  }
+});
+
+
+
+
 //get single movie
 router.get('/:id', async (req, res) => {
     try{
@@ -34,8 +52,11 @@ router.post('/add-multiple', async (req, res) => {
             if (movie.posterURL && !movie.posterURL.startsWith('http')) {
             movie.posterUrl = `${req.protocol}://${req.get("host")}${movie.posterUrl}`;
             }
-            return movie;
-        })
+            return{
+                ...movie,
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            };
+        });
         
         await Movie.insertMany(movies);
         res.status(201).json({ message: 'Movie added Successfully '});
