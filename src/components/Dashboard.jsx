@@ -29,6 +29,8 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
+      const token = localStorage.getItem("token");
+      //movies
       const res = await fetch("http://localhost:5001/api/movies/recent");
       if (!res.ok) {
         throw new Error("Failed to fetch recent movies");
@@ -38,12 +40,21 @@ const Dashboard = () => {
       const movies = Array.isArray(moviesData) ? moviesData : [];
       setRecentMovies(movies);
 
+      //users
+      const usersRes = await fetch("http://localhost:5001/api/users/count",{
+        headers : {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const usersData = await usersRes.json();
+      
+
       // Stats (can be dynamic later)
       setStats({
         bookings: 124,
         revenue: 123456,
         movies: movies.length,
-        users: 345,
+        users: usersData.totalUsers,
       });
 
       // Static for now (replace with API later)

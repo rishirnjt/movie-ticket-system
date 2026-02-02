@@ -129,8 +129,9 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     className="eye-btn"
                     onClick={() => setShowLoginPwd((s) => !s)}
                   >
-                    {showLoginPwd ? "🙈" : "👁"}
+                    <i className={`fa-solid ${showLoginPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
                   </button>
+
                 </div>
                 <button id="btn-go" className="primary-btn" type="submit">
                   GO
@@ -213,8 +214,9 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     className="eye-btn"
                     onClick={() => setShowRegPwd((s) => !s)}
                   >
-                    {showRegPwd ? "🙈" : "👁"}
+                    <i className={`fa-solid ${showRegPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
                   </button>
+
                 </div>
                 <label className="terms">
                   <input

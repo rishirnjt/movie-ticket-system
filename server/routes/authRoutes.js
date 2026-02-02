@@ -5,8 +5,18 @@ const UserType = require("../models/UserType");
 
 const router = express.Router();
 
+// Helper to generate JWT
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, role: user.userType.type }, // include role in token
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+};
 
+// ============================
 // REGISTER
+// ============================
 router.post("/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -17,36 +27,35 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    //get customer role
+    // Get "Customer" role from UserType
     const customerType = await UserType.findOne({ type: "Customer" });
-    if(!customerType){
-      return res.status(500).json({ message: "Customer role not found"});
+    if (!customerType) {
+      return res.status(500).json({ message: "Customer role not found" });
     }
 
-    //create user with userType
+    // Create user
     const user = await User.create({
       firstName,
       lastName,
       email,
       password,
-      userType: customerType._id
+      userType: customerType._id,
     });
 
-    //jwt
-    const token = jwt.sign(
-      { id: user._id, role: user.userType.type },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d"}
-    );
+    // Populate userType to access type for token
+    const populatedUser = await User.findById(user._id).populate("userType");
+
+    // Generate JWT
+    const token = generateToken(populatedUser);
 
     res.status(201).json({
       token,
       user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.userType.type,
+        id: populatedUser._id,
+        firstName: populatedUser.firstName,
+        lastName: populatedUser.lastName,
+        email: populatedUser.email,
+        role: populatedUser.userType.type,
       },
     });
   } catch (err) {
@@ -55,34 +64,22 @@ router.post("/register", async (req, res) => {
   }
 });
 
-
+// ============================
 // LOGIN
-
+// ============================
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  console.log("Login request received: ", { email, password });
 
   try {
-    //find user
     const user = await User.findOne({ email }).populate("userType");
-    if(!user){
-      return res.status(400).json({ message: "Invalid credentials"});
-    }
 
-    // Use the model method for password comparison
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    // Use matchPassword (bcrypt if hashed)
     const isMatch = await user.matchPassword(password);
-    console.log("Password match result:", isMatch);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user._id, role: user.userType.type },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = generateToken(user);
 
     res.json({
       token,
