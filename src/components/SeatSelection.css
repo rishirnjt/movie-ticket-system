@@ -1,6 +1,4 @@
-/* ================================
-   MAIN LAYOUT
-================================ */
+
 .seat-selection {
   display: flex;
   flex-direction: column;
@@ -10,13 +8,9 @@
   padding: 3rem;
   color: #fff;
 
-  /* Gradient Background */
   background: linear-gradient(135deg, #000, #2f090f, #43010c);
 }
 
-/* ================================
-   SCREEN LABEL
-================================ */
 .screen {
   width: 70%;
   background: #d3d3d3;
@@ -41,9 +35,6 @@
   margin-bottom: 30px;
 }
 
-/* ================================
-   SEAT STYLES
-================================ */
 .seat {
   width: 40px;
   height: 40px;
@@ -67,7 +58,7 @@
 }
 
 .seat.selected {
-  background-color: #b4b70c;
+  background-color: #bbc80a;
   transform: scale(1.1);
   box-shadow: 0 0 10px rgba(1, 89, 42, 0.8);
 }
@@ -85,9 +76,6 @@
   cursor: not-allowed;
 }
 
-/* ================================
-   LEGEND BOX
-================================ */
 .seat-legend {
   display: flex;
   justify-content: center;
@@ -110,13 +98,12 @@
   border: 1px solid #ddd;
 }
 
-/* LEGEND COLORS */
 .legend-available {
   background: rgba(255, 255, 255, 0.07);
 }
 
 .legend-selected {
-  background: #b4b70c;
+  background: #bbc80a;
 }
 
 .legend-booked {
@@ -127,9 +114,6 @@
   background: #c00a1c;
 }
 
-/* ================================
-   ACTION BUTTONS
-================================ */
 .actions {
   margin-top: 25px;
   display: flex;
@@ -158,7 +142,6 @@
   transform: scale(1.07);
 }
 
-/* BUY BUTTON — FIXED (RED, NOT GREEN) */
 .buy-btn {
   background-color: #980c0c !important;
   color: white !important;
@@ -178,9 +161,6 @@
   transform: scale(1.07);
 }
 
-/* ================================
-   BOOK SUCCESS POPUP
-================================ */
 .success-overlay {
   position: fixed;
   top: 0;

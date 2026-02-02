@@ -29,7 +29,7 @@ const MyAccount = () => {
       setActiveTab(location.state.tab);
     }
   }, [location.state]);
-  
+
   useEffect(() => {
     if (location.state?.tab) {
       setActiveTab(location.state.tab);
@@ -146,14 +146,18 @@ const MyAccount = () => {
       }
 
       const token = localStorage.getItem("token");
+
       const { data } = await axios.post(
         `http://localhost:5001/api/bookings/cancel/${reservationId}`,
         { seats: cancelSeats },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      //Updata UI after cancellation
-      setReservations((prev) => prev.map((r) => r._id === reservationId ? data.booking : r));
+      setReservations((prev) =>
+        prev.map((r) =>
+          r._id === reservationId ? data.booking : r
+        )
+      );
 
       alert("Booking cancelled successfully!");
     } catch (err) {
@@ -194,10 +198,13 @@ const MyAccount = () => {
                       >
                         <td>{r.movie?.title || "N/A"}</td>
                         <td>
-                          {r.showtime?.hall || "N/A"} -{" "}
                           {r.showtime?.time
-                            ? new Date(r.showtime.time).toLocaleString()
+                            ? new Date(r.showtime.time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
                             : "N/A"}
+
                         </td>
                         <td>{r.seats.join(", ")}</td>
                         <td>{r.seats.length}</td>

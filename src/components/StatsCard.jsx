@@ -6,7 +6,6 @@ const StatsCard = ({ title, value, icon, growth }) => (
       <div className="icon">{icon}</div>
       <h5>{title}</h5>
       <h3>{value}</h3>
-      {growth && <div className="growth">+{growth}%</div>}
     </div>
   </div>
 );
