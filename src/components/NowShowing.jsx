@@ -21,6 +21,7 @@ const NowShowing = () => {
 
         //filtering movies with releasedate
         const upComingMovies = movies.filter(movie => {
+          if (!movie.releaseDate) return false;
           const release = new Date(movie.releaseDate);
           release.setHours(0, 0, 0, 0);
           return release >= today;
@@ -116,7 +117,7 @@ const NowShowing = () => {
                         key={index}
                         onClick={() => handleShowtime(movie._id, showtime)}
                       >
-                        {showtime.hall} - {showtime.time}
+                        {showtime.hall} - {new Date(showtime.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </button>
                     ))
                   ) : (

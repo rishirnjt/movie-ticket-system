@@ -49,10 +49,8 @@ const path = require('path');
     await page.type('#add-rating', '8.7');
     await page.type('#add-language', 'English');
 
-    // --- SHOWTIME & HALL (The missing part) ---
     console.log('Filling showtimes...');
     
-    // Using placeholder selectors because these don't have IDs in your React code
     await page.waitForSelector('input[placeholder="Hall"]');
     await page.type('input[placeholder="Hall"]', 'Hall 1');
     
