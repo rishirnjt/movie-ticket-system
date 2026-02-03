@@ -12,12 +12,7 @@ const movieSchema = new mongoose.Schema({
   duration: String, 
   rating: String,
   language: String,
-  // showtimes: [
-  //   {
-  //     hall: String,
-  //     time: String
-  //   },
-  // ],
+
   expiresAt: {
     type: Date,
     required: true,

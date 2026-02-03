@@ -1,43 +1,21 @@
-/* ====== Dashboard Layout ====== */
+/* ====== LAYOUT ====== */
 .dashboard-wrapper {
+  display: flex;
   min-height: 100vh;
   background-color: #0a0a0a;
   color: #fff;
   font-family: "Inter", sans-serif;
 }
-
-/* ====== Sidebar ====== */
-.sidebar {
-  background: #120808;
-  min-height: 100vh;
-  padding-top: 1rem;
-  border-right: 1px solid #2b0000;
-}
-.sidebar a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #bfbfbf;
-  padding: 10px 20px;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-.sidebar a.active,
-.sidebar a:hover {
-  background: #670101;
-  color: #fff;
-}
-.sidebar
-
-/* ====== Main ====== */
+/* ====== MAIN CONTENT ====== */
 .main-content {
+  flex: 1;
+  padding: 30px;
   background: #1a0a0a;
   border-radius: 16px;
   box-shadow: inset 0 0 10px #1a0000;
 }
 
-/* ====== Stats Cards ====== */
+/* ====== CARDS ====== */
 .glass-card,
 .stats-card {
   background: rgba(30, 10, 10, 0.8);
@@ -46,15 +24,16 @@
   backdrop-filter: blur(10px);
   transition: transform 0.2s ease;
 }
-.stats-card:hover {
-  transform: translateY(-4px);
-}
 
 .stats-card {
   text-align: center;
   padding: 1.5rem;
-  color: #fff;
 }
+
+.stats-card:hover {
+  transform: translateY(-4px);
+}
+
 .stats-card .icon {
   background: #a10000;
   border-radius: 12px;
@@ -63,40 +42,48 @@
   margin-bottom: 8px;
   display: inline-block;
 }
+
 .stats-card h5 {
   font-size: 0.9rem;
   color: #bbb;
 }
+
 .stats-card h3 {
   font-size: 1.8rem;
   font-weight: 600;
 }
+
 .stats-card .growth {
   color: #29cc61;
   font-size: 0.9rem;
   margin-top: 4px;
 }
 
-/* ====== Tables ====== */
+/* ====== TABLES ====== */
 .table {
   color: #fff;
   background: rgba(20, 5, 5, 0.7);
   border-collapse: separate;
   border-spacing: 0 8px;
 }
+
 .table thead th {
   color: #ccc;
   font-weight: 600;
   background: rgba(60, 0, 0, 0.6);
   border: none;
 }
+
 .table tbody tr {
   background: rgba(40, 10, 10, 0.6);
   transition: background 0.2s ease;
 }
+
 .table tbody tr:hover {
   background: rgba(80, 20, 20, 0.8);
 }
+
+/* ====== STATUS BADGES ====== */
 .status-pending {
   background: #e6a700;
   color: #fff;
@@ -118,20 +105,15 @@
   border-radius: 8px;
 }
 
-/* ====== Status Badges ====== */
-.status-active {
-  background: #1c8c4c;
-  padding: 4px 10px;
-  border-radius: 8px;
-}
-.status-inactive {
-  background: #a10000;
-  padding: 4px 10px;
-  border-radius: 8px;
+/* ====== CHART CARD ====== */
+.glass-card {
+  padding: 20px;
 }
 
-/* ====== Footer ====== */
+/* ====== FOOTER ====== */
 footer {
   color: #888;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 10px;
+  margin-top: 20px;
 }

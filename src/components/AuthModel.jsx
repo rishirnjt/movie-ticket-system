@@ -68,6 +68,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
         localStorage.setItem("user", JSON.stringify(res.data.user || {}));
         setIsLoggedIn(true);
       }
+      navigate("/");
       alert("Registration successful");
       onClose();
     } catch (err) {
@@ -157,6 +158,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
               <form onSubmit={handleRegister} className="auth-form">
                 <div className="phone-row">
                   <select
+                    id="reg-select-country" // Added ID
                     name="countryCode"
                     value={reg.countryCode}
                     onChange={onRegChange}
@@ -166,6 +168,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     <option value="+1">+1</option>
                   </select>
                   <input
+                    id="reg-input-phone" // Added ID
                     name="phone"
                     placeholder="Enter your phone number"
                     value={reg.phone}
@@ -174,6 +177,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                   />
                 </div>
                 <input
+                  id="reg-input-email" // Added ID
                   name="email"
                   type="email"
                   placeholder="Enter your email"
@@ -182,6 +186,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                   required
                 />
                 <input
+                  id="reg-input-dob" // Added ID
                   name="dob"
                   type="date"
                   value={reg.dob}
@@ -189,12 +194,14 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                 />
                 <div className="name-row">
                   <input
+                    id="reg-input-first-name" // Added ID
                     name="firstName"
                     placeholder="First Name"
                     value={reg.firstName}
                     onChange={onRegChange}
                   />
                   <input
+                    id="reg-input-last-name" // Added ID
                     name="lastName"
                     placeholder="Last Name"
                     value={reg.lastName}
@@ -203,6 +210,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                 </div>
                 <div className="password-wrapper">
                   <input
+                    id="reg-input-password" // Added ID
                     name="password"
                     type={showRegPwd ? "text" : "password"}
                     placeholder="Enter your password"
@@ -210,16 +218,17 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     onChange={onRegChange}
                   />
                   <button
+                    id="reg-btn-show-password" // Added ID
                     type="button"
                     className="eye-btn"
                     onClick={() => setShowRegPwd((s) => !s)}
                   >
                     <i className={`fa-solid ${showRegPwd ? "fa-eye-slash" : "fa-eye"}`}></i>
                   </button>
-
                 </div>
                 <label className="terms">
                   <input
+                    id="reg-checkbox-terms" // Added ID
                     name="termsAccepted"
                     type="checkbox"
                     checked={reg.termsAccepted}
@@ -227,7 +236,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                   />{" "}
                   I agree to all <a href="#">Terms & Conditions</a>
                 </label>
-                <button className="primary-btn confirm" type="submit">
+                <button id="btn-register-confirm" className="primary-btn confirm" type="submit"> {/* Added ID */}
                   Confirm
                 </button>
                 <p className="muted">
