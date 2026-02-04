@@ -3,7 +3,7 @@ const router = express.Router();
 const Showtime = require("../models/Showtime");
 
 //add showtime
-router.post("/add", async(req,res) => {
+router.post("/", async(req,res) => {
     try{
         const { movieId, hall, time } = req.body;
 
