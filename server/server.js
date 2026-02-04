@@ -58,7 +58,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/tickets', ticketRoutes);
-app.use("/api/users", userRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 
 // --------------------

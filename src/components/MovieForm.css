@@ -1,0 +1,107 @@
+/* Layout container beside sidebar */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0202, #2b0000);
+}
+
+/* Content area next to sidebar */
+.admin-content {
+  flex: 1;
+  display: flex;
+  justify-content: center; /* centers horizontally */
+  align-items: flex-start; /* top aligned */
+  padding: 60px 20px;
+}
+
+/* Center wrapper for the form */
+.movie-form-container {
+  width: 100%;
+  max-width: 750px; /* form width */
+  display: flex;
+  justify-content: center;
+}
+
+/* Movie form card */
+.movie-block {
+  width: 100%;
+  background: rgba(25, 5, 5, 0.9);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 0, 0, 0.25);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+  padding: 32px;
+  color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Title */
+.movie-block h3 {
+  text-align: center;
+  font-size: 26px;
+  color: #ffbdbd;
+}
+
+/* Inputs */
+.movie-block input,
+.movie-block textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f5f5f5;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.movie-block input:focus,
+.movie-block textarea:focus {
+  border-color: #ff3b3b;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Showtime */
+.showtime-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(50, 10, 10, 0.7);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.showtime-group button {
+  background: linear-gradient(135deg, #7a0c0c, #500808);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.showtime-group button:hover {
+  background: linear-gradient(135deg, #a51515, #5a0b0b);
+  transform: scale(1.05);
+}
+
+/* Save Button */
+button.submit-btn {
+  align-self: center;
+  background: linear-gradient(135deg, #a31a1a, #5a0b0b);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+button.submit-btn:hover {
+  background: linear-gradient(135deg, #c02020, #7a0c0c);
+  transform: scale(1.05);
+}

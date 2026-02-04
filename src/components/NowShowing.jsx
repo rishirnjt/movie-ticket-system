@@ -49,8 +49,6 @@ const NowShowing = () => {
       .catch(err => console.error("Failed to fetch movies", err));
   }, []);
 
-
-
   const movies = groupedByDate[selectedDate] || [];
 
   const handleShowtime = (movieId, showtime) => {
@@ -99,9 +97,14 @@ const NowShowing = () => {
           movies.map((movie) => (
             <div className='movie-card' key={movie._id}>
               <img
-                src={`http://localhost:5001${movie.posterUrl}`}
+                src={
+                  movie.posterUrl?.startsWith("http")
+                    ? movie.posterUrl
+                    : `http://localhost:5001${movie.posterUrl}`
+                }
                 alt={movie.title}
               />
+
 
 
               <div className="movie-details">
