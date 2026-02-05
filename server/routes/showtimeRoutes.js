@@ -31,4 +31,9 @@ router.get("/movie/:movieId", async (req, res) => {
     }
 });
 
+router.delete("/movie/:movieId", async (req, res) => {
+    await Showtime.deleteMany({ movie: req.params.movieId });
+    res.json({ message: "Showrtimes deleted"});
+});
+
 module.exports = router;

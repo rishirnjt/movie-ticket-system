@@ -1,40 +1,80 @@
-.coming-soon-cont{
-    padding: 30px 20px;
-    background-color: #101010;
-    color: #fff;
+.coming-soon-cont {
+  padding: 40px 24px;
+  background:
+    radial-gradient(circle at top, #2b0000, #0a0a0a 70%);
+  color: #f5f5f5;
 }
 
-.coming-soon-cont h2{
-    margin-bottom: 20px;
-    font-size: 1.8rem;
+/* Section title */
+.coming-soon-cont h2 {
+  margin-bottom: 28px;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffbdbd;
+  text-shadow: 0 0 12px rgba(255, 0, 0, 0.25);
 }
 
-.coming-card{
-    padding: 10px;
-    text-align: center;
+/* Card */
+.coming-card {
+  padding: 12px;
+  text-align: center;
+  background: rgba(30, 10, 10, 0.6);
+  border: 1px solid rgba(255, 0, 0, 0.2);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.coming-card img{
-    width: 100%;
-    height: 50vh;
-    border-radius: 10px;
+.coming-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 
-.coming-card h4{
-    font-size: 1rem;
-    margin-top: 10px;
+/* Poster */
+.coming-card img {
+  width: 100%;
+  height: 50vh;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
 }
 
-.slick-prev, .slick-next{
-    z-index: 1;
-    width: 40px;
-    height: 40px;
-    background-color: rgba(255,255,255,0.1);
-    border-radius: 50%;
-    transition: background 0.3s ease;
+/* Movie title */
+.coming-card h4 {
+  font-size: 1rem;
+  margin-top: 12px;
+  font-weight: 500;
+  color: #ffe0e0;
 }
 
-.slick-prev:hover, .slick-next:hover{
-    background-color: rgba(255,255,255,0.3);
+/* ===== Slick arrows ===== */
+.slick-prev,
+.slick-next {
+  z-index: 5;
+  width: 42px;
+  height: 42px;
+  background: rgba(120, 10, 10, 0.6);
+  border-radius: 50%;
+  backdrop-filter: blur(6px);
+  transition: all 0.25s ease;
 }
 
+.slick-prev:hover,
+.slick-next:hover {
+  background: rgba(180, 20, 20, 0.8);
+  transform: scale(1.1);
+}
+
+/* Arrow icons */
+.slick-prev::before,
+.slick-next::before {
+  font-size: 18px;
+  color: #fff;
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  .coming-card img {
+    height: 38vh;
+  }
+}

@@ -3,49 +3,113 @@
   max-height: 650px;
   overflow: hidden;
   position: relative;
+  background: #000;
 }
 
+/* Slide */
 .slide {
   position: relative;
 }
 
+/* Image */
 .slide img {
   width: 100%;
-  height: auto;
-  max-height: 650px;
-  object-fit: contain;
+  height: 650px;
+  object-fit: cover;
+  filter: brightness(0.85);
 }
 
+/* Gradient overlay for readability */
+.slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.35) 40%,
+    rgba(0, 0, 0, 0.05) 70%
+  );
+}
+
+/* Text overlay */
 .slide-text {
   position: absolute;
-  bottom: 40px;
-  left: 60px;
-  color: white;
-  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.9);
+  bottom: 60px;
+  left: 70px;
+  max-width: 550px;
+  color: #fff;
+  z-index: 2;
+  text-shadow: 0 8px 20px rgba(0, 0, 0, 0.9);
 }
 
 .slide-text h2 {
-  font-size: 2.2rem;
-  margin: 0;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  color: #ffbdbd;
+  text-transform: uppercase;
 }
 
 .slide-text h1 {
-  font-size: 3rem;
-  margin-top: 10px;
-  font-weight: bold;
+  font-size: 3.2rem;
+  margin-top: 8px;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
-.slick-dots{
-    bottom: 15px;
+/* ===== Slick dots ===== */
+.slick-dots {
+  bottom: 18px;
 }
 
-.slick-dots li button::before{
-    font-size:12px;
-    color:white;
-    opacity: 0.7;
+.slick-dots li button::before {
+  font-size: 12px;
+  color: #fff;
+  opacity: 0.4;
 }
 
-.slick-dots li.slick-active button::before{
-    opacity: 2;
-    color: #fff;
+.slick-dots li.slick-active button::before {
+  opacity: 1;
+  color: #ff3b3b;
+}
+
+/* ===== Arrows ===== */
+.slick-prev,
+.slick-next {
+  width: 46px;
+  height: 46px;
+  z-index: 5;
+  background: rgba(120, 10, 10, 0.6);
+  border-radius: 50%;
+  backdrop-filter: blur(6px);
+  transition: all 0.25s ease;
+}
+
+.slick-prev:hover,
+.slick-next:hover {
+  background: rgba(180, 20, 20, 0.85);
+  transform: scale(1.1);
+}
+
+.slick-prev::before,
+.slick-next::before {
+  font-size: 18px;
+  color: #fff;
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  .slide img {
+    height: 420px;
+  }
+
+  .slide-text {
+    left: 20px;
+    bottom: 30px;
+    max-width: 90%;
+  }
+
+  .slide-text h1 {
+    font-size: 2rem;
+  }
 }
