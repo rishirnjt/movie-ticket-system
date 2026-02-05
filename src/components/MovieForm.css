@@ -1,107 +1,132 @@
-/* Layout container beside sidebar */
+/* ===== LAYOUT ===== */
 .admin-layout {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0a0202, #2b0000);
+  background:
+    radial-gradient(circle at top left, #3b0f16, #0b0608 65%);
 }
 
-/* Content area next to sidebar */
+/* ===== CONTENT AREA ===== */
 .admin-content {
   flex: 1;
   display: flex;
-  justify-content: center; /* centers horizontally */
-  align-items: flex-start; /* top aligned */
-  padding: 60px 20px;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 70px 24px;
 }
 
-/* Center wrapper for the form */
+/* ===== FORM WRAPPER ===== */
 .movie-form-container {
   width: 100%;
-  max-width: 750px; /* form width */
+  max-width: 760px;
   display: flex;
   justify-content: center;
 }
 
-/* Movie form card */
+/* ===== FORM CARD ===== */
 .movie-block {
   width: 100%;
-  background: rgba(25, 5, 5, 0.9);
-  border-radius: 18px;
-  border: 1px solid rgba(255, 0, 0, 0.25);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
-  padding: 32px;
+  padding: 36px;
+  border-radius: 22px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+  backdrop-filter: blur(18px);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.65),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   color: #f5f5f5;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
-/* Title */
+/* ===== TITLE ===== */
 .movie-block h3 {
   text-align: center;
-  font-size: 26px;
-  color: #ffbdbd;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: #ffd4d4;
+  margin-bottom: 8px;
 }
 
-/* Inputs */
+/* ===== INPUTS ===== */
 .movie-block input,
 .movie-block textarea {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
   color: #f5f5f5;
   font-size: 14px;
   outline: none;
-  transition: border-color 0.25s, background 0.25s;
+  transition: all 0.25s ease;
+}
+
+.movie-block input::placeholder,
+.movie-block textarea::placeholder {
+  color: #b5b5b5;
 }
 
 .movie-block input:focus,
 .movie-block textarea:focus {
-  border-color: #ff3b3b;
-  background: rgba(255, 255, 255, 0.1);
+  border-color: #ff4d4d;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.2);
 }
 
-/* Showtime */
+/* ===== SHOWTIME GROUP ===== */
 .showtime-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  background: rgba(50, 10, 10, 0.7);
-  padding: 10px;
-  border-radius: 10px;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.02)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 .showtime-group button {
-  background: linear-gradient(135deg, #7a0c0c, #500808);
+  background: linear-gradient(135deg, #ff4d4d, #8b0000);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-size: 13px;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .showtime-group button:hover {
-  background: linear-gradient(135deg, #a51515, #5a0b0b);
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(255, 77, 77, 0.45);
 }
 
-/* Save Button */
+/* ===== SAVE BUTTON ===== */
 button.submit-btn {
   align-self: center;
-  background: linear-gradient(135deg, #a31a1a, #5a0b0b);
+  margin-top: 10px;
+  background: linear-gradient(135deg, #ff4d4d, #a10000);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
+  border-radius: 12px;
+  padding: 12px 28px;
   font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: all 0.25s ease;
+  box-shadow: 0 10px 30px rgba(255, 77, 77, 0.4);
 }
 
 button.submit-btn:hover {
-  background: linear-gradient(135deg, #c02020, #7a0c0c);
-  transform: scale(1.05);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 45px rgba(255, 77, 77, 0.6);
 }
