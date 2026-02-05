@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
-import StatsCard from "./StatsCard";
 import {
   LineChart,
   Line,
@@ -23,33 +22,23 @@ const Dashboard = () => {
   const [recentMovies, setRecentMovies] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [salesData, setSalesData] = useState([]);
+
   useEffect(() => {
-    fetchDashboardData();
+    loadDashboard();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const loadDashboard = async () => {
     try {
       const token = localStorage.getItem("token");
-      //movies
-      const res = await fetch("http://localhost:5001/api/movies/recent");
-      if (!res.ok) {
-        throw new Error("Failed to fetch recent movies");
-      }
-      const moviesData = await res.json();
 
-      const movies = Array.isArray(moviesData) ? moviesData : [];
-      setRecentMovies(movies);
+      const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
+      const movies = await moviesRes.json();
 
-      //users
       const usersRes = await fetch("http://localhost:5001/api/users/count", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const usersData = await usersRes.json();
 
-
-      // Stats (can be dynamic later)
       setStats({
         bookings: 124,
         revenue: 123456,
@@ -57,7 +46,8 @@ const Dashboard = () => {
         users: usersData.totalUsers,
       });
 
-      // Static for now (replace with API later)
+      setRecentMovies(movies);
+
       setRecentBookings([
         {
           _id: 1,
@@ -75,54 +65,61 @@ const Dashboard = () => {
           amount: 600,
           status: "Cancelled",
         },
-        {
-          _id: 3,
-          user: "Mike",
-          movie: "Avengers",
-          seats: ["C1", "C2", "C3"],
-          amount: 1800,
-          status: "Reserved",
-        },
       ]);
 
       setSalesData([
         { month: "Jan", sales: 15000 },
         { month: "Feb", sales: 18000 },
-        { month: "Mar", sales: 21000 },
-        { month: "Apr", sales: 25000 },
+        { month: "Mar", sales: 22000 },
+        { month: "Apr", sales: 26000 },
         { month: "May", sales: 20000 },
-        { month: "Jun", sales: 28000 },
-        { month: "Jul", sales: 31000 },
       ]);
-    } catch (error) {
-      console.error("Dashboard fetch error:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-
   return (
-  <div className="dashboard-wrapper">
-    <Sidebar />
-    
-    <main className="main-content p-4">
-      <h1 className="mb-4">
-        Admin <span style={{ color: "#ff4d4f" }}>Dashboard</span>
-      </h1>
+    <div className="dashboard-wrapper">
+      <Sidebar />
 
-      {/* Stats Cards */}
-      <div className="row g-3 mb-4">
-        <StatsCard title="Total Bookings" value={stats.bookings} icon="🛒" growth={8.2} />
-        <StatsCard title="Total Revenue" value={`Rs.`} icon="💰" growth={23.1} />
-        <StatsCard title="Active Movies" value={stats.movies} icon="🎬" growth={5.4} />
-        <StatsCard title="Total Users" value={stats.users} icon="👤" growth={12.5} />
-      </div>
+      <main className="main-content">
+        <h1 className="dashboard-title">
+          Admin <span>Dashboard</span>
+        </h1>
 
-      <div className="row g-3 mb-4">
-        {/* Recent Bookings */}
-        <div className="col-md-6">
-          <div className="glass-card p-3">
+        {/* ===== STATS ===== */}
+        <div className="stats-row">
+          <div className="stats-card">
+            <div className="icon"><i className="fa-solid fa-cart-shopping" /></div>
+            <h5>Total Bookings</h5>
+            <h3>{stats.bookings}</h3>
+          </div>
+
+          <div className="stats-card">
+            <div className="icon"><i className="fa-solid fa-sack-dollar" /></div>
+            <h5>Total Revenue</h5>
+            <h3>Rs. {stats.revenue}</h3>
+          </div>
+
+          <div className="stats-card">
+            <div className="icon"><i className="fa-solid fa-clapperboard" /></div>
+            <h5>Active Movies</h5>
+            <h3>{stats.movies}</h3>
+          </div>
+
+          <div className="stats-card">
+            <div className="icon"><i className="fa-solid fa-user" /></div>
+            <h5>Total Users</h5>
+            <h3>{stats.users}</h3>
+          </div>
+        </div>
+
+        {/* ===== TABLES ===== */}
+        <div className="grid-two">
+          <div className="glass-card">
             <h5>Recent Bookings</h5>
-            <table className="table table-dark table-striped mt-2">
+            <table className="table">
               <thead>
                 <tr>
                   <th>User</th>
@@ -133,22 +130,14 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentBookings.map((b) => (
+                {recentBookings.map(b => (
                   <tr key={b._id}>
                     <td>{b.user}</td>
                     <td>{b.movie}</td>
                     <td>{b.seats.join(", ")}</td>
                     <td>Rs. {b.amount}</td>
                     <td>
-                      <span
-                        className={
-                          b.status === "Confirmed"
-                            ? "status-active"
-                            : b.status === "Cancelled"
-                              ? "status-inactive"
-                              : "status-pending"
-                        }
-                      >
+                      <span className={`status ${b.status.toLowerCase()}`}>
                         {b.status}
                       </span>
                     </td>
@@ -157,28 +146,23 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
-        </div>
 
-        {/* Recent Movies */}
-        <div className="col-md-6">
-          <div className="glass-card p-3">
+          <div className="glass-card">
             <h5>Recent Movies</h5>
-            <table className="table table-dark table-striped mt-2">
+            <table className="table">
               <thead>
                 <tr>
                   <th>Title</th>
                   <th>Status</th>
-                  <th>Release Date</th>
+                  <th>Release</th>
                 </tr>
               </thead>
               <tbody>
-                {recentMovies.map((m) => (
+                {recentMovies.map(m => (
                   <tr key={m._id}>
                     <td>{m.title}</td>
                     <td>
-                      <span
-                        className={m.isActive ? "status-active" : "status-inactive"}
-                      >
+                      <span className={`status ${m.isActive ? "active" : "inactive"}`}>
                         {m.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
@@ -189,40 +173,30 @@ const Dashboard = () => {
             </table>
           </div>
         </div>
-      </div>
 
-      {/* Monthly Sales Performance */}
-      <div className="glass-card p-3">
-        <h5>📈 Monthly Sales Performance</h5>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={salesData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#322" />
-            <XAxis dataKey="month" stroke="#ccc" />
-            <YAxis stroke="#ccc" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#1a0a0a",
-                border: "1px solid #a10000",
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="sales"
-              stroke="#198304ff"
-              strokeWidth={3}
-              dot={{ fill: "#119e2dff" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+        {/* ===== CHART ===== */}
+        <div className="glass-card">
+          <h5>📈 Monthly Sales</h5>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={salesData}>
+              <CartesianGrid stroke="#2a1418" />
+              <XAxis dataKey="month" stroke="#ccc" />
+              <YAxis stroke="#ccc" />
+              <Tooltip />
+              <Line
+                dataKey="sales"
+                stroke="#098c30ff"
+                strokeWidth={3}
+                dot={{ fill: "#057a38ff" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
-      <footer className="mt-5 text-center text-light py-2">
-        &copy; 2025 Cinemax
-      </footer>
-    </main>
-  </div>
-);
-
+        <footer>& copy 2025 Cinemax</footer>
+      </main>
+    </div>
+  );
 };
 
 export default Dashboard;
