@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import './Navbar.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation} from 'react-router-dom';
 import logo from '../assets/logo.png';
 import profileImg from "../assets/profileIcon.png";
 
 const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
-  // const [showLogin, setShowLogin] = useState(false);
   const[dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState("");
+
   const navigate = useNavigate();
+  const location = useLocation();   
 
   useEffect(() => {
     //get user info
@@ -27,6 +28,12 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
     setUserName("");
     navigate("/");
   };
+  
+  const handleLoginClick = () =>{
+    navigate("/auth?tab=signin", {
+      state: { backgroundLocation: location},
+    })
+  }
 
   return (
     <nav className="navbar">
@@ -62,7 +69,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
         <button
           id="btn-sign-in"
           className="login-btn"
-          onClick={() => navigate("/auth?tab=signin")}
+          onClick={handleLoginClick}
         >
           Sign In
         </button>

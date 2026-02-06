@@ -1,14 +1,16 @@
 import './NowShowing.css';
 import background from '../assets/background.jpg';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const NowShowing = () => {
   const [groupedByDate, setGroupedByDate] = useState({});
   const [allDates, setAllDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
+
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     axios.get('http://localhost:5001/api/movies')
@@ -56,7 +58,9 @@ const NowShowing = () => {
 
     if (!token) {
       localStorage.setItem("redirectAfterLogin", `/seats/${movieId}`);
-      navigate("/auth");
+      navigate("/auth?tab=signin",{
+        state: { backgroundLocation: location}
+      });
       return;
     }
 
@@ -104,8 +108,6 @@ const NowShowing = () => {
                 }
                 alt={movie.title}
               />
-
-
 
               <div className="movie-details">
                 <h4>{movie.title}</h4>

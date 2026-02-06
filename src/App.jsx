@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Carousel from "./components/Carousel";
@@ -19,89 +24,110 @@ import Checkout from "./components/Checkout";
 import AdminFoods from "./components/AdminFood";
 import AdminRoutes from "./components/AdminRoutes";
 
-import './App.css';
+import "./App.css";
 
-function App() {
+function AppWrapper() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const location = useLocation();
+
+  const state = location.state;
+  const backgroundLocation = state && state.backgroundLocation;
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
 
   return (
-    <Router>
+    <>
       <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<><Carousel /><NowShowing /><ComingSoon /></>} />
+      {/* MAIN ROUTES */}
+      <Routes location={backgroundLocation || location}>
+        <Route
+          path="/"
+          element={
+            <>
+              <Carousel />
+              <NowShowing />
+              <ComingSoon />
+            </>
+          }
+        />
+
         <Route path="/seats/:movieId" element={<SeatSelection />} />
         <Route path="/foods/:bookingId" element={<Foods />} />
         <Route path="/checkout/:bookingId" element={<Checkout />} />
         <Route path="/ticket-rates" element={<TicketRates />} />
         <Route path="/myaccount" element={<MyAccount />} />
 
-        {/* Authentication */}
-        <Route 
-          path="/auth"
-          element={
-            <AuthModal
-              setIsLoggedIn={setIsLoggedIn}
-              onClose={() => window.history.back()}
-            />
-          }
-        />
-
-        {/* Admin Protected Routes */}
-        <Route 
-          path="/admin/dashboard" 
+        {/* Admin */}
+        <Route
+          path="/admin/dashboard"
           element={
             <AdminRoutes>
               <Dashboard />
             </AdminRoutes>
-          } 
+          }
         />
-
-        <Route 
-          path="/admin/add-movie" 
+        <Route
+          path="/admin/add-movie"
           element={
             <AdminRoutes>
               <AddMovie />
             </AdminRoutes>
-          } 
+          }
         />
-         <Route 
-          path="/admin/manage-movies" 
+        <Route
+          path="/admin/manage-movies"
           element={
             <AdminRoutes>
               <ManageMovies />
             </AdminRoutes>
-          } 
+          }
         />
-        <Route 
-          path="/admin/edit-movie/:id" 
+        <Route
+          path="/admin/edit-movie/:id"
           element={
             <AdminRoutes>
               <EditMovie />
             </AdminRoutes>
-          } 
+          }
         />
-
-
-        <Route 
-          path="/admin/foods" 
+        <Route
+          path="/admin/foods"
           element={
             <AdminRoutes>
               <AdminFoods />
             </AdminRoutes>
-          } 
+          }
         />
       </Routes>
 
+      {/* AUTH MODAL ROUTE (overlay) */}
+      {backgroundLocation && (
+        <Routes>
+          <Route
+            path="/auth"
+            element={
+              <AuthModal
+                setIsLoggedIn={setIsLoggedIn}
+                onClose={() => window.history.back()}
+              />
+            }
+          />
+        </Routes>
+      )}
+
       <Footer />
-    </Router>
+    </>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppWrapper />
+    </Router>
+  );
+}
