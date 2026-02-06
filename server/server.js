@@ -10,26 +10,20 @@ const mongoose = require('mongoose');
 dotenv.config();
 const app = express();
 
-// --------------------
-// Middleware
-// --------------------
+//middleware
 app.use(cors());
 app.use(express.json()); // parse JSON
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// --------------------
-// Connect to MongoDB
-// --------------------
+//connection for mongodb
 connectDB();
 mongoose.connection.once('open', () => {
   console.log('Connected to database:', mongoose.connection.name);
 });
 
-// --------------------
-// Register Models
-// --------------------
+//register models
 require('./models/Showtime');
 require('./models/Movie');
 require('./models/Booking');
@@ -37,9 +31,7 @@ require('./models/User');
 require('./models/Ticket');
 require('./models/UserType');
 
-// --------------------
-// Routes
-// --------------------
+//routes
 const movieRoutes = require('./routes/movieRoutes');
 const authRoutes = require('./routes/authRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
@@ -60,16 +52,12 @@ app.use('/api/foods', foodRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 
-// --------------------
-// Test route
-// --------------------
+//route testing
 app.get('/test', (req, res) => {
   res.send('Server and routes are working fine');
 });
 
-// --------------------
-// Start server
-// --------------------
+//start server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

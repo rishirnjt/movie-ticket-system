@@ -1,0 +1,230 @@
+/* ===== PAGE ===== */
+.bookings-page {
+  padding: 30px;
+  color: #f5f5f5;
+  background: linear-gradient(
+    145deg,
+    rgba(25, 8, 12, 0.95),
+    rgba(12, 4, 6, 0.98)
+  );
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+}
+
+/* ===== TITLE ===== */
+.bookings-page h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+/* ===== SEARCH ===== */
+.search-box {
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  outline: none;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.search-box input::placeholder {
+  color: #bbb;
+}
+
+.search-box input:focus {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 10px rgba(255, 77, 79, 0.5);
+}
+
+/* ===== TABLE ===== */
+.bookings-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
+}
+
+/* HEAD */
+.bookings-table th {
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #aaa;
+  background: transparent;
+}
+
+/* ROW */
+.bookings-table tbody tr {
+  background: linear-gradient(
+    145deg,
+    rgba(60, 12, 18, 0.9),
+    rgba(20, 5, 8, 0.95)
+  );
+  border-radius: 14px;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition: all 0.3s ease;
+}
+
+.bookings-table tbody tr:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.9),
+    0 0 25px rgba(255, 77, 79, 0.35);
+}
+
+/* CELLS */
+.bookings-table td {
+  padding: 14px;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+/* ===== STATUS BADGES ===== */
+.status {
+  padding: 5px 14px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status.confirmed {
+  background: linear-gradient(135deg, #34d399, #1c8c4c);
+  color: #fff;
+}
+
+.status.pending {
+  background: linear-gradient(135deg, #facc15, #e6a700);
+  color: #000;
+}
+
+.status.cancelled {
+  background: linear-gradient(135deg, #ef4444, #7a0c0c);
+  color: #fff;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.bookings-table button {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-right: 6px;
+  transition: all 0.25s ease;
+}
+
+/* Confirm */
+.bookings-table button:first-child {
+  background: linear-gradient(135deg, #34d399, #1c8c4c);
+  color: #fff;
+}
+
+/* Cancel */
+.bookings-table button:nth-child(2) {
+  background: linear-gradient(135deg, #ef4444, #7a0c0c);
+  color: #fff;
+}
+
+/* View */
+.bookings-table button:last-child {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: #fff;
+}
+/* === SEARCH BOX === */
+.search-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.search-container input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background-color: #1a1a1a;
+  color: #fff;
+  outline: none;
+  transition: border 0.2s ease;
+}
+
+.search-container input:focus {
+  border-color: #888;
+}
+
+/* === PAGINATION CONTAINER === */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 18px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: none;
+  background-color: #2d2d2d;
+  color: #ccc;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  min-width: 42px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.pagination button:hover:not(.active) {
+  background-color: #3a3a3a;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* optional smaller spacing on small screens */
+@media (max-width: 480px) {
+  .pagination button {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+}
+
+
+.bookings-table button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .bookings-page {
+    padding: 20px;
+  }
+
+  .bookings-table td {
+    font-size: 0.8rem;
+  }
+}

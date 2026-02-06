@@ -1,17 +1,22 @@
-import React, { Children }  from "react";
 import { Navigate } from "react-router-dom";
+import Sidebar from "./Sidebar";
 
-const AdminRoutes = ({ children}) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token");
+const AdminRoutes = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
+  if (!token || !user || user.role?.toLowerCase() !== "admin") {
+    return <Navigate to="/" replace />;
+  }
 
-    //if not logged in as admin
-    if(!token || !user || user.role.toLowerCase() !== "admin") {
-        return <Navigate to="/" replace />
-    }
-
-    return children;
+  return (
+    <div className="admin-layout">
+      <Sidebar />
+      <div className="admin-content">
+        {children}
+      </div>
+    </div>
+  );
 };
 
 export default AdminRoutes;

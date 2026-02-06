@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Sidebar from "./Sidebar";
 import {
   LineChart,
   Line,
@@ -81,7 +80,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-wrapper">
-      <Sidebar />
 
       <main className="main-content">
         <h1 className="dashboard-title">
@@ -187,7 +185,7 @@ const Dashboard = () => {
                 dataKey="sales"
                 stroke="#098c30ff"
                 strokeWidth={3}
-                dot={{ fill: "#057a38ff" }}
+                dot={{ fill: "#4dff9aff" }}
               />
             </LineChart>
           </ResponsiveContainer>

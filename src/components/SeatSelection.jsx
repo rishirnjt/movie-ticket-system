@@ -103,40 +103,40 @@ const SeatSelection = () => {
 
   // Confirm inside popup
   const handleConfirmBuy = async () => {
-  if (!agreeTerms) {
-    alert("You must agree to the terms and conditions.");
-    return;
-  }
+    if (!agreeTerms) {
+      alert("You must agree to the terms and conditions.");
+      return;
+    }
 
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const totalPrice = selectedSeats.length * 300;
+      const totalPrice = selectedSeats.length * 300;
 
-    const res = await axios.post(
-      "http://localhost:5001/api/bookings/reserve",
-      {
-        movieId,
-        showtime: selectedShowtime._id,
-        seats: selectedSeats,
-        totalPrice,
-        foods: [],
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      const res = await axios.post(
+        "http://localhost:5001/api/bookings/reserve",
+        {
+          movieId,
+          showtime: selectedShowtime._id,
+          seats: selectedSeats,
+          totalPrice,
+          foods: [],
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    const bookingId = res.data.booking._id;
+      const bookingId = res.data.booking._id;
 
-    setBuyPopup(false);
-    navigate(`/foods/${bookingId}`);
+      setBuyPopup(false);
+      navigate(`/foods/${bookingId}`);
 
-  } catch (error) {
-    alert(error.response?.data?.message || "Something went wrong.");
-    console.error(error);
-  }
-};
+    } catch (error) {
+      alert(error.response?.data?.message || "Something went wrong.");
+      console.error(error);
+    }
+  };
 
 
   const renderSeats = () => {
@@ -172,8 +172,20 @@ const SeatSelection = () => {
 
       {selectedShowtime && (
         <p>
-          Showtime: <strong>{selectedShowtime.hall} - {selectedShowtime.time}</strong>
+          Showtime: <strong>
+            {selectedShowtime.hall} -{" "}
+            {new Date(selectedShowtime.time).toLocaleDateString('en-GB', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+            })}{" "}
+            {new Date(selectedShowtime.time).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </strong>
         </p>
+
       )}
 
       <div className="screen">SCREEN</div>

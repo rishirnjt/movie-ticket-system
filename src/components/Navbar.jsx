@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 import './Navbar.css';
-import { Link, useNavigate, useLocation} from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import profileImg from "../assets/profileIcon.png";
 
 const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
-  const[dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [userName, setUserName] = useState("");
 
   const navigate = useNavigate();
-  const location = useLocation();   
+  const location = useLocation();
 
   useEffect(() => {
     //get user info
     const storedUser = localStorage.getItem("user");
-    if(storedUser) {
+    if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      const fullName = `${parsedUser.firstName || ""} ${parsedUser.lastName || ""}` .trim();
+      const fullName = `${parsedUser.firstName || ""} ${parsedUser.lastName || ""}`.trim();
       setUserName(fullName || "User");
     }
   }, [isLoggedIn]);
@@ -28,10 +28,10 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
     setUserName("");
     navigate("/");
   };
-  
-  const handleLoginClick = () =>{
+
+  const handleLoginClick = () => {
     navigate("/auth?tab=signin", {
-      state: { backgroundLocation: location},
+      state: { backgroundLocation: location },
     })
   }
 

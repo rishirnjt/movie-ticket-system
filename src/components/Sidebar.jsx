@@ -60,7 +60,7 @@ const Sidebar = () => {
       </div>
 
       {/* Bookings */}
-      <NavLink to="/admin/list-bookings" className={linkClass}>
+      <NavLink to="/admin/bookings" className={linkClass}>
         <i className="fas fa-ticket-alt me-2"></i> Bookings
       </NavLink>
 

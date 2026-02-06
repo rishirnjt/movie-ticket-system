@@ -422,4 +422,48 @@ router.post("/add-foods/:bookingId", protect(["Customer"]), async (req, res) => 
   }
 });
 
+//get bookings for admin
+router.get("admin/all", protect(["Admin"]), async (req, res)=> {
+  try{
+    const booking = await Booking.find()
+      .populate("user", "firstName lastName email")
+      .populate("movie", "title")
+      .populate("showtime", "hall time")
+      .sort({ createdAt: -1 });
+
+      res.json(bookings);
+  } catch (err) {
+    console.error("Admin bookings error:", err);
+    res.status(500).json({ message: "Server error "});
+  }
+});
+
+//update booking status for admin
+router.patch("/admin/:id/status", protect(["Admin"]), async (req, res) => {
+  try{
+    const { status } = req.body;
+
+    if(!["confirmed", "cancelled"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const bookings = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true}
+    )
+      .populate("user", "firstName lastName email")
+      .populate("movie", "title")
+      .populate("showtime", "hall time");
+
+      if(!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.json(booking);
+  } catch (err) {
+    console.error("Admin status update error:", err);
+    res.status(500).json({ message: "Server error "});
+  }
+});
+
 module.exports = router;

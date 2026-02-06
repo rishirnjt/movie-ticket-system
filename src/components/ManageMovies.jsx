@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
 import "./ManageMovies.css";
 
 const ManageMovies = () => {
@@ -46,7 +45,6 @@ const ManageMovies = () => {
 
   return (
     <div className="admin-layout" id="manage-movies-page">
-      <Sidebar />
 
       <div className="content-wrapper manage-movies" id="manage-movies-content">
         <h2 className="page-title" id="manage-movies-title">
