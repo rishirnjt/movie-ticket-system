@@ -1,0 +1,30 @@
+.movie-details-page {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  color: white;
+}
+
+.poster-large {
+  width: 300px;
+  border-radius: 10px;
+}
+
+.movie-info {
+  flex: 1;
+}
+
+.description {
+  margin-top: 1rem;
+  line-height: 1.6;
+}
+
+.showtimes button {
+  margin: 5px;
+  padding: 8px 12px;
+  background: #ff4d4f;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}

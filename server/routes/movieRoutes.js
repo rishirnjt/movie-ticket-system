@@ -24,6 +24,7 @@ router.get("/", async (req, res) => {
           language: movie.language || "N/A",
           duration: movie.duration || "N/A",
           posterUrl: movie.posterUrl || "",
+          trailerUrl: movie.trailerUrl || "",
           releaseDate: movie.releaseDate
             ? movie.releaseDate.toISOString().split("T")[0]
             : "N/A",
@@ -93,6 +94,7 @@ router.get("/:id", async (req, res) => {
       language: movie.language || "N/A",
       duration: movie.duration || "N/A",
       posterUrl: movie.posterUrl || "",
+      trailerUrl: movie.trailerUrl || "", 
       releaseDate: movie.releaseDate
         ? movie.releaseDate.toISOString().split("T")[0]
         : "N/A",
