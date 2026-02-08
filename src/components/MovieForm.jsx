@@ -7,6 +7,7 @@ const emptyMovie = {
   description: "",
   genre: "",
   posterUrl: "",
+  trailerUrl: "",
   releaseDate: "",
   duration: "",
   rating: "",
@@ -69,210 +70,218 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    let savedMovieId = movieId;
+    e.preventDefault();
+    try {
+      let savedMovieId = movieId;
 
-    // 1. Save Movie
-    if (mode === "add") {
-      const res = await axios.post("http://localhost:5001/api/movies", movie, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      savedMovieId = res.data._id;
-    } else {
-      await axios.put(`http://localhost:5001/api/movies/${movieId}`, movie, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      await axios.delete(`http://localhost:5001/api/showtimes/movie/${movieId}`);
+      if (mode === "add") {
+        const res = await axios.post("http://localhost:5001/api/movies", movie, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        savedMovieId = res.data._id;
+      } else {
+        await axios.put(`http://localhost:5001/api/movies/${movieId}`, movie, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        await axios.delete(`http://localhost:5001/api/showtimes/movie/${movieId}`);
+      }
+
+      for (const s of movie.showtimes) {
+        if (!s.hall || !s.time) continue;
+
+        await axios.post(
+          "http://localhost:5001/api/showtimes",
+          {
+            movieId: savedMovieId,
+            hall: s.hall,
+            // Ensure time is a valid ISO string for the backend
+            time: new Date(s.time).toISOString()
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
+      alert(mode === "add" ? "🎬 Movie Added!" : "Movie Updated!");
+      setMovie(emptyMovie);
+      onSuccess && onSuccess();
+    } catch (err) {
+      console.error("Save failed details:", err.response?.data || err.message);
+      alert("Error saving movie.");
     }
+  };
+  return (
+    <div className="movie-form-container">
+      <h1 id="movie-form-title">
+        {mode === "add" ? "Add New Movie 🎬" : "Edit Movie ✏️"}
+      </h1>
 
-    // 2. Save Showtimes (The likely source of the error)
-    for (const s of movie.showtimes) {
-      if (!s.hall || !s.time) continue;
-      
-      await axios.post(
-        "http://localhost:5001/api/showtimes",
-        { 
-          movieId: savedMovieId, 
-          hall: s.hall, 
-          // Ensure time is a valid ISO string for the backend
-          time: new Date(s.time).toISOString() 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    }
-
-    alert(mode === "add" ? "🎬 Movie Added!" : "Movie Updated!");
-    setMovie(emptyMovie);
-    onSuccess && onSuccess();
-  } catch (err) {
-    console.error("Save failed details:", err.response?.data || err.message);
-    alert("Error saving movie.");
-  }
-};
-return (
-  <div className="movie-form-container">
-    <h1 id="movie-form-title">
-      {mode === "add" ? "Add New Movie 🎬" : "Edit Movie ✏️"}
-    </h1>
-
-    <form id="movie-form" className="movie-form" onSubmit={handleSubmit}>
-      {/* LEFT COLUMN */}
-      <div className="form-left">
-        <div className="input-group">
-          <label htmlFor="movie-title">Movie Title</label>
-          <input
-            id="movie-title"
-            placeholder="Enter movie title"
-            value={movie.title}
-            onChange={(e) => handleChange("title", e.target.value)}
-            required
-          />
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="movie-description">Description</label>
-          <textarea
-            id="movie-description"
-            placeholder="Write movie description..."
-            value={movie.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-          />
-        </div>
-
-        <div className="row">
+      <form id="movie-form" className="movie-form" onSubmit={handleSubmit}>
+        {/* LEFT COLUMN */}
+        <div className="form-left">
           <div className="input-group">
-            <label htmlFor="movie-genre">Genre</label>
+            <label htmlFor="movie-title">Movie Title</label>
             <input
-              id="movie-genre"
-              placeholder="Action / Drama"
-              value={movie.genre}
-              onChange={(e) => handleChange("genre", e.target.value)}
+              id="movie-title"
+              placeholder="Enter movie title"
+              value={movie.title}
+              onChange={(e) => handleChange("title", e.target.value)}
+              required
             />
           </div>
 
           <div className="input-group">
-            <label htmlFor="movie-language">Language</label>
-            <input
-              id="movie-language"
-              placeholder="English"
-              value={movie.language}
-              onChange={(e) => handleChange("language", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="input-group">
-            <label htmlFor="movie-duration">Duration</label>
-            <input
-              id="movie-duration"
-              placeholder="2hr 30min"
-              value={movie.duration}
-              onChange={(e) => handleChange("duration", e.target.value)}
+            <label htmlFor="movie-description">Description</label>
+            <textarea
+              id="movie-description"
+              placeholder="Write movie description..."
+              value={movie.description}
+              onChange={(e) => handleChange("description", e.target.value)}
             />
           </div>
 
-          <div className="input-group">
-            <label htmlFor="movie-rating">Rating</label>
-            <input
-              id="movie-rating"
-              placeholder="PG-13 / 8.5"
-              value={movie.rating}
-              onChange={(e) => handleChange("rating", e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="input-group">
-          <label htmlFor="movie-release-date">Release Date</label>
-          <input
-            id="movie-release-date"
-            type="date"
-            value={movie.releaseDate ? movie.releaseDate.split("T")[0] : ""}
-            onChange={(e) => handleChange("releaseDate", e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN */}
-      <div className="form-right">
-        <div className="poster-upload">
-          <label htmlFor="movie-poster">Movie Poster</label>
-          <div className="upload-box">
-            <p>Click to Upload</p>
-            <input
-              id="movie-poster"
-              type="file"
-              onChange={(e) => uploadPoster(e.target.files[0])}
-            />
-          </div>
-
-          {movie.posterUrl && (
-            <img
-              id="poster-preview"
-              className="poster-preview"
-              src={`http://localhost:5001${movie.posterUrl}`}
-              alt="Poster"
-            />
-          )}
-        </div>
-
-        <div className="showtime-box">
-          <h3 id="showtime-heading">Showtimes</h3>
-
-          {movie.showtimes.map((s, i) => (
-            <div className="showtime-row" key={i}>
+          <div className="row">
+            <div className="input-group">
+              <label htmlFor="movie-genre">Genre</label>
               <input
-                id={`showtime-hall-${i}`}
-                placeholder="Hall"
-                value={s.hall}
-                onChange={(e) =>
-                  handleShowtimeChange(i, "hall", e.target.value)
-                }
+                id="movie-genre"
+                placeholder="Action / Drama"
+                value={movie.genre}
+                onChange={(e) => handleChange("genre", e.target.value)}
               />
-
-              <input
-                id={`showtime-time-${i}`}
-                type="datetime-local"
-                value={s.time}
-                onChange={(e) =>
-                  handleShowtimeChange(i, "time", e.target.value)
-                }
-              />
-
-              <button
-                id={`remove-showtime-${i}`}
-                type="button"
-                className="remove-btn"
-                onClick={() => removeShowtime(i)}
-              >
-                ✕
-              </button>
             </div>
-          ))}
+
+            <div className="input-group">
+              <label htmlFor="movie-language">Language</label>
+              <input
+                id="movie-language"
+                placeholder="English"
+                value={movie.language}
+                onChange={(e) => handleChange("language", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="input-group">
+              <label htmlFor="movie-duration">Duration</label>
+              <input
+                id="movie-duration"
+                placeholder="2hr 30min"
+                value={movie.duration}
+                onChange={(e) => handleChange("duration", e.target.value)}
+              />
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="movie-rating">Rating</label>
+              <input
+                id="movie-rating"
+                placeholder="PG-13 / 8.5"
+                value={movie.rating}
+                onChange={(e) => handleChange("rating", e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="movie-release-date">Release Date</label>
+            <input
+              id="movie-release-date"
+              type="date"
+              value={movie.releaseDate ? movie.releaseDate.split("T")[0] : ""}
+              onChange={(e) => handleChange("releaseDate", e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className="form-right">
+          <div className="poster-upload">
+            <label htmlFor="movie-poster">Movie Poster</label>
+            <div className="upload-box">
+              <p>Click to Upload</p>
+              <input
+                id="movie-poster"
+                type="file"
+                onChange={(e) => uploadPoster(e.target.files[0])}
+              />
+            </div>
+
+            {movie.posterUrl && (
+              <img
+                id="poster-preview"
+                className="poster-preview"
+                src={`http://localhost:5001${movie.posterUrl}`}
+                alt="Poster"
+              />
+            )}
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="movie-trailer">Trailer URL (YouTube)</label>
+            <input
+              id="movie-trailer"
+              placeholder="https://www.youtube.com/watch?v=XXXXXXX"
+              value={movie.trailerUrl || ""}
+              onChange={(e) => handleChange("trailerUrl", e.target.value)}
+            />
+          </div>
+
+          <div className="showtime-box">
+            <h3 id="showtime-heading">Showtimes</h3>
+
+            {movie.showtimes.map((s, i) => (
+              <div className="showtime-row" key={i}>
+                <input
+                  id={`showtime-hall-${i}`}
+                  placeholder="Hall"
+                  value={s.hall}
+                  onChange={(e) =>
+                    handleShowtimeChange(i, "hall", e.target.value)
+                  }
+                />
+
+                <input
+                  id={`showtime-time-${i}`}
+                  type="datetime-local"
+                  value={s.time}
+                  onChange={(e) =>
+                    handleShowtimeChange(i, "time", e.target.value)
+                  }
+                />
+
+                <button
+                  id={`remove-showtime-${i}`}
+                  type="button"
+                  className="remove-btn"
+                  onClick={() => removeShowtime(i)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+
+            <button
+              id="add-showtime-btn"
+              type="button"
+              className="add-showtime"
+              onClick={addShowtime}
+            >
+              + Add Showtime
+            </button>
+          </div>
 
           <button
-            id="add-showtime-btn"
-            type="button"
-            className="add-showtime"
-            onClick={addShowtime}
+            id="submit-movie-btn"
+            type="submit"
+            className="submit-btn"
           >
-            + Add Showtime
+            {mode === "add" ? "Save Movie" : " Update Movie"}
           </button>
         </div>
-
-        <button
-          id="submit-movie-btn"
-          type="submit"
-          className="submit-btn"
-        >
-          {mode === "add" ? "Save Movie" : " Update Movie"}
-        </button>
-      </div>
-    </form>
-  </div>
-);
+      </form>
+    </div>
+  );
 };
 
 export default MovieForm;

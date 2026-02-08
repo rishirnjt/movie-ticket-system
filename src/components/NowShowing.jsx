@@ -58,13 +58,17 @@ const NowShowing = () => {
 
     if (!token) {
       localStorage.setItem("redirectAfterLogin", `/seats/${movieId}`);
-      navigate("/auth?tab=signin",{
-        state: { backgroundLocation: location}
+      navigate("/auth?tab=signin", {
+        state: { backgroundLocation: location }
       });
       return;
     }
 
     navigate(`/seats/${movieId}`, { state: { selectedShowtime: showtime } });
+  };
+
+  const handleMovieClick = (movieId) => {
+    navigate(`/movie/${movieId}`);
   };
 
   return (
@@ -99,7 +103,12 @@ const NowShowing = () => {
       <div className='movies-grid'>
         {movies.length > 0 ? (
           movies.map((movie) => (
-            <div className='movie-card' key={movie._id}>
+            <div
+              className='movie-card'
+              key={movie._id}
+              onClick={() => handleMovieClick(movie._id)}
+              style={{ cursor: "pointer" }}
+            >
               <img
                 src={
                   movie.posterUrl?.startsWith("http")
@@ -120,7 +129,10 @@ const NowShowing = () => {
                     movie.showtimes.map((showtime, index) => (
                       <button
                         key={index}
-                        onClick={() => handleShowtime(movie._id, showtime)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleShowtime(movie._id, showtime);
+                        }}
                       >
                         {showtime.hall} - {new Date(showtime.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </button>
