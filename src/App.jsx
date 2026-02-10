@@ -25,6 +25,7 @@ import AdminFoods from "./components/AdminFood";
 import AdminRoutes from "./components/AdminRoutes";
 import Bookings from "./components/Bookings";
 import MovieDetails from "./components/MovieDetails";
+import SearchResults from "./pages/SearchResults";
 import "./App.css";
 
 function AppWrapper() {
@@ -55,6 +56,7 @@ function AppWrapper() {
             </>
           }
         />
+        <Route path="/search" element={<SearchResults />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
         <Route path="/auth" element={<AuthModal setIsLoggedIn={setIsLoggedIn} />} />
 

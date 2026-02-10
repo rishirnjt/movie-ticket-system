@@ -131,6 +131,22 @@
   transition: 0.25s ease;
   letter-spacing: 0.5px;
 }
+.timer-box {
+  margin: 15px 0;
+  padding: 12px;
+  background: linear-gradient(45deg, #ff4d4d, #ff0000);
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
+}
+
 
 /* BOOK BUTTON */
 .book-btn {

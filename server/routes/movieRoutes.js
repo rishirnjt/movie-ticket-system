@@ -4,6 +4,29 @@ const router = express.Router();
 const Movie = require("../models/Movie");
 const Showtime = require("../models/Showtime");
 
+//search
+router.get("/search", async (req, res) => {
+  try {
+    const query = req.query.q;
+
+    if (!query) {
+      return res.json([]);
+    }
+
+    const movies = await Movie.find({
+      $or: [
+        { title: { $regex: query, $options: "i" } },
+        { genre: { $regex: query, $options: "i" } }
+      ]
+    }).limit(12);
+
+    res.json(movies);
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ message: "Search failed" });
+  }
+});
+
 /* =========================
    GET ALL MOVIES WITH SHOWTIMES
 ========================= */

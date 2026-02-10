@@ -59,7 +59,7 @@ const MovieDetails = () => {
               : `http://localhost:5001${movie.posterUrl}`
           }
           alt={movie.title}
-          className="movie-poster"
+          className="poster"
         />
 
         {/* INFO */}

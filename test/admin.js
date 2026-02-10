@@ -9,14 +9,13 @@ const path = require('path');
 
   const page = await browser.newPage();
 
-  // Handle alerts automatically
   page.on('dialog', async dialog => {
     console.log(`ALERT: ${dialog.message()}`);
     await dialog.accept();
   });
 
   try {
-    // 1. LOGIN
+    //LOGIN
     await page.goto('http://localhost:5173/', { waitUntil: 'networkidle2' });
     await page.waitForSelector('#btn-sign-in');
     await page.click('#btn-sign-in');
@@ -28,16 +27,16 @@ const path = require('path');
 
     await page.waitForNavigation({ waitUntil: 'networkidle0' });
 
-    // 2. NAVIGATE TO ADD MOVIE
+    //NAVIGATE TO ADD MOVIE
     await page.goto('http://localhost:5173/admin/add-movie');
 
-    // 3. FILL DETAILS
+    //  FILL DETAILS
     await page.waitForSelector('#movie-title');
     await page.type('#movie-title', 'Interstellar');
     await page.type('#movie-description', 'A masterpiece of space exploration.');
     await page.type('#movie-genre', 'Sci-Fi');
 
-    // 4. FILE UPLOAD (POSTER)
+    // FILE UPLOAD (POSTER)
     const filePath = path.resolve(__dirname, 'poster.jpeg'); 
     console.log("Uploading poster...");
     
@@ -45,37 +44,40 @@ const path = require('path');
     const inputHandle = await page.$('#movie-poster');
     await inputHandle.uploadFile(filePath);
 
-    // Wait for the img to appear (React renders it once movie.posterUrl is truthy)
     await page.waitForSelector('#poster-preview', { visible: true, timeout: 15000 });
     console.log('Poster upload successful!');
 
-    // 5. FILL REMAINING FIELDS
-    await page.type('#movie-release-date', '2014-11-07');
+    // TRAILER URL 
+    console.log('Entering Trailer URL...');
+    await page.waitForSelector('#movie-trailer');
+    await page.type('#movie-trailer', 'https://www.youtube.com/watch?v=zSWdZVtXT7E');
+
+    // FILL REMAINING FIELDS
+    await page.type('#movie-release-date', '11072014'); 
     await page.type('#movie-duration', '169 min');
     await page.type('#movie-rating', 'PG-13');
     await page.type('#movie-language', 'English');
 
-    // 6. SHOWTIMES
-console.log('Filling showtimes...');
+    // 7. SHOWTIMES
+    console.log('Filling showtimes...');
+    await page.waitForSelector('#showtime-hall-0');
+    await page.type('#showtime-hall-0', 'Hall 1');
 
-await page.waitForSelector('#showtime-hall-0');
-await page.type('#showtime-hall-0', 'Hall 1');
+    await page.waitForSelector('#showtime-time-0');
+    await page.focus('#showtime-time-0');
 
-await page.waitForSelector('#showtime-time-0');
-await page.focus('#showtime-time-0');
+    // Keyboard simulation for datetime-local
+    await page.keyboard.type('02102026'); // MMDDYYYY
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('0900PM');   // HHmmA
 
-// Format: MMDDYYYY (then Tab) HHmm (then AM/PM if applicable)
-// Example for Feb 10, 2026, 09:00 PM:
-await page.keyboard.type('02102026'); // MMDDYYYY
-await page.keyboard.press('Tab');
-await page.keyboard.type('0900PM');   // HHmmA
-
-console.log('Date entered via keyboard simulation.');
-    // 7. SUBMIT
+    // 8. SUBMIT
     console.log('Submitting form...');
+    await page.waitForSelector('#submit-movie-btn');
     await page.click('#submit-movie-btn');
     
     console.log('Test completed successfully!');
+    await new Promise(r => setTimeout(r, 3000));
 
   } catch (error) {
     console.error('Automation Error:', error.message);
