@@ -20,9 +20,7 @@ const bookingSchema = new mongoose.Schema(
       required: true
     },
 
-    seats: [
-      { type: String, required: true }
-    ],
+    seats: [{ type: String, required: true }],
 
     totalPrice: {
       type: Number,
@@ -39,26 +37,25 @@ const bookingSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["reserved", "confirmed", "cancelled"],
-      default: "reserved"
+      enum: ["holding", "confirmed", "cancelled"],
+      default: "holding"
     },
 
-    // seat hold timer (5 minutes)
+    // For 5-minute hold ONLY
     expiresAt: {
       type: Date,
       default: () => new Date(Date.now() + 5 * 60 * 1000)
+    },
+
+    // For 1-hour-before-showtime rule
+    purchaseDeadline: {
+      type: Date
     }
   },
   { timestamps: true }
 );
 
-/* 🔥 Prevent double booking */
-bookingSchema.index(
-  { movie: 1, showtime: 1, seats: 1 },
-  { unique: true }
-);
-
-/*  Auto delete expired reservations */
+// TTL index (only works when expiresAt has a value)
 bookingSchema.index(
   { expiresAt: 1 },
   { expireAfterSeconds: 0 }

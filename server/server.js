@@ -31,6 +31,28 @@ require('./models/User');
 require('./models/Ticket');
 require('./models/UserType');
 
+//Auto cancellation
+const cron = require("node-cron");
+const Booking = require("./models/Booking");
+
+cron.schedule("*/1 * * * *", async () => {
+  try {
+    const now = new Date();
+
+    await Booking.updateMany(
+      {
+        status: "confirmed",
+        purchaseDeadline: { $lte: now }
+      },
+      { status: "cancelled" }
+    );
+
+  } catch (err) {
+    console.error("Auto cancel error:", err);
+  }
+});
+
+
 //routes
 const movieRoutes = require('./routes/movieRoutes');
 const authRoutes = require('./routes/authRoutes');

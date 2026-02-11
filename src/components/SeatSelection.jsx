@@ -87,7 +87,7 @@ const SeatSelection = () => {
     }
   };
 
-  /* ---------------- BOOK (RESERVE) ---------------- */
+  //Handle booking
   const handleBook = async () => {
     console.log("MOVIE ID:", movieId);
     console.log("SHOWTIME:", selectedShowtime);
@@ -104,7 +104,7 @@ const SeatSelection = () => {
       const totalPrice = selectedSeats.length * 300; // seat price
 
       const res = await axios.post(
-        "http://localhost:5001/api/bookings/reserve",
+        "http://localhost:5001/api/bookings/hold",
         {
           movieId,
           showtimeId: selectedShowtime._id,
