@@ -43,6 +43,7 @@ router.get("/", async (req, res) => {
         return {
           _id: movie._id,
           title: movie.title || "Untitled",
+          description: movie.description || "N/A",
           genre: movie.genre || "N/A",
           language: movie.language || "N/A",
           duration: movie.duration || "N/A",
@@ -113,6 +114,7 @@ router.get("/:id", async (req, res) => {
     res.status(200).json({
       _id: movie._id,
       title: movie.title || "Untitled",
+      description: movie.description || "N/A",
       genre: movie.genre || "N/A",
       language: movie.language || "N/A",
       duration: movie.duration || "N/A",

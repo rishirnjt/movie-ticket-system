@@ -28,7 +28,7 @@ const SeatSelection = () => {
   const [buyPopup, setBuyPopup] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  /* ---------------- FETCH MOVIE + BOOKED SEATS ---------------- */
+//Fetch movie and book seats
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -87,7 +87,7 @@ const SeatSelection = () => {
     }
   };
 
-  /* ---------------- BOOK (RESERVE) ---------------- */
+  //Handle booking
   const handleBook = async () => {
     console.log("MOVIE ID:", movieId);
     console.log("SHOWTIME:", selectedShowtime);
@@ -104,7 +104,7 @@ const SeatSelection = () => {
       const totalPrice = selectedSeats.length * 300; // seat price
 
       const res = await axios.post(
-        "http://localhost:5001/api/bookings/reserve",
+        "http://localhost:5001/api/bookings/hold",
         {
           movieId,
           showtimeId: selectedShowtime._id,
@@ -167,17 +167,44 @@ const SeatSelection = () => {
     }
   };
 
-  /* ---------------- BUY ---------------- */
-  const handleBuyClick = () => {
-    if (selectedSeats.length === 0) return alert("Please select seats first");
-    if (!bookingId) return alert("Please book seats first");
-    setBuyPopup(true);
-  };
+  //Buy Ticket//
+  const handleBuyClick = async () => {
+  if (selectedSeats.length === 0) return alert("Please select seats first");
 
-  const handleConfirmBuy = () => {
-    if (!agreeTerms) return alert("You must agree to terms");
-    navigate(`/foods/${bookingId}`);
-  };
+  const token = localStorage.getItem("token");
+  if (!token) return alert("You must be logged in to buy");
+
+  try {
+    const res = await axios.post(
+      "http://localhost:5001/api/bookings/buy",
+      {
+        movieId,
+        showtimeId: selectedShowtime._id,
+        seats: selectedSeats,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const booking = res.data;
+    if (!booking || !booking._id) {
+      return alert("Buy failed");
+    }
+
+    setBookingId(booking._id); // store bookingId for food page
+    setBuyPopup(true);
+
+  } catch (err) {
+    console.error("Direct buy error:", err);
+    alert(err.response?.data?.message || "Buy failed");
+  }
+};
+
+ const handleConfirmBuy = () => {
+  if (!agreeTerms) return alert("You must agree to terms");
+  if (!bookingId) return alert("Booking not found");
+
+  navigate(`/foods/${bookingId}`);
+};
 
   //render seats
   const renderSeats = () => {

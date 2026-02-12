@@ -78,25 +78,25 @@ const MyAccount = () => {
       }
     };
 
-    const fetchHistory = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "http://localhost:5001/api/bookings/my-history",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setHistory(res.data);
-      } catch (err) {
-        console.error("Failed to fetch history", err);
-      }
-    };
+    // const fetchHistory = async () => {
+    //   try {
+    //     const token = localStorage.getItem("token");
+    //     const res = await axios.get(
+    //       "http://localhost:5001/api/bookings/my-history",
+    //       {
+    //         headers: { Authorization: `Bearer ${token}` },
+    //       }
+    //     );
+    //     setHistory(res.data);
+    //   } catch (err) {
+    //     console.error("Failed to fetch history", err);
+    //   }
+    // };
 
     fetchUser();
     fetchReservations();
     fetchTickets();
-    fetchHistory();
+    // fetchHistory();
   }, []);
 
   useEffect(() => {
@@ -282,19 +282,77 @@ const MyAccount = () => {
 
       case "tickets":
         return (
-          <div>
-            <h2>My Tickets</h2>
+          <div className="tickets-wrapper dark-theme">
+            <h2 className="tickets-title">
+              <i className="fa-solid fa-ticket me-2"></i>
+              My Tickets
+            </h2>
+
             {tickets.length === 0 ? (
-              <p>No tickets found.</p>
+              <div className="empty-state">
+                <i className="fa-solid fa-film fa-2x mb-3"></i>
+                <p>No tickets yet.</p>
+              </div>
             ) : (
-              <ul>
+              <div className="tickets-container">
                 {tickets.map((t) => (
-                  <li key={t._id}>{t.movie?.title}</li>
+                  <div key={t._id} className="cinema-ticket">
+
+                    {/* LEFT - Poster */}
+                    <div className="ticket-poster-section">
+                      <img
+                        src={t.movieId?.poster}
+                        alt={t.movieId?.title}
+                      />
+                    </div>
+
+                    {/* RIGHT - Info */}
+                    <div className="ticket-info-section">
+
+                      <div className="ticket-top">
+                        <h3>{t.movieId?.title}</h3>
+                        <span className="ticket-number">
+                          #{t._id.slice(-6).toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="ticket-details">
+                        <p>
+                          <i className="fa-solid fa-clock"></i>
+                          {new Date(t.showtimeId?.time).toLocaleString()}
+                        </p>
+
+                        <p>
+                          <i className="fa-solid fa-chair"></i>
+                          Seats: {t.seats.join(", ")}
+                        </p>
+
+                        <p>
+                          <i className="fa-solid fa-money-bill-wave"></i>
+                          Rs. {t.totalPrice}
+                        </p>
+                      </div>
+
+                      <div className="ticket-bottom">
+                        <button className="qr-btn">
+                          <i className="fa-solid fa-qrcode"></i>
+                          View QR
+                        </button>
+                      </div>
+
+                    </div>
+
+                    {/* Perforation */}
+                    <div className="ticket-perforation"></div>
+
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         );
+
+
 
       case "history":
         return (
