@@ -5,17 +5,16 @@ const movieSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  description: String,
+  description: {
+    type: String,
+    required: true,
+  },
   genre: String,
   posterUrl: String,
   releaseDate: Date,
   duration: String, 
   rating: String,
   language: String,
-  trailerUrl:{
-    type: String,
-    default: ""
-  },
 
 expiresAt: {
   type: Date,

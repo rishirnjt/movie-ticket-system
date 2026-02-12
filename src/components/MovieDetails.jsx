@@ -67,6 +67,11 @@ const MovieDetails = () => {
           <h1>{movie.title}</h1>
 
           <p>
+            <strong>Description:</strong>{movie.description}
+          </p>
+
+
+          <p>
             <strong>Genre:</strong> {movie.genre}
           </p>
 
@@ -75,7 +80,7 @@ const MovieDetails = () => {
           </p>
 
           <p>
-            <strong>Duration:</strong> {movie.duration} mins
+            <strong>Duration:</strong> {movie.duration}
           </p>
 
           <p>

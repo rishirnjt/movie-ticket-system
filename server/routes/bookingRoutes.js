@@ -1,52 +1,59 @@
 const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
-const Movie = require("../models/Movie");
 const Showtime = require("../models/Showtime");
 const { protect } = require("../middleware/authMiddleware");
 
-//Create booking
+
+// =====================================================
+// HOLD (Reserve Until 1 Hour Before Showtime)
+// =====================================================
 router.post("/hold", protect(["Customer"]), async (req, res) => {
   try {
     const { movieId, showtimeId, seats, foods = [] } = req.body;
-    console.log("Body: ", req.body);
 
-    if (!movieId || !showtimeId || !seats || seats.length === 0) {
+    if (!movieId || !showtimeId || !seats?.length)
       return res.status(400).json({ message: "Missing required fields" });
-    }
 
     const showtime = await Showtime.findById(showtimeId);
-    if (!showtime) {
-      return res.status(404).json({ message: "Showtime not found" });
+    if (!showtime.time) {
+      return res.status(500).json({
+        message: "Showtime time is missing in database"
+      });
     }
 
-    // Booking closed 1 hour before showtime
-    const oneHourBefore = new Date(showtime.time.getTime() - 60 * 60 * 1000);
-    if (new Date() > oneHourBefore) {
-      return res.status(400).json({ message: "Booking closed (1 hour before showtime)" });
-    }
+    const showtimeDate = new Date(showtime.time);
 
-    // Check if seats are already booked or held
+    const oneHourBefore = new Date(
+      showtimeDate.getTime() - 60 * 60 * 1000
+    );
+
+
+    if (new Date() > oneHourBefore)
+      return res.status(400).json({
+        message: "Booking closed (1 hour before showtime)"
+      });
+
+    // Prevent double booking
     const existing = await Booking.findOne({
       movie: movieId,
       showtime: showtimeId,
       seats: { $in: seats },
       $or: [
         { status: "confirmed" },
-        { status: "holding", expiresAt: { $gt: new Date() } }
+        { status: "holding", reservationExpiresAt: { $gt: new Date() } }
       ]
     });
 
-    if (existing) {
+    if (existing)
       return res.status(409).json({ message: "Seats already taken" });
-    }
-
-    // Dynamically calculate expiration: until 1 hour before showtime
-    const now = new Date();
-    const expiresAt = oneHourBefore; // seats hold until 1 hour before showtime
 
     const seatPrice = 300;
-    const foodTotal = foods.reduce((sum, f) => sum + f.price * f.quantity, 0);
+    const foodTotal = foods.reduce(
+      (sum, f) => sum + f.price * f.quantity,
+      0
+    );
+
     const totalPrice = seats.length * seatPrice + foodTotal;
 
     const booking = await Booking.create({
@@ -57,88 +64,177 @@ router.post("/hold", protect(["Customer"]), async (req, res) => {
       foods,
       totalPrice,
       status: "holding",
-      expiresAt
+      reservationExpiresAt: oneHourBefore
     });
 
     res.status(201).json(booking);
 
   } catch (err) {
-    console.error("Hold booking error:", err);
+    console.error("Hold error:", err);
     res.status(500).json({ message: "Seat hold failed" });
   }
 });
 
 
-/* ======================================================
-   CONFIRM BOOKING
-   ====================================================== */
-router.post("/confirm/:id", protect(["Customer"]), async (req, res) => {
+//Buy
+router.post("/buy", protect(["Customer"]), async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate("showtime");
+    const { movieId, showtimeId, seats } = req.body;
 
-    if (!booking) {
-      return res.status(404).json({ message: "Booking not found" });
-    }
+    if (!movieId || !showtimeId || !seats?.length)
+      return res.status(400).json({ message: "Missing required fields" });
 
-    if (booking.status !== "holding") {
-      return res.status(400).json({ message: "Invalid booking state" });
-    }
+    const showtime = await Showtime.findById(showtimeId);
+    if (!showtime)
+      return res.status(404).json({ message: "Showtime not found" });
+    const showtimeDate = new Date(showtime.time);
 
-    if (booking.expiresAt < new Date()) {
-      return res.status(400).json({ message: "Hold expired" });
-    }
+    const oneHourBefore = new Date(
+      showtimeDate.getTime() - 60 * 60 * 1000
+    );
 
-    if (!booking.showtime || !booking.showtime.time) {
-      return res.status(500).json({ message: "Showtime data missing" });
-    }
-
-    const showtimeTime = new Date(booking.showtime.time);
-    const oneHourBefore = new Date(showtimeTime.getTime() - 60 * 60 * 1000);
-
-    if (new Date() > oneHourBefore) {
+    if (new Date() > oneHourBefore)
       return res.status(400).json({
-        message: "Booking closed (cannot confirm 1 hour before showtime)",
+        message: "Booking closed (1 hour before showtime)"
       });
-    }
 
-    booking.status = "confirmed";
-    booking.expiresAt = null; // stop TTL
-    booking.purchasedDeadline = oneHourBefore;
+    const existing = await Booking.findOne({
+      movie: movieId,
+      showtime: showtimeId,
+      seats: { $in: seats },
+      $or: [
+        { status: "confirmed" },
+        { status: "holding", reservationExpiresAt: { $gt: new Date() } }
+      ]
+    });
 
-    await booking.save();
+    if (existing)
+      return res.status(409).json({ message: "Seats already taken" });
 
-    res.json({ message: "Booking confirmed", booking });
+    const paymentWindow = new Date(Date.now() + 10 * 60 * 1000);
+
+    const booking = await Booking.create({
+      user: req.user._id,
+      movie: movieId,
+      showtime: showtimeId,
+      seats,
+      totalPrice: seats.length * 300,
+      status: "holding",
+      reservationExpiresAt: paymentWindow
+    });
+
+    res.status(201).json(booking);
+
   } catch (err) {
-    console.error("Confirm error:", err);
-    res.status(500).json({ message: "Confirmation failed" });
+    console.error("Buy error:", err);
+    res.status(500).json({ message: "Buy failed" });
   }
 });
 
-/* ======================================================
-   CANCEL BOOKING / RELEASE SEATS
-   ====================================================== */
+// Add foods to booking
+router.post("/add-foods/:id", protect(["Customer"]), async (req, res) => {
+  try {
+    const { foods } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
+
+    if (booking.status !== "confirmed" && booking.status !== "holding")
+      return res.status(400).json({ message: "Invalid booking status" });
+
+    booking.foods = foods;
+
+    // Recalculate total
+    const foodTotal = foods.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    booking.totalPrice += foodTotal;
+
+    await booking.save();
+
+    res.json(booking);
+
+  } catch (err) {
+    console.error("Add foods error:", err);
+    res.status(500).json({ message: "Failed to add foods" });
+  }
+});
+
+//Checkout
+router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id).populate("showtime");
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
+
+    if (booking.user.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: "Unauthorized" });
+
+    if (booking.reservationExpiresAt < new Date())
+      return res.status(400).json({ message: "Payment window expired" });
+
+    booking.status = "confirmed";
+    booking.reservationExpiresAt = null;
+
+    await booking.save();
+
+    const Ticket = require("../models/Ticket");
+
+    await Ticket.create({
+      userId: booking.user,
+      movieId: booking.movie,
+      showtimeId: booking.showtime,
+      seats: booking.seats,
+      totalPrice: booking.totalPrice,
+      foods: booking.foods || []
+    });
+    console.log("Creating ticket for user:", booking.user);
+    
+
+    res.json({
+      message: "Payment successful",
+      booking
+    });
+
+  } catch (err) {
+    console.error("Checkout error:", err);
+    res.status(500).json({ message: "Checkout failed" });
+  }
+});
+
+
+//Cancel Booking
 router.post("/cancel/:id", protect(["Customer"]), async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
 
-    if (!booking) {
+    if (!booking)
       return res.status(404).json({ message: "Booking not found" });
-    }
+
+    if (booking.user.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: "Unauthorized" });
 
     booking.status = "cancelled";
-    booking.expiresAt = new Date(); // triggers TTL deletion if needed
+    booking.reservationExpiresAt = null;
+
     await booking.save();
 
     res.json({ message: "Booking cancelled" });
+
   } catch (err) {
-    console.error("Cancel error:", err);
     res.status(500).json({ message: "Cancel failed" });
   }
 });
 
-/* ======================================================
-   GET BOOKED / HELD SEATS
-   ====================================================== */
+
+// =====================================================
+// 🎟 GET BOOKED SEATS
+// =====================================================
 router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
   try {
     const { movieId, showtimeId } = req.params;
@@ -148,19 +244,23 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
       showtime: showtimeId,
       $or: [
         { status: "confirmed" },
-        { status: "holding", expiresAt: { $gt: new Date() } },
-      ],
+        { status: "holding", reservationExpiresAt: { $gt: new Date() } }
+      ]
     });
 
-    const bookedSeats = bookings.flatMap((b) => b.seats);
+    const bookedSeats = bookings.flatMap(b => b.seats);
+
     res.json(bookedSeats);
+
   } catch (err) {
-    console.error("Booked seats error:", err);
     res.status(500).json({ message: "Failed to fetch seats" });
   }
 });
 
-// My Reservations (active bookings)
+
+// =====================================================
+// 👤 MY RESERVATIONS
+// =====================================================
 router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
   try {
     const now = new Date();
@@ -168,10 +268,8 @@ router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
     const bookings = await Booking.find({
       user: req.user._id,
       $or: [
-        // still holding (timer not expired)
-        { status: "holding", expiresAt: { $gt: now } },
-        // confirmed but purchase deadline not passed
-        { status: "confirmed", purchasedDeadline: { $gt: now } }
+        { status: "holding", reservationExpiresAt: { $gt: now } },
+        { status: "confirmed" }
       ]
     })
       .populate("movie")
@@ -179,47 +277,103 @@ router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json(bookings);
+
   } catch (err) {
-    console.error("My reservations error:", err);
     res.status(500).json({ message: "Failed to fetch reservations" });
   }
 });
 
-/* ======================================================
-   ADMIN ROUTES
-   ====================================================== */
+
+// =====================================================
+// 👑 ADMIN – GET ALL BOOKINGS
+// =====================================================
 router.get("/admin/all", protect(["Admin"]), async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate("user")
+      .populate("user", "name email")
       .populate("movie")
       .populate("showtime")
       .sort({ createdAt: -1 });
 
     res.json(bookings);
+
   } catch (err) {
-    console.error("Admin fetch error:", err);
     res.status(500).json({ message: "Failed to fetch bookings" });
   }
 });
 
+
+// =====================================================
+// 👑 ADMIN – GET SINGLE BOOKING
+// =====================================================
+router.get("/admin/:id", protect(["Admin"]), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("user", "name email")
+      .populate("movie")
+      .populate("showtime");
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
+
+    res.json(booking);
+
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch booking" });
+  }
+});
+
+
+// =====================================================
+// 👑 ADMIN – UPDATE STATUS
+// =====================================================
 router.put("/admin/:id/status", protect(["Admin"]), async (req, res) => {
   try {
     const { status } = req.body;
 
-    const booking = await Booking.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+    const allowedStatuses = ["holding", "confirmed", "cancelled"];
 
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!allowedStatuses.includes(status))
+      return res.status(400).json({ message: "Invalid status value" });
 
-    res.json(booking);
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
+
+    booking.status = status;
+
+    if (status === "confirmed") {
+      booking.reservationExpiresAt = null;
+    }
+
+    await booking.save();
+
+    res.json({ message: "Status updated", booking });
+
   } catch (err) {
-    console.error("Admin update error:", err);
     res.status(500).json({ message: "Status update failed" });
   }
 });
+
+// GET booking by ID
+router.get("/:id", protect(["Customer"]), async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate("movie")
+      .populate("showtime");
+
+    if (!booking)
+      return res.status(404).json({ message: "Booking not found" });
+
+    res.json(booking);
+
+  } catch (err) {
+    console.error("Get booking error:", err);
+    res.status(500).json({ message: "Failed to fetch booking" });
+  }
+});
+
+
 
 module.exports = router;

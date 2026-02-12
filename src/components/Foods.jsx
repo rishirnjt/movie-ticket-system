@@ -11,23 +11,25 @@ const Foods = () => {
   const [foods, setFoods] = useState([]);
   const [cart, setCart] = useState([]);
 
-  // Fetch booking and foods
+  // Fetch booking and available foods
   useEffect(() => {
     const fetchBooking = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          console.error("No error");
-          navigate("/login");
-          return;
-        }
-        const res = await axios.get(`http://localhost:5001/api/bookings/${bookingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        if (!token) throw new Error("Not authenticated");
 
-        });
+        if (!bookingId) throw new Error("Booking ID missing");
+
+        const res = await axios.get(
+          `http://localhost:5001/api/bookings/${bookingId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
         setBooking(res.data);
       } catch (err) {
-        console.error("Failed to load booking", err);
+        console.error("Failed to load booking:", err.response?.data || err.message);
+        alert("Booking not found or expired");
+        navigate("/myaccount"), { state: { tab: tickets }};
       }
     };
 
@@ -42,7 +44,7 @@ const Foods = () => {
 
     fetchBooking();
     fetchFoods();
-  }, [bookingId]);
+  }, [bookingId, navigate]);
 
   // Toggle item in cart
   const handleToggleItem = (food) => {
@@ -54,14 +56,12 @@ const Foods = () => {
     }
   };
 
-  // Increase quantity
   const handleIncrease = (food) => {
     setCart(cart.map((item) =>
       item._id === food._id ? { ...item, quantity: item.quantity + 1 } : item
     ));
   };
 
-  // Decrease quantity
   const handleDecrease = (food) => {
     setCart(cart.map((item) =>
       item._id === food._id
@@ -70,57 +70,64 @@ const Foods = () => {
     ));
   };
 
-  // Total calculation
-  const total = cart.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+  // Ticket price calculation with mid-week discount
+  const getTicketPricePerSeat = () => {
+    if (!booking) return 300;
+    const showtimeDate = new Date(booking.showtime?.time);
+    const day = showtimeDate.getDay(); // 0 = Sunday
+    let price = 300;
+    if (day >= 2 && day <= 4) price = price / 2; // Tue-Thu half price
+    return price;
+  };
 
-  // Checkout
+  const ticketPricePerSeat = getTicketPricePerSeat();
+  const ticketTotal = booking ? booking.seats.length * ticketPricePerSeat : 0;
+  const foodTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const total = ticketTotal + foodTotal;
+
+  // Checkout / add foods
   const handleCheckout = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
-        `http://localhost:5001/api/bookings/add-foods/${bookingId}`,
-        { items: cart },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      if (cart.length > 0) {
+        await axios.post(
+          `http://localhost:5001/api/bookings/add-foods/${bookingId}`,
+          { foods: cart },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
 
-      alert("Food added successfully!");
       navigate(`/checkout/${bookingId}`);
     } catch (err) {
-      console.error("Checkout failed:", err);
+      console.error("Checkout failed:", err.response?.data || err);
       alert("Failed to add food items. Try again!");
     }
   };
 
+  if (!booking) return <div>Loading booking...</div>;
+
   return (
     <div className="foods-container">
-      {/* Food selection */}
       <div className="foods-left">
         <div className="foods-header">
           <h1>Choose Your Food & Drinks</h1>
-          <button className="skip-btn" onClick={() => navigate(`/checkout/${bookingId}`)}>
+          <button className="skip-btn" onClick={handleCheckout}>
             Skip to Checkout
           </button>
         </div>
 
-        {booking && (
-          <div className="booking-summary">
-            <p><strong>Movie:</strong> {booking.movie?.title}</p>
-            <p><strong>Seats:</strong> {booking.seats.join(", ")}</p>
-            <p><strong>Showtime:</strong> {new Date(booking.showtime?.time).toLocaleString()}</p>
-          </div>
-        )}
+        <div className="booking-summary">
+          <p><strong>Movie:</strong> {booking.movie?.title}</p>
+          <p><strong>Seats:</strong> {booking.seats.join(", ")}</p>
+          <p><strong>Showtime:</strong> {new Date(booking.showtime?.time).toLocaleString()}</p>
+        </div>
 
         <div className="foods-grid">
           {foods.map((item) => {
             const inCart = cart.find(c => c._id === item._id);
             return (
-              <div
-                key={item._id}
-                className={`food-item ${inCart ? "selected" : ""}`}
-              >
-                {item.image && (
-                  <img src={`http://localhost:5001${item.image}`} alt={item.name} className="food-img" />
-                )}
+              <div key={item._id} className={`food-item ${inCart ? "selected" : ""}`}>
+                {item.image && <img src={`http://localhost:5001${item.image}`} alt={item.name} className="food-img" />}
                 <h3>{item.name}</h3>
                 <p>Rs. {item.price}</p>
 
@@ -140,17 +147,22 @@ const Foods = () => {
         </div>
       </div>
 
-      {/* Bill summary */}
       <div className="foods-right">
         <div className="bill-header"><h2>Your Bill</h2></div>
-
         <div className="bill-items">
-          {cart.length > 0 ? cart.map((item) => (
+          <div className="bill-item">
+            <span className="bill-item-name">
+              Tickets ({booking.seats.join(", ")}) @ Rs. {ticketPricePerSeat} each
+            </span>
+            <span className="bill-item-price">Rs. {ticketTotal}</span>
+          </div>
+
+          {cart.length > 0 && cart.map((item) => (
             <div className="bill-item" key={item._id}>
               <span className="bill-item-name">{item.name} x {item.quantity}</span>
               <span className="bill-item-price">Rs. {item.price * item.quantity}</span>
             </div>
-          )) : <p style={{ opacity: 0.7 }}>No items selected yet.</p>}
+          ))}
         </div>
 
         <div className="bill-total">
@@ -158,7 +170,7 @@ const Foods = () => {
           <span>Rs. {total}</span>
         </div>
 
-        <button className="checkout-btn" onClick={handleCheckout} disabled={cart.length === 0}>
+        <button className="checkout-btn" onClick={handleCheckout}>
           Confirm & Pay
         </button>
       </div>

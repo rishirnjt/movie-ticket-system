@@ -1,176 +1,20 @@
-/* .account-container{
-    display: flex;
-    min-height: 100vh;
-    background: linear-gradient(135deg,#000, #3f0b14, #7f1425);
-    color: white;
-    font-family: "Poppins", sans-serif;
-}
-
-.account-sidebar{
-   width: 260px;
-   background: rgba(0,0,0,0.6);
-   padding: 20px;
-   border-right: 2px solid #7f1425;
-}
-
-.profile-info{
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.profile-avatar{
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid #7f1425;
-    margin-bottom: 10px;
-}
-
-.sidebar-menu{
-    display: flex;
-    flex-direction: column;
-    gap: 13px;
-}
-
-.sidebar-menu a{
-    padding: 10px;
-    border-radius: 6px;
-    color: bisque;
-    text-decoration: none;
-    transition: background 0.3s, color 0.3s;
-}
-
-.sidebar-menu a:hover{
-    background: #7f1425;
-    color: #fff;
-}
-
-.account-main{
-    flex: 1;
-    padding: 40px;
-}
-
-.account-main h2{
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    color: #ffb6b6;
-}
-
-.account-card{
-    background: rgba(255,255,2555,0.05);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(255,255,2555,0.05);
-}
-
-.account-card h3{
-    margin-bottom: 15px;
-    border-left: 4px solid #7f1425;
-    padding-left: 8px;
-}
-
-.account-card p{
-    margin: 8px 0;
-}
-
-.account-table{
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background: #fff;
-    color: #7f1425;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.account-table th, .account-table td{
-    padding: 12px 15px;
-    text-align: center;
-    border-bottom: 1px solid #3e0505;
-}
-
-.account-table th{
-    background: #0f1117;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.account-table tr:hover{
-    background: #f5f5f5;
-}
-
-.settings-form{
-    max-width: 500px;
-    margin: 20px 0;
-    display: flex;
-    flex-direction: column;
-    background-color: #f9f9f9;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.settings-form label{
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #333;
-}
-
-.settings-form input{
-    padding: 10px 12px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.settings-form input:form{
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 5px rgba(74, 144, 226,0.5);
-}
-
-.settings-form button{
-    padding: 12px;
-    background-color: #7f1425;
-    color: #fff;
-    border:none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    font-weight: 600;
-    transition: background-color 0.2s;
-}
-
-.setting-form button:hover{
-    background-color: #bb1531;
-}
-
-.settings-form p {
-  margin-top: 10px;
-  font-weight: 500;
-  color: green;
-}
- */
-
- /* Container */
 .account-container {
   display: flex;
   min-height: 100vh;
-  background-color: #f9f9f9;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  background: radial-gradient(circle at top left, #1a1a1a, #0f0f0f 60%);
+  font-family: "Poppins", sans-serif;
+  color: #fff;
 }
 
-/* Sidebar */
+/* ===============================
+   SIDEBAR
+================================= */
+
 .account-sidebar {
-  width: 250px;
-  background:linear-gradient(135deg,#000, #3f0b14, #7f1425);
-  color: #fff;
-  padding: 20px;
-  flex-shrink: 0;
+  width: 270px;
+  background: linear-gradient(180deg, #111, #1c1c1c);
+  padding: 30px 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,188 +22,257 @@
 
 .profile-info {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .profile-avatar {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
+  border: 3px solid #e50914;
   object-fit: cover;
-  margin-bottom: 10px;
-  border: 2px solid #fff;
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.5);
 }
 
 .profile-info h3 {
-  margin: 5px 0;
+  margin-top: 15px;
   font-size: 18px;
 }
 
 .profile-info p {
-  font-size: 14px;
-  color: #ccc;
+  font-size: 13px;
+  color: #aaa;
 }
 
 .sidebar-menu {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  gap: 10px;
 }
 
 .sidebar-menu button {
-  background: none;
-  border: none;
-  color: #fff;
-  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #ccc;
   padding: 12px 15px;
-  margin-bottom: 5px;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.2s;
-}
-
-.sidebar-menu button:hover,
-.sidebar-menu button:focus {
-  background-color: #1b324a;
-}
-
-/* Main Content */
-.account-main {
-  flex-grow: 1;
-  padding: 30px;
-  background-color: #ecf0f1;
-}
-
-/* Tables */
-.account-table,
-.dropdown-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-.account-table th,
-.account-table td,
-.dropdown-table th,
-.dropdown-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
+  border-radius: 8px;
   text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sidebar-menu button:hover {
+  background: rgba(229, 9, 20, 0.1);
+  border-color: #e50914;
+  color: #fff;
+  transform: translateX(5px);
+}
+
+/* ===============================
+   MAIN CONTENT
+================================= */
+
+.account-main {
+  flex: 1;
+  padding: 50px;
+}
+
+.account-main h2 {
+  font-size: 28px;
+  margin-bottom: 30px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* ===============================
+   CINEMA TICKET CARD
+================================= */
+
+.cinema-ticket {
+  display: flex;
+  background: linear-gradient(145deg, #1c1c1c, #111);
+  border-radius: 20px;
+  margin-bottom: 35px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cinema-ticket:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 60px rgba(229, 9, 20, 0.3);
+}
+
+/* Poster Section */
+.ticket-poster-section {
+  width: 200px;
+  background: #000;
+}
+
+.ticket-poster-section img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Ticket Info */
+.ticket-info-section {
+  flex: 1;
+  padding: 30px;
+  position: relative;
+}
+
+.ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticket-top h3 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.ticket-number {
+  background: #e50914;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+/* Ticket Details */
+.ticket-details {
+  margin-top: 20px;
+}
+
+.ticket-details p {
+  margin: 12px 0;
   font-size: 14px;
-}
-
-.account-table th {
-  background-color: #5b0606;
-  color: #fff;
-}
-
-.dropdown-table th {
-  background-color: #630707;
-  color: #fff;
-}
-
-.reservation-row {
-  cursor: pointer;
-}
-
-.dropdown-row td {
-  background-color: #f7f7f7;
-}
-
-/* Buttons */
-button.dropdown-toggle {
-  background: none;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
-  color: #000;
-}
-
-.dropdown-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
-  margin-top: 10px;
+  color: #ccc;
 }
 
-.cancel-btn,
-.buy-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
+.ticket-details i {
+  color: #e50914;
 }
 
-.cancel-btn {
-  background-color: #7b1307;
-  color: #fff;
-}
-
-.cancel-btn:hover {
-  background-color: #9c2114;
-}
-
-.buy-btn {
-  background-color: #0f7439;
-  color: #fff;
-}
-
-.buy-btn:hover {
-  background-color: #1e8449;
-}
-
-/* Settings Form */
-.settings-form {
+/* Bottom Section */
+.ticket-bottom {
+  margin-top: 25px;
   display: flex;
-  flex-direction: column;
-  max-width: 400px;
-  margin-top: 15px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticket-price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #e50914;
+}
+
+/* QR Button */
+.qr-btn {
+  padding: 8px 18px;
+  border-radius: 30px;
+  border: 1px solid #e50914;
+  background: transparent;
+  color: #e50914;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.qr-btn:hover {
+  background: #e50914;
+  color: #fff;
+}
+
+/* Perforation effect */
+.ticket-perforation {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 18px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    #0f0f0f,
+    #0f0f0f 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+/* ===============================
+   SETTINGS FORM
+================================= */
+
+.settings-form {
+  background: #1a1a1a;
+  padding: 30px;
+  border-radius: 15px;
+  max-width: 450px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
 }
 
 .settings-form label {
-  margin-top: 10px;
-  font-weight: bold;
+  margin-top: 15px;
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .settings-form input {
-  padding: 8px;
-  margin-top: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #0f0f0f;
+  color: #fff;
+}
+
+.settings-form input:focus {
+  border-color: #e50914;
+  outline: none;
+  box-shadow: 0 0 8px rgba(229, 9, 20, 0.4);
 }
 
 .settings-form button {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #c61a1a;
-  color: #fff;
+  margin-top: 25px;
+  padding: 12px;
+  background: #e50914;
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
+  font-weight: 600;
   cursor: pointer;
+  transition: 0.3s ease;
 }
 
 .settings-form button:hover {
-  background-color: #2471a3;
+  background: #b20710;
 }
 
-/* History list */
-.history-list {
-  list-style-type: none;
-  padding-left: 0;
+/* ===============================
+   EMPTY STATE
+================================= */
+
+.no-tickets {
+  text-align: center;
+  margin-top: 80px;
+  color: #aaa;
+  font-size: 16px;
 }
 
-.history-list li {
-  background-color: #fff;
-  padding: 10px;
-  margin-bottom: 8px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-}
+/* ===============================
+   RESPONSIVE
+================================= */
 
-/* Responsive */
-@media screen and (max-width: 900px) {
+@media (max-width: 900px) {
   .account-container {
     flex-direction: column;
   }
@@ -368,15 +281,22 @@ button.dropdown-toggle {
     width: 100%;
     flex-direction: row;
     justify-content: space-around;
-    padding: 10px 0;
   }
 
   .sidebar-menu {
     flex-direction: row;
   }
 
-  .sidebar-menu button {
-    font-size: 14px;
-    padding: 8px 10px;
+  .cinema-ticket {
+    flex-direction: column;
+  }
+
+  .ticket-poster-section {
+    width: 100%;
+    height: 250px;
+  }
+
+  .account-main {
+    padding: 25px;
   }
 }
