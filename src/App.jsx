@@ -26,6 +26,7 @@ import AdminRoutes from "./components/AdminRoutes";
 import Bookings from "./components/Bookings";
 import MovieDetails from "./components/MovieDetails";
 import SearchResults from "./pages/SearchResults";
+import TicketPage from "./pages/TicketPage";
 import "./App.css";
 
 function AppWrapper() {
@@ -65,6 +66,7 @@ function AppWrapper() {
         <Route path="/checkout/:bookingId" element={<Checkout />} />
         <Route path="/ticket-rates" element={<TicketRates />} />
         <Route path="/myaccount" element={<MyAccount />} />
+        <Route path="/ticket/:ticketId" element={<TicketPage />} />
 
         {/* Admin */}
         <Route
