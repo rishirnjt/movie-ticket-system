@@ -13,7 +13,8 @@ const SeatSelection = () => {
 
   const [selectedShowtime] = useState(location.state?.selectedShowtime || null);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [bookedSeats, setBookedSeats] = useState([]);
+  const [soldSeats, setSoldSeats] = useState([]);
+  const [heldSeats, setHeldSeats] = useState([]);
   const [movie, setMovie] = useState(null);
 
   const [bookingId, setBookingId] = useState(null);
@@ -28,7 +29,7 @@ const SeatSelection = () => {
   const [buyPopup, setBuyPopup] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-//Fetch movie and book seats
+  //Fetch movie and book seats
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,7 +40,8 @@ const SeatSelection = () => {
           const seatsRes = await axios.get(
             `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
           );
-          setBookedSeats(seatsRes.data || []);
+          setSoldSeats(seatsRes.data.soldSeats || []);
+          setHeldSeats(seatsRes.data.heldSeats || []);
         }
       } catch (err) {
         console.error("Fetch error:", err);
@@ -70,7 +72,7 @@ const SeatSelection = () => {
 
   /* ---------------- SEAT CLICK ---------------- */
   const handleSeatClick = (seatId) => {
-    if (bookedSeats.includes(seatId)) return;
+    if (heldSeats.includes(seatId) || soldSeats.includes(seatId)) return;
 
     setSelectedSeats(prev =>
       prev.includes(seatId)
@@ -133,8 +135,8 @@ const SeatSelection = () => {
       const seatsRes = await axios.get(
         `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
       );
-      setBookedSeats(seatsRes.data || []);
-
+      setSoldSeats(seatsRes.data.soldSeats || []);
+      setHeldSeats(seatsRes.data.heldSeats || []);
     } catch (err) {
       alert(err.response?.data?.message || "Booking failed");
     }
@@ -160,7 +162,8 @@ const SeatSelection = () => {
         const seatsRes = await axios.get(
           `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
         );
-        setBookedSeats(seatsRes.data || []);
+        setSoldSeats(seatsRes.data.soldSeats || []);
+        setHeldSeats(seatsRes.data.heldSeats || []);
       }
     } catch (err) {
       console.error(err);
@@ -169,42 +172,59 @@ const SeatSelection = () => {
 
   //Buy Ticket//
   const handleBuyClick = async () => {
-  if (selectedSeats.length === 0) return alert("Please select seats first");
+    if (selectedSeats.length === 0) return alert("Please select seats first");
 
-  const token = localStorage.getItem("token");
-  if (!token) return alert("You must be logged in to buy");
+    const token = localStorage.getItem("token");
+    if (!token) return alert("You must be logged in to buy");
 
-  try {
-    const res = await axios.post(
-      "http://localhost:5001/api/bookings/buy",
-      {
-        movieId,
-        showtimeId: selectedShowtime._id,
-        seats: selectedSeats,
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    try {
+      const res = await axios.post(
+        "http://localhost:5001/api/bookings/buy",
+        {
+          movieId,
+          showtimeId: selectedShowtime._id,
+          seats: selectedSeats,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    const booking = res.data;
-    if (!booking || !booking._id) {
-      return alert("Buy failed");
+      const booking = res.data;
+      if (!booking || !booking._id) {
+        return alert("Buy failed");
+      }
+
+      setBookingId(booking._id); // store bookingId for food page
+      setBuyPopup(true);
+
+    } catch (err) {
+      console.error("Direct buy error:", err);
+      alert(err.response?.data?.message || "Buy failed");
     }
+  };
 
-    setBookingId(booking._id); // store bookingId for food page
-    setBuyPopup(true);
+  const fetchSeats = async () => {
+    if (!selectedShowtime?._id) return;
 
-  } catch (err) {
-    console.error("Direct buy error:", err);
-    alert(err.response?.data?.message || "Buy failed");
-  }
-};
+    try {
+      const res = await axios.get(
+        `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
+      );
 
- const handleConfirmBuy = () => {
-  if (!agreeTerms) return alert("You must agree to terms");
-  if (!bookingId) return alert("Booking not found");
+      setSoldSeats(res.data.soldSeats || []);
+      setHeldSeats(res.data.heldSeats || []);
+    } catch (error) {
+      console.error("Seat fetch error:", error);
+    }
+  };
 
-  navigate(`/foods/${bookingId}`);
-};
+
+
+  const handleConfirmBuy = () => {
+    if (!agreeTerms) return alert("You must agree to terms");
+    if (!bookingId) return alert("Booking not found");
+
+    navigate(`/foods/${bookingId}`);
+  };
 
   //render seats
   const renderSeats = () => {
@@ -216,12 +236,15 @@ const SeatSelection = () => {
         seats.push(
           <div
             key={seatId}
-            className={`seat ${bookedSeats.includes(seatId)
-                ? "booked"
+            className={`seat ${soldSeats.includes(seatId)
+              ? "sold"
+              : heldSeats.includes(seatId)
+                ? "held"
                 : selectedSeats.includes(seatId)
                   ? "selected"
                   : "available"
               }`}
+
             onClick={() => handleSeatClick(seatId)}
           >
             {seatId}
@@ -287,6 +310,10 @@ const SeatSelection = () => {
         <div className="legend-item">
           <div className="legend-box legend-booked" />
           <span>Booked</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-box legend-bought" />
+          <span>Sold</span>
         </div>
       </div>
 

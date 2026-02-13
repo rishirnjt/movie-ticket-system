@@ -167,7 +167,9 @@ router.post("/add-foods/:id", protect(["Customer"]), async (req, res) => {
 //Checkout
 router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id).populate("showtime");
+    const booking = await Booking.findById(req.params.id)
+      .populate("showtime")
+      .populate("movie");
 
     if (!booking)
       return res.status(404).json({ message: "Booking not found" });
@@ -187,7 +189,7 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
 
     await Ticket.create({
       userId: booking.user,
-      movieId: booking.movie,
+      movieId: booking.movie._id,
       showtimeId: booking.showtime,
       seats: booking.seats,
       totalPrice: booking.totalPrice,
@@ -232,31 +234,41 @@ router.post("/cancel/:id", protect(["Customer"]), async (req, res) => {
 });
 
 
-// =====================================================
-// 🎟 GET BOOKED SEATS
-// =====================================================
+//Get Booked Seats
 router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
   try {
     const { movieId, showtimeId } = req.params;
+    const now = new Date(); 
 
     const bookings = await Booking.find({
       movie: movieId,
       showtime: showtimeId,
       $or: [
         { status: "confirmed" },
-        { status: "holding", reservationExpiresAt: { $gt: new Date() } }
+        { status: "holding", reservationExpiresAt: { $gt: now } }
       ]
     });
 
-    const bookedSeats = bookings.flatMap(b => b.seats);
+    const soldSeats = bookings
+      .filter(b => b.status === "confirmed")
+      .flatMap(b => b.seats);
 
-    res.json(bookedSeats);
+    const heldSeats = bookings
+      .filter(
+        b =>
+          b.status === "holding" &&
+          b.reservationExpiresAt &&
+          b.reservationExpiresAt > now
+      )
+      .flatMap(b => b.seats);
+
+    res.json({ soldSeats, heldSeats });
 
   } catch (err) {
+    console.error("Fetch seats error:", err); 
     res.status(500).json({ message: "Failed to fetch seats" });
   }
 });
-
 
 // =====================================================
 // 👤 MY RESERVATIONS

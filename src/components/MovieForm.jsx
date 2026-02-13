@@ -211,13 +211,10 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
               <img
                 id="poster-preview"
                 className="poster-preview"
-                src={movie.posterUrl.startsWith("http")
-                  ? movie.posterUrl
-                  : `http://localhost:5001${movie.posterUrl}`}
+                src={`http://localhost:5001${movie.posterUrl}`}
                 alt="Poster"
               />
             )}
-
           </div>
 
           <div className="input-group">

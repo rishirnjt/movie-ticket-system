@@ -11,6 +11,7 @@ const MyAccount = () => {
   const [tickets, setTickets] = useState([]);
   const [history, setHistory] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -171,114 +172,105 @@ const MyAccount = () => {
     switch (activeTab) {
       case "reservations":
         return (
-          <div>
-            <h2>My Reservations</h2>
+          <div className="reservations-wrapper">
+            <h2 className="reservations-title">
+              <i className="fa-solid fa-calendar-check"></i> My Reservations
+            </h2>
+
             {reservations.length === 0 ? (
-              <p>You do not have any reservations.</p>
+              <div className="empty-state">
+                <i className="fa-solid fa-film"></i>
+                <h4>No Reservations</h4>
+                <p>You haven’t reserved any seats yet.</p>
+              </div>
             ) : (
-              <table className="account-table">
-                <thead>
-                  <tr>
-                    <th>Movie</th>
-                    <th>Showtime</th>
-                    <th>Seats</th>
-                    <th>Quantity</th>
-                    <th>Price / Ticket</th>
-                    <th>Total</th>
-                    <th>Reserved On</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reservations.map((r) => (
-                    <React.Fragment key={r._id}>
-                      <tr
-                        onClick={() => toggleRow(r._id)}
-                        className="reservation-row"
-                      >
-                        <td>{r.movie?.title || "N/A"}</td>
-                        <td>
+              <div className="reservations-grid">
+                {reservations.map((r) => (
+                  <div key={r._id} className="reservation-card">
+
+                    {/* Header */}
+                    <div
+                      className="reservation-header"
+                      onClick={() => toggleRow(r._id)}
+                    >
+                      <div>
+                        <h3>{r.movie?.title}</h3>
+                        <p className="reservation-time">
+                          <i className="fa-solid fa-clock"></i>{" "}
                           {r.showtime?.time
-                            ? new Date(r.showtime.time).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
+                            ? new Date(r.showtime.time).toLocaleString()
                             : "N/A"}
+                        </p>
+                      </div>
 
-                        </td>
-                        <td>{r.seats.join(", ")}</td>
-                        <td>{r.seats.length}</td>
-                        <td>Rs. {Math.floor(r.totalPrice / r.seats.length)}</td>
-                        <td>Rs. {r.totalPrice}</td>
-                        <td>{new Date(r.createdAt).toLocaleDateString()}</td>
-                        <td>
-                          <button className="dropdown-toggle">
-                            {expandedRow === r._id ? "▲" : "▼"}
-                          </button>
-                        </td>
-                      </tr>
+                      <div className="reservation-summary">
+                        <span>
+                          <i className="fa-solid fa-chair"></i> {r.seats.length} Seats
+                        </span>
+                        <span className="reservation-price">
+                          Rs. {r.totalPrice}
+                        </span>
+                        <i
+                          className={`fa-solid ${expandedRow === r._id
+                            ? "fa-chevron-up"
+                            : "fa-chevron-down"
+                            }`}
+                        ></i>
+                      </div>
+                    </div>
 
-                      {expandedRow === r._id && (
-                        <tr className="dropdown-row">
-                          <td colSpan="8">
-                            <table className="dropdown-table">
-                              <thead>
-                                <tr>
-                                  <th>Seat No.</th>
-                                  <th>Expiry Date</th>
-                                  <th>Expiry Time</th>
-                                  <th>Select</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {r.seats.map((seat, idx) => (
-                                  <tr key={idx}>
-                                    <td>{seat}</td>
-                                    <td>
-                                      {new Date(r.expiryDate).toLocaleDateString("en-US", {
-                                        weekday: "long",
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                      })}
-                                    </td>
-                                    <td>
-                                      {new Date(r.expiryDate).toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </td>
-                                    <td>
-                                      <input
-                                        type="checkbox"
-                                        checked={selectedSeats[r._id]?.includes(seat) || false}
-                                        onChange={() => toggleSeatSelection(r._id, seat)}
-                                      />
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
+                    {/* Expand Section */}
+                    {expandedRow === r._id && (
+                      <div className="reservation-body">
 
-                            </table>
-
-                            <div className="dropdown-actions">
-                              <button className="cancel-btn" onClick={() => handleCancel(r._id, selectedSeats[r._id] || [])}>
-                                Cancel Selected
-                              </button>
-                              <button className="buy-btn">
-                                Buy Selected
-                              </button>
+                        {/* Seat Selection */}
+                        <div className="seat-grid">
+                          {r.seats.map((seat, idx) => (
+                            <div
+                              key={idx}
+                              className={`seat-box ${selectedSeats[r._id]?.includes(seat)
+                                ? "selected"
+                                : ""
+                                }`}
+                              onClick={() =>
+                                toggleSeatSelection(r._id, seat)
+                              }
+                            >
+                              {seat}
                             </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                          ))}
+                        </div>
+
+                        {/* Expiry Info */}
+                        <div className="reservation-expiry">
+                          <i className="fa-solid fa-hourglass-half"></i>
+                          Expires on{" "}
+                          {new Date(r.expiryDate).toLocaleString()}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="reservation-actions">
+                          <button
+                            className="cancel-btn"
+                            onClick={() => handleCancel(r._id)}
+                          >
+                            <i className="fa-solid fa-xmark"></i> Cancel Selected
+                          </button>
+
+                          <button className="buy-btn">
+                            <i className="fa-solid fa-credit-card"></i> Buy Selected
+                          </button>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         );
+
 
       case "tickets":
         return (
@@ -294,64 +286,146 @@ const MyAccount = () => {
                 <p>No tickets yet.</p>
               </div>
             ) : (
-              <div className="tickets-container">
-                {tickets.map((t) => (
-                  <div key={t._id} className="cinema-ticket">
+              <>
+                <div className="tickets-container">
+                  {tickets.map((t) => {
+                    const showTime = t.showtimeId?.time
+                      ? new Date(t.showtimeId.time)
+                      : null;
 
-                    {/* LEFT - Poster */}
-                    <div className="ticket-poster-section">
-                      <img
-                        src={t.movieId?.poster}
-                        alt={t.movieId?.title}
-                      />
+                    const isUpcoming =
+                      showTime && showTime > new Date();
+
+                    return (
+                      <div key={t._id} className="cinema-ticket">
+
+                        {/* LEFT - POSTER */}
+                        <div className="ticket-poster-section">
+                          {t.movieId?.posterUrl ? (
+                            <img
+                              src={t.movieId.posterUrl}
+                              alt={t.movieId?.title || "Movie Poster"}
+                            />
+                          ) : (
+                            <p>Poster not available</p>
+                          )}
+                        </div>
+
+                        {/* RIGHT - INFO */}
+                        <div className="ticket-info-section">
+                          <div className="ticket-top">
+                            <h3>{t.movieId?.title || "Unknown Movie"}</h3>
+                            <span className="ticket-number">
+                              Booking ID: #{t._id.slice(-6).toUpperCase()}
+                            </span>
+                          </div>
+
+                          {/* STATUS */}
+                          <div
+                            className={`ticket-status ${isUpcoming ? "upcoming" : "completed"
+                              }`}
+                          >
+                            {isUpcoming ? "Upcoming" : "Completed"}
+                          </div>
+
+                          <div className="ticket-details">
+                            <p>
+                              <i className="fa-solid fa-clock me-2"></i>
+                              {showTime
+                                ? showTime.toLocaleString()
+                                : "Showtime unavailable"}
+                            </p>
+
+                            <p>
+                              <i className="fa-solid fa-chair me-2"></i>
+                              Seats: {t.seats?.join(", ") || "N/A"}
+                            </p>
+
+                            <p>
+                              <i className="fa-solid fa-money-bill-wave me-2"></i>
+                              Rs. {t.totalPrice}
+                            </p>
+                          </div>
+
+                          {/* VIEW TICKET BUTTON */}
+                          <div className="ticket-bottom">
+                            <button
+                              className="view-ticket-btn"
+                              onClick={() => setSelectedTicket(t)}
+                            >
+                              View Ticket
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="ticket-perforation"></div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* E-TICKET MODAL */}
+                {selectedTicket && (
+                  <div className="ticket-modal-overlay" onClick={() => setSelectedTicket(null)}>
+                    <div
+                      className="e-ticket-card"
+                      onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                    >
+                      <button className="close-modal" onClick={() => setSelectedTicket(null)}>
+                        &times;
+                      </button>
+
+                      <div className="ticket-content">
+                        <h2 className="ticket-movie">
+                          {selectedTicket.movieId?.title || "Movie"}
+                        </h2>
+
+                        <p className="ticket-date">
+                          {selectedTicket.showtimeId?.time
+                            ? new Date(selectedTicket.showtimeId.time).toLocaleDateString()
+                            : "Date unavailable"}
+                        </p>
+
+                        <p className="ticket-hall">
+                          {selectedTicket.showtimeId?.hall || "Hall"}
+                        </p>
+
+                        <p className="ticket-time">
+                          {selectedTicket.showtimeId?.time
+                            ? new Date(selectedTicket.showtimeId.time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                            : "Time unavailable"}
+                        </p>
+
+                        <p className="ticket-seats">
+                          Seats: {selectedTicket.seats?.join(", ") || "N/A"}
+                        </p>
+
+                        <p className="ticket-order-label">Order number</p>
+                        <p className="ticket-order">
+                          {selectedTicket._id.slice(-8).toUpperCase()}
+                        </p>
+
+                        {selectedTicket.qrCode && (
+                          <img
+                            src={selectedTicket.qrCode}
+                            alt="QR"
+                            className="ticket-qr"
+                          />
+                        )}
+                      </div>
+
+                      <div className="ticket-cut left"></div>
+                      <div className="ticket-cut right"></div>
                     </div>
-
-                    {/* RIGHT - Info */}
-                    <div className="ticket-info-section">
-
-                      <div className="ticket-top">
-                        <h3>{t.movieId?.title}</h3>
-                        <span className="ticket-number">
-                          #{t._id.slice(-6).toUpperCase()}
-                        </span>
-                      </div>
-
-                      <div className="ticket-details">
-                        <p>
-                          <i className="fa-solid fa-clock"></i>
-                          {new Date(t.showtimeId?.time).toLocaleString()}
-                        </p>
-
-                        <p>
-                          <i className="fa-solid fa-chair"></i>
-                          Seats: {t.seats.join(", ")}
-                        </p>
-
-                        <p>
-                          <i className="fa-solid fa-money-bill-wave"></i>
-                          Rs. {t.totalPrice}
-                        </p>
-                      </div>
-
-                      <div className="ticket-bottom">
-                        <button className="qr-btn">
-                          <i className="fa-solid fa-qrcode"></i>
-                          View QR
-                        </button>
-                      </div>
-
-                    </div>
-
-                    {/* Perforation */}
-                    <div className="ticket-perforation"></div>
-
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         );
-
 
 
       case "history":
