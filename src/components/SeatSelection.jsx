@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback} from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./SeatSelection.css";
@@ -70,8 +70,8 @@ const SeatSelection = () => {
     return () => clearInterval(interval);
   }, [expiresAt]);
 
-  /* ---------------- SEAT CLICK ---------------- */
-  const handleSeatClick = (seatId) => {
+  //Seat click
+  const handleSeatClick = useCallback((seatId) => {
     if (heldSeats.includes(seatId) || soldSeats.includes(seatId)) return;
 
     setSelectedSeats(prev =>
@@ -87,7 +87,7 @@ const SeatSelection = () => {
       setTimeLeft(5 * 60); // 5 min in seconds
       setTimerStarted(true);
     }
-  };
+  }, [heldSeats, soldSeats, timerStarted]);
 
   //Handle booking
   const handleBook = async () => {
@@ -227,24 +227,23 @@ const SeatSelection = () => {
   };
 
   //render seats
-  const renderSeats = () => {
+  const seatElements = useMemo(() => {
     const seats = [];
+
     for (let r = 0; r < rows; r++) {
       const row = String.fromCharCode(65 + r);
+
       for (let c = 1; c <= cols; c++) {
         const seatId = `${row}${c}`;
+        const seatClass =  soldSeats.includes(seatId)
+          ?"sold": heldSeats.includes(seatId)
+          ?"held": selectedSeats.includes(seatId)
+          ?"selected": "available";
+          
         seats.push(
           <div
             key={seatId}
-            className={`seat ${soldSeats.includes(seatId)
-              ? "sold"
-              : heldSeats.includes(seatId)
-                ? "held"
-                : selectedSeats.includes(seatId)
-                  ? "selected"
-                  : "available"
-              }`}
-
+            className={`seat ${seatClass}`}
             onClick={() => handleSeatClick(seatId)}
           >
             {seatId}
@@ -253,7 +252,7 @@ const SeatSelection = () => {
       }
     }
     return seats;
-  };
+  }, [soldSeats, heldSeats, selectedSeats, handleSeatClick]);
 
   return (
     <div className="seat-selection">
@@ -295,7 +294,7 @@ const SeatSelection = () => {
       )}
 
       <div className="screen">SCREEN</div>
-      <div className="seats-grid">{renderSeats()}</div>
+      <div className="seats-grid">{seatElements}</div>
 
       {/* LEGEND */}
       <div className="seat-legend">

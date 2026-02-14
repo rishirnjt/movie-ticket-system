@@ -71,7 +71,7 @@
   position: absolute;
   width: 26px;
   height: 26px;
-  background: #1c1c1c; /* matches dark background */
+  background: #1c1c1c; 
   border-radius: 50%;
 }
 
@@ -86,3 +86,20 @@
   right: -13px;
   transform: translateY(-50%);
 }
+.download-btn {
+  margin-top: 30px;
+  padding: 12px 20px;
+  border: none;
+  background: #ffffff;
+  color: #000;
+  font-weight: bold;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.download-btn:hover {
+  background: #e50914;
+  color: white;
+}
+
