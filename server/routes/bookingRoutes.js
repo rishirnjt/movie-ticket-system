@@ -255,7 +255,7 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
     const tickets = await Ticket.find({
       movieId,
       showtimeId,
-      status: "active"   // if you use status
+      status: "active"  
     });
 
     const heldSeats = bookings
@@ -285,10 +285,7 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
   }
 });
 
-
-// =====================================================
-// 👤 MY RESERVATIONS
-// =====================================================
+//reservations
 router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
   try {
     const now = new Date();
@@ -304,7 +301,11 @@ router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
       .populate("showtime")
       .sort({ createdAt: -1 });
 
-    res.json(bookings);
+    const activeBookings= bookings.filter(b => {
+      return b.showtime && new Date(b.showtime.time) > now;
+    });
+
+    res.json(activeBookings);
 
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch reservations" });
@@ -312,14 +313,12 @@ router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
 });
 
 
-// =====================================================
-// 👑 ADMIN – GET ALL BOOKINGS
-// =====================================================
+//Admin- Get all bookings
 router.get("/admin/all", protect(["Admin"]), async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate("user", "name email")
-      .populate("movie")
+      .populate("user", "firstName lastName email")
+      .populate("movie", "title")
       .populate("showtime")
       .sort({ createdAt: -1 });
 

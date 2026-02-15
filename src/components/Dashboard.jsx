@@ -30,42 +30,52 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
 
+      // ===== MOVIES =====
       const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
       const movies = await moviesRes.json();
 
+      setRecentMovies(movies?.slice(0, 5) || []);
+
+      // ===== USERS =====
       const usersRes = await fetch("http://localhost:5001/api/users/count", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const usersData = await usersRes.json();
 
+      // ===== BOOKINGS =====
+      const bookingRes = await fetch(
+        "http://localhost:5001/api/bookings/admin/all",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const bookingsData = await bookingRes.json();
+
+      const latestBookings = bookingsData
+        ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+        .map((b) => ({
+          _id: b._id,
+          user: b.user
+            ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
+            : "Unknown",
+          movie: b.movie?.title || "Unknown",
+          seats: b.seats || [],
+          status: b.status || "unknown",
+        })) || [];
+
+      setRecentBookings(latestBookings);
+
+      // ===== STATS =====
       setStats({
-        bookings: 124,
-        revenue: 123456,
-        movies: movies.length,
-        users: usersData.totalUsers,
+        bookings: bookingsData?.length || 0,
+        revenue: 123456, // replace later with real calculation
+        movies: movies?.length || 0,
+        users: usersData?.totalUsers || 0,
       });
 
-      setRecentMovies(movies);
-
-      setRecentBookings([
-        {
-          _id: 1,
-          user: "John",
-          movie: "Interstellar",
-          seats: ["A1", "A2"],
-          amount: 1200,
-          status: "Confirmed",
-        },
-        {
-          _id: 2,
-          user: "Alice",
-          movie: "Inception",
-          seats: ["B1"],
-          amount: 600,
-          status: "Cancelled",
-        },
-      ]);
-
+      // ===== SALES CHART (TEMP STATIC) =====
       setSalesData([
         { month: "Jan", sales: 15000 },
         { month: "Feb", sales: 18000 },
@@ -74,13 +84,12 @@ const Dashboard = () => {
         { month: "May", sales: 20000 },
       ]);
     } catch (err) {
-      console.error(err);
+      console.error("Dashboard load error:", err);
     }
   };
 
   return (
     <div className="dashboard-wrapper">
-
       <main className="main-content">
         <h1 className="dashboard-title">
           Admin <span>Dashboard</span>
@@ -89,25 +98,33 @@ const Dashboard = () => {
         {/* ===== STATS ===== */}
         <div className="stats-row">
           <div className="stats-card">
-            <div className="icon"><i className="fa-solid fa-cart-shopping" /></div>
+            <div className="icon">
+              <i className="fa-solid fa-cart-shopping" />
+            </div>
             <h5>Total Bookings</h5>
             <h3>{stats.bookings}</h3>
           </div>
 
           <div className="stats-card">
-            <div className="icon"><i className="fa-solid fa-sack-dollar" /></div>
+            <div className="icon">
+              <i className="fa-solid fa-sack-dollar" />
+            </div>
             <h5>Total Revenue</h5>
             <h3>Rs. {stats.revenue}</h3>
           </div>
 
           <div className="stats-card">
-            <div className="icon"><i className="fa-solid fa-clapperboard" /></div>
+            <div className="icon">
+              <i className="fa-solid fa-clapperboard" />
+            </div>
             <h5>Active Movies</h5>
             <h3>{stats.movies}</h3>
           </div>
 
           <div className="stats-card">
-            <div className="icon"><i className="fa-solid fa-user" /></div>
+            <div className="icon">
+              <i className="fa-solid fa-user" />
+            </div>
             <h5>Total Users</h5>
             <h3>{stats.users}</h3>
           </div>
@@ -115,6 +132,7 @@ const Dashboard = () => {
 
         {/* ===== TABLES ===== */}
         <div className="grid-two">
+          {/* ===== RECENT BOOKINGS ===== */}
           <div className="glass-card">
             <h5>Recent Bookings</h5>
             <table className="table">
@@ -123,28 +141,36 @@ const Dashboard = () => {
                   <th>User</th>
                   <th>Movie</th>
                   <th>Seats</th>
-                  <th>Amount</th>
                   <th>Status</th>
                 </tr>
               </thead>
+
               <tbody>
-                {recentBookings.map(b => (
-                  <tr key={b._id}>
-                    <td>{b.user}</td>
-                    <td>{b.movie}</td>
-                    <td>{b.seats.join(", ")}</td>
-                    <td>Rs. {b.amount}</td>
-                    <td>
-                      <span className={`status ${b.status.toLowerCase()}`}>
-                        {b.status}
-                      </span>
-                    </td>
+                {recentBookings.length === 0 ? (
+                  <tr>
+                    <td colSpan="4">No bookings found</td>
                   </tr>
-                ))}
+                ) : (
+                  recentBookings.map((b) => (
+                    <tr key={b._id}>
+                      <td>{b.user}</td>
+                      <td>{b.movie}</td>
+                      <td>{b.seats.join(", ")}</td>
+                      <td>
+                        <span
+                          className={`status ${b.status.toLowerCase()}`}
+                        >
+                          {b.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
+          {/* ===== RECENT MOVIES ===== */}
           <div className="glass-card">
             <h5>Recent Movies</h5>
             <table className="table">
@@ -155,18 +181,33 @@ const Dashboard = () => {
                   <th>Release</th>
                 </tr>
               </thead>
+
               <tbody>
-                {recentMovies.map(m => (
-                  <tr key={m._id}>
-                    <td>{m.title}</td>
-                    <td>
-                      <span className={`status ${m.isActive ? "active" : "inactive"}`}>
-                        {m.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td>{m.releaseDate}</td>
+                {recentMovies.length === 0 ? (
+                  <tr>
+                    <td colSpan="3">No movies found</td>
                   </tr>
-                ))}
+                ) : (
+                  recentMovies.map((m) => (
+                    <tr key={m._id}>
+                      <td>{m.title}</td>
+                      <td>
+                        <span
+                          className={`status ${
+                            m.isActive ? "active" : "inactive"
+                          }`}
+                        >
+                          {m.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>
+                        {m.releaseDate
+                          ? new Date(m.releaseDate).toLocaleDateString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -191,7 +232,7 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        <footer>& copy 2025 Cinemax</footer>
+        <footer>&copy; 2025 Cinemax</footer>
       </main>
     </div>
   );
