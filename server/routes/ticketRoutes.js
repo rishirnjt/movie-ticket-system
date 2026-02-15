@@ -1,16 +1,34 @@
 const express = require("express");
 const router = express.Router();
 const Ticket = require("../models/Ticket");
+const Booking = require("../models/Booking");
 const QRCode = require("qrcode");
 const PDFDocument = require("pdfkit");
 const fs = require("fs");
 const path = require("path");
 const { protect } = require("../middleware/authMiddleware");
 
+const expireOldTickets = async() => {
+    const now = new Date();
+
+    const expiredShowtimes = await require("../models/Showtime")
+        .find({ time: { $lt: now} })
+        .select("_id");
+
+    const showtimeIds = expiredShowtimes.map(st=> st._id);
+
+    await Ticket.updateMany(
+        { showtimeId: { $in: showtimeIds }, status: "active"},
+        { $set: { status: "expired"} }
+    );
+};
+
 // Get all tickets for logged-in user
 router.get("/mytickets", protect(["Customer"]), async (req, res) => {
   try {
-    const tickets = await Ticket.find({ userId: req.user._id })
+    await expireOldTickets();
+
+    const tickets = await Ticket.find({ userId: req.user._id, status: "active"})
       .populate("movieId", "title posterUrl")
       .populate("showtimeId", "time hall")
       .sort({ createdAt: -1 });
@@ -52,6 +70,25 @@ router.get("/mytickets", protect(["Customer"]), async (req, res) => {
     console.error("Failed to fetch tickets:", err);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+router.get("/myhistory", protect(["Customer"]), async(req, res) => {
+    try{
+        await expireOldTickets();
+
+        const tickets = await Ticket.find({
+            userId: req.user._id,
+            status: "expired"
+        })
+        .populate("movieId", "title posterUrl")
+        .populate("showtimeId", "time hall")
+        .sort({ created: -1});
+
+    res.json({ tickets });
+    } catch (err) {
+        console.error("Failed to fetch history:", err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 //Ticket download
@@ -141,6 +178,34 @@ router.get("/:ticketId/download", protect(["Customer"]), async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Error generating PDF" });
   }
+});
+
+//Convert reservation to ticket
+router.post("/from-booking/:bookingId", protect(["Customer"]), async(req, res) => {
+    try{
+        const booking = await Booking.findOne({
+            _id: req.params.bookingId,
+            user: req.user._id,
+        });
+
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found"});
+        }
+
+        const ticket = await Ticket.create({
+            userId: booking.user,
+            movieId: booking.movie,
+            showtimeId: booking.showtime,
+            seats: booking.seats,
+            totalPrice: booking.totalPrice,
+        });
+
+        await booking.deleteOne();
+        res.json({ message: "Ticket purchased successfully", ticket});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 

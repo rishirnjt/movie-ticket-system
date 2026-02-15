@@ -71,9 +71,23 @@ const MyAccount = () => {
       }
     };
 
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get(
+          "http://localhost:5001/api/tickets/myhistory",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setHistory(res.data.tickets);
+      } catch (err) {
+        console.error("Failed to fetch history", err);
+      }
+    };
+
     fetchUser();
     fetchReservations();
     fetchTickets();
+    fetchHistory();
   }, []);
 
   useEffect(() => {
@@ -139,6 +153,35 @@ const MyAccount = () => {
     }
   };
 
+  const handleBuy = async (reservationId) => {
+    try{
+      const token = localStorage.getItem("token");
+      console.log("Booking ID:", reservationId);
+      await axios.post(
+        `http://localhost:5001/api/tickets/from-booking/${reservationId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("Ticket purchased successfully!");
+
+      //Refresh reservations and tickets
+      const updatedReservations = reservations.filter(
+        (r) => r._id !== reservationId
+      );
+      setReservations(updatedReservations);
+
+      const ticketRes = await axios.get(
+        "http://localhost:5001/api/tickets/mytickets",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTickets(ticketRes.data.tickets);
+    } catch (err) {
+      console.error("Failed to buy ticket", err);
+      alert("Failed to purchase ticket");
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "reservations":
@@ -184,11 +227,10 @@ const MyAccount = () => {
                           {r.seats.map((seat, idx) => (
                             <div
                               key={idx}
-                              className={`seat-box ${
-                                selectedSeats[r._id]?.includes(seat)
-                                  ? "selected"
-                                  : ""
-                              }`}
+                              className={`seat-box ${selectedSeats[r._id]?.includes(seat)
+                                ? "selected"
+                                : ""
+                                }`}
                               onClick={() =>
                                 toggleSeatSelection(r._id, seat)
                               }
@@ -204,6 +246,10 @@ const MyAccount = () => {
                             onClick={() => handleCancel(r._id)}
                           >
                             Cancel Selected
+                          </button>
+
+                          <button className="buy-button" onClick={() => handleBuy(r._id)}>
+                            Buy Ticket
                           </button>
                         </div>
                       </div>
@@ -259,9 +305,8 @@ const MyAccount = () => {
                         </div>
 
                         <div
-                          className={`ticket-status ${
-                            isUpcoming ? "upcoming" : "completed"
-                          }`}
+                          className={`ticket-status ${isUpcoming ? "upcoming" : "completed"
+                            }`}
                         >
                           {isUpcoming ? "Upcoming" : "Completed"}
                         </div>
@@ -296,11 +341,76 @@ const MyAccount = () => {
             )}
           </div>
         );
+      case "history":
+        return (
+          <div className="tickets-wrapper dark-theme">
+            <h2 className="tickets-title">
+              <i className="fa-solid fa-clock-rotate-left"></i>
+              My History
+            </h2>
+
+            {history.length === 0 ? (
+              <div className="empty-state">
+                <p>No past tickets.</p>
+              </div>
+            ) : (
+              <div className="tickets-container">
+                {history.map((t) => {
+                  const showTime = t.showtimeId?.time
+                    ? new Date(t.showtimeId.time)
+                    : null;
+
+                  return (
+                    <div key={t._id} className="cinema-ticket expired-ticket">
+                      <div className="ticket-poster-section">
+                        {t.movieId?.posterUrl ? (
+                          <img
+                            src={t.movieId.posterUrl}
+                            alt={t.movieId?.title}
+                          />
+                        ) : (
+                          <p>Poster not available</p>
+                        )}
+                      </div>
+
+                      <div className="ticket-info-section">
+                        <div className="ticket-top">
+                          <h3>{t.movieId?.title}</h3>
+                          <span className="ticket-number">
+                            Booking ID: #{t._id.slice(-6).toUpperCase()}
+                          </span>
+                        </div>
+
+                        <div className="ticket-status completed">
+                          Expired
+                        </div>
+
+                        <div className="ticket-details">
+                          <p>
+                            {showTime
+                              ? showTime.toLocaleString()
+                              : "Showtime unavailable"}
+                          </p>
+                          <p>Seats: {t.seats?.join(", ")}</p>
+                          <p>Rs. {t.totalPrice}</p>
+                        </div>
+                      </div>
+
+                      <div className="ticket-perforation"></div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+
 
       default:
         return <h2>Welcome to My Account</h2>;
     }
   };
+
 
   return (
     <div className="account-container">
@@ -311,7 +421,7 @@ const MyAccount = () => {
             alt="profile"
             className="profile-avatar"
           />
-          <h3>{user?.name || "Guest User"}</h3>
+          <h3>{user ? `${user.firstName} ${user.lastName}` : ""}</h3>
           <p>{user?.email}</p>
         </div>
         <nav className="sidebar-menu">
@@ -331,7 +441,9 @@ const MyAccount = () => {
       </aside>
 
       <main className="account-main">
+        <div className="tab-content">
         {renderContent()}
+        </div>
       </main>
     </div>
   );

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
 const Showtime = require("../models/Showtime");
+const Ticket = require("../models/Ticket");
 const { protect } = require("../middleware/authMiddleware");
 
 
@@ -238,8 +239,9 @@ router.post("/cancel/:id", protect(["Customer"]), async (req, res) => {
 router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
   try {
     const { movieId, showtimeId } = req.params;
-    const now = new Date(); 
+    const now = new Date();
 
+    // Active bookings
     const bookings = await Booking.find({
       movie: movieId,
       showtime: showtimeId,
@@ -249,26 +251,40 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
       ]
     });
 
-    const soldSeats = bookings
+    // Sold tickets (permanent)
+    const tickets = await Ticket.find({
+      movieId,
+      showtimeId,
+      status: "active"   // if you use status
+    });
+
+    const heldSeats = bookings
+      .filter(b =>
+        b.status === "holding" &&
+        b.reservationExpiresAt &&
+        b.reservationExpiresAt > now
+      )
+      .flatMap(b => b.seats);
+
+    const soldSeatsFromBookings = bookings
       .filter(b => b.status === "confirmed")
       .flatMap(b => b.seats);
 
-    const heldSeats = bookings
-      .filter(
-        b =>
-          b.status === "holding" &&
-          b.reservationExpiresAt &&
-          b.reservationExpiresAt > now
-      )
-      .flatMap(b => b.seats);
+    const soldSeatsFromTickets = tickets.flatMap(t => t.seats);
+
+    const soldSeats = [
+      ...soldSeatsFromBookings,
+      ...soldSeatsFromTickets
+    ];
 
     res.json({ soldSeats, heldSeats });
 
   } catch (err) {
-    console.error("Fetch seats error:", err); 
+    console.error("Fetch seats error:", err);
     res.status(500).json({ message: "Failed to fetch seats" });
   }
 });
+
 
 // =====================================================
 // 👤 MY RESERVATIONS

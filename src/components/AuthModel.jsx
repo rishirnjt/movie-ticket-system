@@ -11,6 +11,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPwd, setShowLoginPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // sign-up
   const [reg, setReg] = useState({
@@ -28,11 +29,14 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
       const res = await axios.post("http://localhost:5001/api/auth/login", {
         email: loginEmail,
         password: loginPassword,
       });
+      
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setIsLoggedIn(true);
@@ -44,6 +48,8 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
       }
     } catch (err) {
       alert(err.response?.data?.message || "Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,9 +140,22 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                   </button>
 
                 </div>
-                <button id="btn-go" className="primary-btn" type="submit">
-                  GO
+                <button
+                  id="btn-go"
+                  className="primary-btn"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner"></span>
+                      <span style={{ marginLeft: "8px" }}>Logging in...</span>
+                    </>
+                  ) : (
+                    "GO"
+                  )}
                 </button>
+
                 <a className="forgot-link" href="#">
                   Forgot Your Password?
                 </a>

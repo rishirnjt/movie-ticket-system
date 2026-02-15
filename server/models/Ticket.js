@@ -10,6 +10,11 @@ const ticketSchema = new mongoose.Schema({
     foodId: { type: mongoose.Schema.Types.ObjectId, ref: "Food" },
     quantity: Number
   }],
+  status: {
+    type: String,
+    enum: ["active", "expired"],
+    default: "active"
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -35,6 +35,7 @@
   cursor: pointer;
   transition: color 0.2s;
 }
+
 .auth-close:hover {
   color: #fff;
 }
@@ -45,6 +46,7 @@
   border-bottom: 1px solid #333;
   margin-bottom: 1.5rem;
 }
+
 .auth-tab {
   flex: 1;
   padding: 0.75rem;
@@ -55,10 +57,12 @@
   font-weight: bold;
   transition: background 0.2s, color 0.2s;
 }
+
 .auth-tab.active {
   color: #fff;
   border-bottom: 2px solid #7f1425;
 }
+
 .auth-tab:hover {
   background: #2a2a2a;
 }
@@ -69,6 +73,7 @@
   flex-direction: column;
   gap: 0.9rem;
 }
+
 .auth-form input,
 .auth-form select {
   background: #2a2a2a;
@@ -79,6 +84,7 @@
   outline: none;
   transition: border 0.2s;
 }
+
 .auth-form input:focus,
 .auth-form select:focus {
   border-color: #7f1425;
@@ -89,9 +95,11 @@
   display: flex;
   align-items: center;
 }
+
 .password-wrapper input {
   flex: 1;
 }
+
 .eye-btn {
   background: none;
   border: none;
@@ -101,6 +109,7 @@
   padding: 0 0.5rem;
   transition: color 0.2s;
 }
+
 .eye-btn:hover {
   color: #fff;
 }
@@ -114,14 +123,45 @@
   color: white;
   font-weight: bold;
   cursor: pointer;
+  justify-content: center;
+  align-items: center;
   transition: background 0.2s;
 }
+
+/* Disable button while loading */
+.primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
 .primary-btn:hover {
   background: #ea1337;
 }
+
 .confirm {
   background: #7f1425;
 }
+
 .confirm:hover {
   background: #ea1337;
 }
@@ -132,16 +172,20 @@
   color: #4da3ff;
   text-decoration: none;
 }
+
 .forgot-link:hover {
   text-decoration: underline;
 }
+
 .switch-link {
   color: #4da3ff;
   cursor: pointer;
 }
+
 .switch-link:hover {
   text-decoration: underline;
 }
+
 .muted {
   font-size: 0.85rem;
   color: #aaa;
@@ -153,9 +197,11 @@
   display: flex;
   gap: 0.5rem;
 }
+
 .phone-row select {
   max-width: 80px;
 }
+
 .name-row input {
   flex: 1;
 }
@@ -165,10 +211,12 @@
   font-size: 0.85rem;
   color: #ccc;
 }
+
 .terms a {
   color: #4da3ff;
   text-decoration: none;
 }
+
 .terms a:hover {
   text-decoration: underline;
 }
@@ -179,6 +227,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

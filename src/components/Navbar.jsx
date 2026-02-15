@@ -17,7 +17,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* ================= USER INFO ================= */
+  //User info
   useEffect(() => {
     const user = localStorage.getItem("user");
     if (user) {
@@ -26,7 +26,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
     }
   }, [isLoggedIn]);
 
-  /* ================= LIVE SEARCH ================= */
+  //Search
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults([]);
@@ -51,7 +51,6 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
     return () => clearTimeout(delay);
   }, [searchQuery]);
 
-  /* ================= CLOSE DROPDOWN ON OUTSIDE CLICK ================= */
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -63,7 +62,6 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /* ================= ACTIONS ================= */
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

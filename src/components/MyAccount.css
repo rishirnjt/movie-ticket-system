@@ -213,23 +213,30 @@
   transition: 0.2s;
 }
 
-.cancel-btn:hover {
-  background: #c0392b;
-}
 
-.buy-btn {
-  background: #27ae60;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
+
+.buy-button {
+  background-color: #029e43;
   color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: 0.2s;
+  margin-left: 10px;
+  transition: 0.2s ease;
 }
 
-.buy-btn:hover {
-  background: #1e8449;
+.buy-button:hover {
+  background-color: #0f843e;
 }
+
+.reservation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
 
 /* Animation */
 @keyframes fadeIn {
@@ -520,6 +527,22 @@
   font-size: 40px;
   margin-bottom: 10px;
 }
+
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 /* ===============================
    RESPONSIVE
