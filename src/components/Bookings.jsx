@@ -50,7 +50,7 @@ const Bookings = () => {
         <div className="bookings-page">
             <h2>Bookings</h2>
 
-            <div classname="search-container">
+            <div className="search-container">
                 <input
                     type="text"
                     placeholder="Search by customer or movie"

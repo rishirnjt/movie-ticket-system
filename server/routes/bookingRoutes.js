@@ -214,7 +214,9 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
 //Cancel Booking
 router.post("/cancel/:id", protect(["Customer"]), async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await Booking.findById(req.params.id)
+    .populate("movie")
+    .populate("showtime");
 
     if (!booking)
       return res.status(404).json({ message: "Booking not found" });
@@ -351,9 +353,7 @@ router.get("/admin/:id", protect(["Admin"]), async (req, res) => {
 });
 
 
-// =====================================================
-// 👑 ADMIN – UPDATE STATUS
-// =====================================================
+//Admin-Updated Status
 router.put("/admin/:id/status", protect(["Admin"]), async (req, res) => {
   try {
     const { status } = req.body;

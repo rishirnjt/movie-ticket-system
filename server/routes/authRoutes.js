@@ -14,9 +14,7 @@ const generateToken = (user) => {
   );
 };
 
-// ============================
-// REGISTER
-// ============================
+//Register
 router.post("/register", async (req, res) => {
   const { firstName, lastName, email, password } = req.body;
 
@@ -64,9 +62,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// ============================
-// LOGIN
-// ============================
+//Login
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 

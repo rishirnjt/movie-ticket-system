@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Carousel from "./components/Carousel";
@@ -18,6 +13,7 @@ import AddMovie from "./components/AddMovie";
 import EditMovie from "./components/EditMovie";
 import ManageMovies from "./components/ManageMovies";
 import AuthModal from "./components/AuthModel";
+import AdminLogin from "./pages/AdminLogin";
 import MyAccount from "./components/MyAccount";
 import Foods from "./components/Foods";
 import Checkout from "./components/Checkout";
@@ -36,6 +32,8 @@ function AppWrapper() {
   const state = location.state;
   const backgroundLocation = state && state.backgroundLocation;
 
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
@@ -43,10 +41,12 @@ function AppWrapper() {
 
   return (
     <>
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      {!isAdminRoute && (
+        <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      )}
 
-      {/* MAIN ROUTES */}
       <Routes location={backgroundLocation || location}>
+        {/* Customer Routes */}
         <Route
           path="/"
           element={
@@ -60,7 +60,6 @@ function AppWrapper() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
         <Route path="/auth" element={<AuthModal setIsLoggedIn={setIsLoggedIn} />} />
-
         <Route path="/seats/:movieId" element={<SeatSelection />} />
         <Route path="/foods/:bookingId" element={<Foods />} />
         <Route path="/checkout/:bookingId" element={<Checkout />} />
@@ -68,7 +67,10 @@ function AppWrapper() {
         <Route path="/myaccount" element={<MyAccount />} />
         <Route path="/ticket/:ticketId" element={<TicketPage />} />
 
-        {/* Admin */}
+        {/* Admin Login */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        {/* Protected Admin Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -109,7 +111,6 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
-
         <Route
           path="/admin/foods"
           element={
@@ -120,22 +121,7 @@ function AppWrapper() {
         />
       </Routes>
 
-      {/* AUTH MODAL ROUTE (overlay) */}
-      {backgroundLocation && (
-        <Routes>
-          <Route
-            path="/auth"
-            element={
-              <AuthModal
-                setIsLoggedIn={setIsLoggedIn}
-                onClose={() => window.history.back()}
-              />
-            }
-          />
-        </Routes>
-      )}
-
-      <Footer />
+      {!isAdminRoute && <Footer />}
     </>
   );
 }
