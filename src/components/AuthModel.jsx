@@ -36,22 +36,31 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
         email: loginEmail,
         password: loginPassword,
       });
-      
+
+      // Block admin 
+      const role = res.data?.user?.role?.toLowerCase();
+
+      if (role === "admin") {
+        alert("Please login from admin panel.");
+        setLoading(false);
+        return;
+      }
+
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setIsLoggedIn(true);
 
-      if (res.data.user.role.toLowerCase() === "admin") {
-        navigate("/admin/dashboard");
-      } else {
+      onClose();
+      setTimeout(() => {
         navigate("/");
-      }
+      }, 100);
     } catch (err) {
       alert(err.response?.data?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -247,7 +256,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                 </div>
                 <label className="terms">
                   <input
-                    id="reg-checkbox-terms" // Added ID
+                    id="reg-checkbox-terms"
                     name="termsAccepted"
                     type="checkbox"
                     checked={reg.termsAccepted}

@@ -1,13 +1,14 @@
 // routes/admin.js
 const express = require("express");
 const router = express.Router();
+const { protect } = require("../middleware/authMiddleware");
 
 const Booking = require("../models/Booking");
 const Movie = require("../models/Movie");
 const User = require("../models/User");
 
 // Get dashboard stats
-router.get("/stats", async (req, res) => {
+router.get("/stats", protect(["admin"]), async (req, res) => {
   try {
     const totalBookings = await Booking.countDocuments();
     const totalRevenue = await Booking.aggregate([
@@ -28,7 +29,7 @@ router.get("/stats", async (req, res) => {
 });
 
 //total bookings
-router.get("/bookings", async (req, res) => {
+router.get("/bookings", protect(["admin"]), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;

@@ -142,9 +142,10 @@ const MyAccount = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setReservations((prev) =>
-        prev.map((r) => (r._id === reservationId ? data.booking : r))
+      setReservations(prev =>
+        prev.filter(r => r._id !== reservationId)
       );
+
 
       alert("Booking cancelled successfully!");
     } catch (err) {
@@ -154,7 +155,7 @@ const MyAccount = () => {
   };
 
   const handleBuy = async (reservationId) => {
-    try{
+    try {
       const token = localStorage.getItem("token");
       console.log("Booking ID:", reservationId);
       await axios.post(
@@ -442,7 +443,7 @@ const MyAccount = () => {
 
       <main className="account-main">
         <div className="tab-content">
-        {renderContent()}
+          {renderContent()}
         </div>
       </main>
     </div>
