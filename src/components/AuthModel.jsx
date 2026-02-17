@@ -238,7 +238,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                 </div>
                 <div className="password-wrapper">
                   <input
-                    id="reg-input-password" // Added ID
+                    id="reg-input-password"
                     name="password"
                     type={showRegPwd ? "text" : "password"}
                     placeholder="Enter your password"
