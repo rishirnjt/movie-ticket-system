@@ -131,15 +131,19 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
           )}
         </div>
 
-        {/* AUTH */}
+
         {isLoggedIn ? (
-          <div
-            className="profile-section"
-            ref={dropdownRef}
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <img src={profileImg} className="profile-icon" alt="profile" />
-            <span className="profile-name">{userName}</span>
+          <div className="profile-wrapper" ref={dropdownRef}>
+            <div
+              className="profile-section"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDropdownOpen(!dropdownOpen);
+              }}
+            >
+              <img src={profileImg} className="profile-icon" alt="profile" />
+              <span className="profile-name">{userName}</span>
+            </div>
 
             {dropdownOpen && (
               <div className="dropdown">
@@ -150,6 +154,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
               </div>
             )}
           </div>
+
         ) : (
           <button className="login-btn" onClick={handleLoginClick}>
             Sign In

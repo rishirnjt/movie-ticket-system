@@ -17,8 +17,23 @@ const Bookings = () => {
     const fetchBookings = async () => {
         try {
             setLoading(true);
+
+            const token = localStorage.getItem("token");
+            if (!token) {
+                console.error("No token found. Please login first");
+                setLoading(false);
+                return;
+            }
+
             const res = await fetch(
-                `http://localhost:5001/api/admin/bookings?page=${page}&limit=${limit}`
+                `http://localhost:5001/api/admin/bookings?page=${page}&limit=${limit}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+
+                    },
+                }
             );
             const data = await res.json();
 

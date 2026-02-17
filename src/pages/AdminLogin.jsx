@@ -8,6 +8,7 @@ const AdminLogin = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleAdminLogin = async (e) => {
@@ -24,6 +25,7 @@ const AdminLogin = () => {
 
       if (role !== "admin") {
         alert("Access denied. Admins only.");
+        setLoading(false);
         return;
       }
 
@@ -43,7 +45,9 @@ const AdminLogin = () => {
       <div className="admin-login-overlay"></div>
 
       <form className="admin-login-form" onSubmit={handleAdminLogin}>
-        <h1 className="admin-logo">MOVIE<span>ADMIN</span></h1>
+        <h1 className="admin-logo">
+          MOVIE<span>ADMIN</span>
+        </h1>
         <h2>Sign In</h2>
 
         <input
@@ -54,15 +58,29 @@ const AdminLogin = () => {
           required
         />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="password-wrapper">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
-        <button type="submit" disabled={loading}>
+          <button
+            type="button"
+            className="eye-btn"
+            onClick={() => setShowPassword((prev) => !prev)}
+          >
+            <i
+              className={`fa-solid ${
+                showPassword ? "fa-eye-slash" : "fa-eye"
+              }`}
+            ></i>
+          </button>
+        </div>
+
+        <button type="submit" disabled={loading} className="submit-btn">
           {loading ? "Signing In..." : "Sign In"}
         </button>
       </form>

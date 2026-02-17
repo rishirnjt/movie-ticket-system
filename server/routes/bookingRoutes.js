@@ -3,12 +3,13 @@ const router = express.Router();
 const Booking = require("../models/Booking");
 const Showtime = require("../models/Showtime");
 const Ticket = require("../models/Ticket");
+const User = require("../models/User");
+
+const sendBookingEmail = require("../utils/sendEmail");
 const { protect } = require("../middleware/authMiddleware");
 
 
-// =====================================================
-// HOLD (Reserve Until 1 Hour Before Showtime)
-// =====================================================
+//Hold booking
 router.post("/hold", protect(["Customer"]), async (req, res) => {
   try {
     const { movieId, showtimeId, seats, foods = [] } = req.body;
@@ -24,10 +25,7 @@ router.post("/hold", protect(["Customer"]), async (req, res) => {
     }
 
     const showtimeDate = new Date(showtime.time);
-
-    const oneHourBefore = new Date(
-      showtimeDate.getTime() - 60 * 60 * 1000
-    );
+    const oneHourBefore = new Date(showtimeDate.getTime() - 60 * 60 * 1000);
 
 
     if (new Date() > oneHourBefore)
@@ -68,6 +66,20 @@ router.post("/hold", protect(["Customer"]), async (req, res) => {
       reservationExpiresAt: oneHourBefore
     });
 
+    //send email
+    const user = await User.findById(req.user._id);
+    try{
+      await sendBookingEmail(user.email,{
+        movie: showtime.movie.title,
+        date: new Date(showtime.time).toLocaleDateString(),
+        time: new Date(showtime.time).toLocaleDateString(),
+        seats: booking.seats.join(", "),
+        total: booking.totalPrice
+      });
+      console.log("Booking email sent after hold");
+    } catch (emailErr) {
+      console.error("Email failed but booking held:", emailErr);
+    }
     res.status(201).json(booking);
 
   } catch (err) {
@@ -80,24 +92,21 @@ router.post("/hold", protect(["Customer"]), async (req, res) => {
 //Buy
 router.post("/buy", protect(["Customer"]), async (req, res) => {
   try {
+    console.log("Buy request body:", req.body);
+    console.log("User info:", req.user);
+
     const { movieId, showtimeId, seats } = req.body;
 
-    if (!movieId || !showtimeId || !seats?.length)
+    if (!movieId || !showtimeId || !seats?.length) {
+      console.log("Missing fields in request");
       return res.status(400).json({ message: "Missing required fields" });
+    }
 
     const showtime = await Showtime.findById(showtimeId);
-    if (!showtime)
+    if (!showtime) {
+      console.log("Showtime not found:", showtimeId);
       return res.status(404).json({ message: "Showtime not found" });
-    const showtimeDate = new Date(showtime.time);
-
-    const oneHourBefore = new Date(
-      showtimeDate.getTime() - 60 * 60 * 1000
-    );
-
-    if (new Date() > oneHourBefore)
-      return res.status(400).json({
-        message: "Booking closed (1 hour before showtime)"
-      });
+    }
 
     const existing = await Booking.findOne({
       movie: movieId,
@@ -109,8 +118,10 @@ router.post("/buy", protect(["Customer"]), async (req, res) => {
       ]
     });
 
-    if (existing)
+    if (existing) {
+      console.log("Seats already taken:", seats);
       return res.status(409).json({ message: "Seats already taken" });
+    }
 
     const paymentWindow = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -124,13 +135,15 @@ router.post("/buy", protect(["Customer"]), async (req, res) => {
       reservationExpiresAt: paymentWindow
     });
 
+    console.log("Booking created:", booking._id);
     res.status(201).json(booking);
 
   } catch (err) {
     console.error("Buy error:", err);
-    res.status(500).json({ message: "Buy failed" });
+    res.status(500).json({ message: "Buy failed", error: err.message });
   }
 });
+
 
 // Add foods to booking
 router.post("/add-foods/:id", protect(["Customer"]), async (req, res) => {
@@ -197,7 +210,22 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
       foods: booking.foods || []
     });
     console.log("Creating ticket for user:", booking.user);
-    
+
+    try {
+      const user = await User.findById(booking.user);
+
+      await sendBookingEmail(user.email, {
+        movie: booking.movie.title,
+        date: new Date(booking.showtime.time).toLocaleDateString(),
+        time: new Date(booking.showtime.time).toLocaleTimeString(),
+        seats: booking.seats.join(", "),
+        total: booking.totalPrice
+      });
+
+    } catch (emailErr) {
+      console.error("Email failed but booking confirmed:", emailErr);
+    }
+
 
     res.json({
       message: "Payment successful",
@@ -215,8 +243,8 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
 router.post("/cancel/:id", protect(["Customer"]), async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
-    .populate("movie")
-    .populate("showtime");
+      .populate("movie")
+      .populate("showtime");
 
     if (!booking)
       return res.status(404).json({ message: "Booking not found" });
@@ -257,7 +285,7 @@ router.get("/booked-seats/:movieId/:showtimeId", async (req, res) => {
     const tickets = await Ticket.find({
       movieId,
       showtimeId,
-      status: "active"  
+      status: "active"
     });
 
     const heldSeats = bookings
@@ -303,7 +331,7 @@ router.get("/my-reservations", protect(["Customer"]), async (req, res) => {
       .populate("showtime")
       .sort({ createdAt: -1 });
 
-    const activeBookings= bookings.filter(b => {
+    const activeBookings = bookings.filter(b => {
       return b.showtime && new Date(b.showtime.time) > now;
     });
 

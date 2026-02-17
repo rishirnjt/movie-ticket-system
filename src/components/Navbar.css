@@ -1,10 +1,12 @@
 .navbar {
   height: 100px;
+  min-height: 100px;   
+  max-height: 100px;   
+  overflow: visible;  
   padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   background: linear-gradient(135deg, #000, #3f0b14, #7f1425);
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.6);
   position: sticky;
@@ -143,11 +145,16 @@
 }
 
 /* ================= PROFILE ================= */
+.profile-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .profile-section {
   display: flex;
   align-items: center;
-  gap: 10px;
-  position: relative;
+  gap: 8px;
   cursor: pointer;
 }
 
@@ -155,43 +162,76 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 2px solid #ffbdbd;
+  border: 2px solid #fff;
 }
 
 .profile-name {
-  color: white;
+  color: #fff;
   font-weight: 500;
 }
 
-/* ================= DROPDOWN ================= */
+/* ✅ FIXED DROPDOWN */
 .dropdown {
   position: absolute;
-  top: 52px;
+  top: 55px;
   right: 0;
-  background: rgba(40, 10, 15, 0.95);
-  backdrop-filter: blur(10px);
+  width: 180px;
+  background: #111;
   border-radius: 12px;
-  min-width: 180px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  box-shadow: 0 14px 30px rgba(0,0,0,.7);
+  animation: fadeSlide 0.2s ease-in-out;
+  z-index: 1000;
 }
 
+/* Arrow */
+.dropdown::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: 20px;
+  width: 14px;
+  height: 14px;
+  background: #111;
+  transform: rotate(45deg);
+}
+
+/* Links */
 .dropdown a,
 .dropdown button {
-  padding: 12px 16px;
+  display: block;
+  width: 100%;
+  padding: 12px 15px;
+  text-align: left;
+  color: #fff;
   background: transparent;
   border: none;
-  text-align: left;
-  color: bisque;
+  font-size: 14px;
   cursor: pointer;
-  transition: background 0.25s;
+  transition: 0.2s;
 }
 
 .dropdown a:hover,
 .dropdown button:hover {
-  background: linear-gradient(135deg, #7f1425, #a31a1a);
-  color: white;
+  background: #1f1f1f;
 }
+
+.dropdown button {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animation */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 /* ================= MOBILE ================= */
 @media (max-width: 768px) {

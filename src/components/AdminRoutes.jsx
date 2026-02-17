@@ -2,10 +2,22 @@ import { Navigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 
 const AdminRoutes = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
-  if (!token || !user || user.role?.toLowerCase() !== "admin") {
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch (err) {
+    user = null;
+  }
+
+  // Not logged in
+  if (!token || !user) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Not admin
+  if (user.role?.toLowerCase() !== "admin") {
     return <Navigate to="/" replace />;
   }
 
