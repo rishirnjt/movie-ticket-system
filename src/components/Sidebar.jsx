@@ -41,23 +41,11 @@ const Sidebar = () => {
           </div>
         )}
       </div>
-
-      {/* Showtimes */}
-      <div className="menu-group">
-        <div className="menu-title" onClick={() => toggleMenu("shows")}>
-          <i className="fas fa-clock me-2"></i> Showtimes
-        </div>
-        {openMenu === "shows" && (
-          <div className="submenu">
-            <NavLink to="/admin/add-show" className={linkClass}>
-              <i className="fas fa-plus me-2"></i> Add Show
-            </NavLink>
-            <NavLink to="/admin/list-shows" className={linkClass}>
-              <i className="fas fa-list me-2"></i> Manage Shows
-            </NavLink>
-          </div>
-        )}
-      </div>
+    
+        {/* Users */}
+        <NavLink to="/admin/users" className={linkClass}>
+          <i className="fas fa-users me-2"></i> Users
+        </NavLink>
 
       {/* Bookings */}
       <NavLink to="/admin/bookings" className={linkClass}>

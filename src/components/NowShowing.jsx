@@ -72,43 +72,39 @@ const NowShowing = () => {
   };
 
   return (
-    <div
-      className='now-showing-container'
-      style={{
-        backgroundImage: `url(${background})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        minHeight: '100vh',
-        padding: '1.5rem',
-        color: '#fff',
-      }}
-    >
+  <div className="now-showing-container">
+
+    <div className="section-header">
       <h2>Now Showing</h2>
+    </div>
 
-      <div className='date-tabs'>
-        {allDates.map(date => (
-          <button
-            key={date}
-            className={date === selectedDate ? 'active' : ''}
-            onClick={() => setSelectedDate(date)}
+    <div className="date-tabs">
+      {allDates.map((date) => (
+        <button
+          key={date}
+          className={`date-tab ${date === selectedDate ? "active" : ""}`}
+          onClick={() => setSelectedDate(date)}
+        >
+          {new Date(date).toLocaleDateString("en-GB", {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+          })}
+        </button>
+      ))}
+    </div>
+
+    <div className="movies-grid">
+      {movies.length > 0 ? (
+        movies.map((movie) => (
+          <div
+            className="movie-card"
+            key={movie._id}
+            onClick={() => handleMovieClick(movie._id)}
           >
-            {new Date(date).toLocaleDateString('en-GB', {
-              weekday: 'short', day: 'numeric', month: 'short'
-            })}
-          </button>
-        ))}
-      </div>
 
-      <div className='movies-grid'>
-        {movies.length > 0 ? (
-          movies.map((movie) => (
-            <div
-              className='movie-card'
-              key={movie._id}
-              onClick={() => handleMovieClick(movie._id)}
-              style={{ cursor: "pointer" }}
-            >
+            {/* IMAGE WRAPPER */}
+            <div className="poster-wrapper">
               <img
                 src={
                   movie.posterUrl?.startsWith("http")
@@ -117,41 +113,48 @@ const NowShowing = () => {
                 }
                 alt={movie.title}
               />
+            </div>
 
-              <div className="movie-details">
-                <h4>{movie.title}</h4>
-                <p>{movie.duration}</p>
-                <p>{movie.genre}</p>
-                <p>{movie.rating}</p>
+            {/* HOVER INFO */}
+            <div className="hover-info">
+              <h4>{movie.title}</h4>
+              <p className="genre">{movie.genre}</p>
 
-                <div className="showtimes">
-                  {movie.showtimes && movie.showtimes.length > 0 ? (
-                    movie.showtimes.map((showtime, index) => (
-                      <button
-                        key={index}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShowtime(movie._id, showtime);
-                        }}
-                      >
-                        {showtime.hall} - {new Date(showtime.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </button>
-                    ))
-                  ) : (
-                    <span>No showtimes available</span>
-                  )}
-                </div>
+              <div className="showtimes">
+                {movie.showtimes && movie.showtimes.length > 0 ? (
+                  movie.showtimes.slice(0, 3).map((showtime, index) => (
+                    <span
+                      key={index}
+                      className="time-pill"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShowtime(movie._id, showtime);
+                      }}
+                    >
+                      {new Date(showtime.time).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  ))
+                ) : (
+                  <span className="no-showtime">
+                    No showtimes
+                  </span>
+                )}
               </div>
             </div>
-          ))
-        ) : (
-          <p>No movies available for this date.</p>
-        )}
-      </div>
+
+          </div>
+        ))
+      ) : (
+        <p className="no-movies">
+          No movies available for this date.
+        </p>
+      )}
     </div>
-  );
+  </div>
+);
 };
-
-
 export default NowShowing;
 

@@ -6,7 +6,7 @@ import './Carousel.css';
 
 import poster1 from '../assets/Avatar.webp';
 import poster2 from '../assets/FantasticFour.jpg';
-import poster3 from '../assets/Saamrajya.jpg';
+import poster3 from '../assets/spider.jpg';
 
 const Carousel = () => {
     const settings={
@@ -24,7 +24,7 @@ const Carousel = () => {
     const posters = [
         {src : poster1, title: 'Avatar:Fire and Ash'},
         {src : poster2, title: 'Fantastic Four'},
-        {src: poster3, title: 'Saamrajya'}
+        {src: poster3, title: 'SpiderMan'}
     ];
 
    return (

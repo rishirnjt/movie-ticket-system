@@ -28,6 +28,8 @@ import Bookings from "./components/Bookings";
 import MovieDetails from "./components/MovieDetails";
 import SearchResults from "./pages/SearchResults";
 import TicketPage from "./pages/TicketPage";
+import Users from "./pages/Users";
+
 import "./App.css";
 
 function AppWrapper() {
@@ -104,6 +106,15 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
+        <Route
+         path="/admin/users"
+         element={
+          <AdminRoutes>
+            <Users /> 
+          </AdminRoutes>
+         }
+         />
+         
         <Route
           path="/admin/bookings"
           element={

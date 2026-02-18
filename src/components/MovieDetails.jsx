@@ -49,97 +49,92 @@ const MovieDetails = () => {
   const trailerId = getYouTubeId(movie.trailerUrl);
 
   return (
-    <div className="movie-details-page">
-      <div className="movie-details-card">
-        {/* POSTER */}
-        <img
-          src={
-            movie.posterUrl?.startsWith("http")
-              ? movie.posterUrl
-              : `http://localhost:5001${movie.posterUrl}`
-          }
-          alt={movie.title}
-          className="poster"
-        />
+  <div className="movie-hero-page">
 
-        {/* INFO */}
-        <div className="movie-info">
+    <div className="hero-content">
+
+      {/* LEFT SIDE */}
+      <div className="hero-left">
+        <div className="poster-wrapper">
+          <img
+            src={
+              movie.posterUrl?.startsWith("http")
+                ? movie.posterUrl
+                : `http://localhost:5001${movie.posterUrl}`
+            }
+            alt={movie.title}
+          />
+        </div>
+
+        <div className="movie-text">
           <h1>{movie.title}</h1>
-
-          <p>
-            <strong>Description:</strong>{movie.description}
-          </p>
-
-
-          <p>
-            <strong>Genre:</strong> {movie.genre}
-          </p>
-
-          <p>
-            <strong>Language:</strong> {movie.language}
-          </p>
-
-          <p>
-            <strong>Duration:</strong> {movie.duration}
-          </p>
-
-          <p>
-            <strong>Release Date:</strong>{" "}
-            {new Date(movie.releaseDate).toLocaleDateString()}
-          </p>
-
-          {/* SHOWTIMES */}
-          <h3>Available Showtimes</h3>
-          {movie.showtimes && movie.showtimes.length > 0 ? (
-            <div className="showtimes">
-              {movie.showtimes.map((showtime) => (
-                <button
-                  key={showtime._id}
-                  className="showtime-btn"
-                  onClick={() =>
-                    navigate(`/seats/${movie._id}`, {
-                      state: { selectedShowtime: showtime },
-                    })
-                  }
-                >
-                  {showtime.hall} —{" "}
-                  {new Date(showtime.time).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p>No showtimes available</p>
-          )}
-
-          {/* 🎬 TRAILER */}
-          {trailerId && (
-            <div className="trailer-section">
-              <h3>🎬 Watch Trailer</h3>
-              <div className="trailer-wrapper">
-                <iframe
-                  src={`https://www.youtube.com/embed/${trailerId}`}
-                  title="Movie Trailer"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Optional warning if URL exists but invalid */}
-          {movie.trailerUrl && !trailerId && (
-            <p style={{ color: "red" }}>
-              Invalid YouTube trailer link
-            </p>
-          )}
+          <p className="description">{movie.description}</p>
         </div>
       </div>
-    </div>
-  );
-};
 
+      {/* RIGHT GLASS PANEL */}
+      <div className="hero-right">
+
+        <div className="info-item">
+          <span>GENRE</span>
+          <p>{movie.genre}</p>
+        </div>
+
+        <div className="info-item">
+          <span>LANGUAGE</span>
+          <p>{movie.language}</p>
+        </div>
+
+        <div className="info-item">
+          <span>DURATION</span>
+          <p>{movie.duration}</p>
+        </div>
+
+        <div className="info-item">
+          <span>RELEASE DATE</span>
+          <p>
+            {new Date(movie.releaseDate).toLocaleDateString()}
+          </p>
+        </div>
+
+        <h3 className="showtime-title">Showtimes</h3>
+
+        {movie.showtimes?.length > 0 ? (
+          <div className="showtimes">
+            {movie.showtimes.map((showtime) => (
+              <button
+                key={showtime._id}
+                className="showtime-btn"
+                onClick={() =>
+                  navigate(`/seats/${movie._id}`, {
+                    state: { selectedShowtime: showtime },
+                  })
+                }
+              >
+                {showtime.hall} —{" "}
+                {new Date(showtime.time).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="no-showtimes">No showtimes available</p>
+        )}
+
+        {trailerId && (
+          <div className="trailer-mini">
+            <iframe
+              src={`https://www.youtube.com/embed/${trailerId}`}
+              title="Movie Trailer"
+              allowFullScreen
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+);
+};
 export default MovieDetails;
