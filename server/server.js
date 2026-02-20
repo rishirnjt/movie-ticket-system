@@ -41,7 +41,7 @@ cron.schedule("*/1 * * * *", async () => {
 
     await Booking.updateMany(
       {
-        status: "confirmed",
+        status: "holding",
         purchaseDeadline: { $lte: now }
       },
       { status: "cancelled" }
@@ -63,6 +63,7 @@ const userRoutes = require('./routes/userRoutes');
 const foodRoutes = require('./routes/foodRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const showtimeRoutes = require('./routes/showtimeRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
@@ -73,6 +74,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use("/api/showtimes", showtimeRoutes);
+app.use("/api/payment", paymentRoutes);
 
 //route testing
 app.get('/test', (req, res) => {

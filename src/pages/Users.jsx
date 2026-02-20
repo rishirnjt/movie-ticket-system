@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Users.css";
 
-const AdminUsers = () => {
+const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -12,7 +12,17 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/users");
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        "http://localhost:5001/api/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       setUsers(res.data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -20,76 +30,75 @@ const AdminUsers = () => {
   };
 
   const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(search.toLowerCase()) ||
-    user.email.toLowerCase().includes(search.toLowerCase())
+    user.name?.toLowerCase().includes(search.toLowerCase()) ||
+    user.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="admin-users-page">
+      <div className="users-container">
 
-      <div className="admin-header">
-        <h2>Total Users</h2>
-        <p>Manage registered users of the system</p>
-      </div>
+        <div className="users-header">
+          <h1>Total Users</h1>
+          <p>Manage registered users of the system</p>
+        </div>
 
-      {/* Stats Card */}
-      <div className="stats-card">
-        <h3>{users.length}</h3>
-        <span>Registered Users</span>
-      </div>
+        <div className="stats-card">
+          <h2>{users.length}</h2>
+          <span>Registered Users</span>
+        </div>
 
-      {/* Search */}
-      <div className="search-bar">
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+        <div className="search-box">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-      {/* Users Table */}
-      <div className="users-table">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map((user, index) => (
-                <tr key={user._id}>
-                  <td>{index + 1}</td>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <span className={`role ${user.role}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td>
-                    {new Date(user.createdAt).toLocaleDateString()}
+        <div className="users-table">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="no-data">
+                    No users found.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-data">
-                  No users found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredUsers.map((user, index) => (
+                  <tr key={user._id}>
+                    <td>{index + 1}</td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>
+                      <span className={`role-badge ${user.role}`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td>
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
+      </div>
     </div>
   );
 };
 
-export default AdminUsers;
+export default Users;

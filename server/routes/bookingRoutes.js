@@ -5,7 +5,7 @@ const Showtime = require("../models/Showtime");
 const Ticket = require("../models/Ticket");
 const User = require("../models/User");
 
-const sendBookingEmail = require("../utils/sendEmail");
+const { sendReservationEmail, sendPurchaseEmail } = require("../utils/sendEmail");
 const { protect } = require("../middleware/authMiddleware");
 
 
@@ -66,11 +66,13 @@ router.post("/hold", protect(["Customer"]), async (req, res) => {
       reservationExpiresAt: oneHourBefore
     });
 
+    await booking.populate("movie showtime");
+
     //send email
     const user = await User.findById(req.user._id);
-    try{
-      await sendBookingEmail(user.email,{
-        movie: showtime.movie.title,
+    try {
+      await sendReservationEmail(user.email, {
+        movie: booking.movie.title,
         date: new Date(showtime.time).toLocaleDateString(),
         time: new Date(showtime.time).toLocaleDateString(),
         seats: booking.seats.join(", "),
@@ -178,63 +180,75 @@ router.post("/add-foods/:id", protect(["Customer"]), async (req, res) => {
   }
 });
 
-//Checkout
+// Checkout & confirm purchase
+// Checkout Route
 router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
   try {
+    // 1️⃣ Fetch booking and populate movie & showtime
     const booking = await Booking.findById(req.params.id)
       .populate("showtime")
       .populate("movie");
 
-    if (!booking)
+    if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
+    }
 
-    if (booking.user.toString() !== req.user._id.toString())
+    // 2️⃣ Check if user owns this booking
+    if (booking.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
+    }
 
-    if (booking.reservationExpiresAt < new Date())
+    // 3️⃣ Check payment window
+    if (!booking.reservationExpiresAt || booking.reservationExpiresAt < new Date()) {
       return res.status(400).json({ message: "Payment window expired" });
+    }
 
+    // 4️⃣ Update booking status to confirmed
     booking.status = "confirmed";
     booking.reservationExpiresAt = null;
-
     await booking.save();
 
-    const Ticket = require("../models/Ticket");
-
-    await Ticket.create({
+    // 5️⃣ Create ticket record
+    const ticket = await Ticket.create({
       userId: booking.user,
       movieId: booking.movie._id,
-      showtimeId: booking.showtime,
+      showtimeId: booking.showtime._id,
       seats: booking.seats,
       totalPrice: booking.totalPrice,
-      foods: booking.foods || []
+      foods: booking.foods || [],
+      status: "active"
     });
-    console.log("Creating ticket for user:", booking.user);
+
+    console.log("Ticket created for user:", booking.user);
+
+    // 6️⃣ Send purchase email with PDF e-ticket
+    const user = await User.findById(req.user._id);
 
     try {
-      const user = await User.findById(booking.user);
-
-      await sendBookingEmail(user.email, {
+      await sendPurchaseEmail(user.email, {
         movie: booking.movie.title,
         date: new Date(booking.showtime.time).toLocaleDateString(),
         time: new Date(booking.showtime.time).toLocaleTimeString(),
         seats: booking.seats.join(", "),
-        total: booking.totalPrice
+        foods: booking.foods || [],
+        totalPaid: booking.totalPrice,
+        ticketId: ticket._id
       });
-
+      console.log("Purchase email sent successfully");
     } catch (emailErr) {
-      console.error("Email failed but booking confirmed:", emailErr);
+      console.error("Email failed after purchase:", emailErr);
     }
 
-
+    // Respond with booking + ticket
     res.json({
       message: "Payment successful",
-      booking
+      booking,
+      ticket
     });
 
   } catch (err) {
     console.error("Checkout error:", err);
-    res.status(500).json({ message: "Checkout failed" });
+    res.status(500).json({ message: "Checkout failed", error: err.message });
   }
 });
 

@@ -48,6 +48,19 @@ router.get("/count", protect(["Admin"]), async (req, res) => {
   }
 });
 
+//Get all Users
+// Get all users
+router.get("/", protect(["Admin"]), async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("-password")
+      .sort({ createdAt: -1 }); 
 
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 
 module.exports = router;

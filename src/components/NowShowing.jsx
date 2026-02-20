@@ -1,5 +1,4 @@
 import './NowShowing.css';
-import background from '../assets/background.jpg';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -15,25 +14,19 @@ const NowShowing = () => {
   useEffect(() => {
     axios.get('http://localhost:5001/api/movies')
       .then(res => {
-        console.log('Movies fetched:', res.data);
         const movies = res.data;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        //filtering movies with releasedate
-        const upComingMovies = movies.filter(movie => {
-          if (!movie.releaseDate) return false;
-          const release = new Date(movie.releaseDate);
-          release.setHours(0, 0, 0, 0);
-          return release >= today;
-        })
-
-
         // Group movies by release date
         const grouped = {};
         movies.forEach(movie => {
-          const date = new Date(movie.releaseDate).toLocaleDateString('en-CA'); // yyyy-mm-dd
+          if (!movie.releaseDate) return;
+
+          const date = new Date(movie.releaseDate)
+            .toLocaleDateString('en-CA'); // yyyy-mm-dd
+
           if (!grouped[date]) grouped[date] = [];
           grouped[date].push(movie);
         });
@@ -41,8 +34,10 @@ const NowShowing = () => {
         const dates = Object.keys(grouped).sort();
         setGroupedByDate(grouped);
 
-        const defaultDate = dates.includes(today.toLocaleDateString('en-CA'))
-          ? today.toLocaleDateString('en-CA')
+        const todayString = today.toLocaleDateString('en-CA');
+
+        const defaultDate = dates.includes(todayString)
+          ? todayString
           : dates[0];
 
         setAllDates(dates);
@@ -64,7 +59,9 @@ const NowShowing = () => {
       return;
     }
 
-    navigate(`/seats/${movieId}`, { state: { selectedShowtime: showtime } });
+    navigate(`/seats/${movieId}`, {
+      state: { selectedShowtime: showtime }
+    });
   };
 
   const handleMovieClick = (movieId) => {
@@ -72,89 +69,97 @@ const NowShowing = () => {
   };
 
   return (
-  <div className="now-showing-container">
+    <div className="now-showing-container">
 
-    <div className="section-header">
-      <h2>Now Showing</h2>
-    </div>
+      <div className="section-header">
+        <h2>Now Showing</h2>
+      </div>
 
-    <div className="date-tabs">
-      {allDates.map((date) => (
-        <button
-          key={date}
-          className={`date-tab ${date === selectedDate ? "active" : ""}`}
-          onClick={() => setSelectedDate(date)}
-        >
-          {new Date(date).toLocaleDateString("en-GB", {
-            weekday: "short",
-            day: "numeric",
-            month: "short",
-          })}
-        </button>
-      ))}
-    </div>
-
-    <div className="movies-grid">
-      {movies.length > 0 ? (
-        movies.map((movie) => (
-          <div
-            className="movie-card"
-            key={movie._id}
-            onClick={() => handleMovieClick(movie._id)}
+      <div className="date-tabs">
+        {allDates.map((date) => (
+          <button
+            key={date}
+            className={`date-tab ${date === selectedDate ? "active" : ""}`}
+            onClick={() => setSelectedDate(date)}
           >
+            {new Date(date).toLocaleDateString("en-GB", {
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+            })}
+          </button>
+        ))}
+      </div>
 
-            {/* IMAGE WRAPPER */}
-            <div className="poster-wrapper">
-              <img
-                src={
-                  movie.posterUrl?.startsWith("http")
-                    ? movie.posterUrl
-                    : `http://localhost:5001${movie.posterUrl}`
-                }
-                alt={movie.title}
-              />
-            </div>
+      <div className="movies-grid">
+        {movies.length > 0 ? (
+          movies.map((movie) => (
+            <div
+              className="movie-card"
+              key={movie._id}
+              onClick={() => handleMovieClick(movie._id)}
+            >
 
-            {/* HOVER INFO */}
-            <div className="hover-info">
-              <h4>{movie.title}</h4>
-              <p className="genre">{movie.genre}</p>
-
-              <div className="showtimes">
-                {movie.showtimes && movie.showtimes.length > 0 ? (
-                  movie.showtimes.slice(0, 3).map((showtime, index) => (
-                    <span
-                      key={index}
-                      className="time-pill"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShowtime(movie._id, showtime);
-                      }}
-                    >
-                      {new Date(showtime.time).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  ))
-                ) : (
-                  <span className="no-showtime">
-                    No showtimes
-                  </span>
-                )}
+              {/* Poster */}
+              <div className="poster-wrapper">
+                <img
+                  src={
+                    movie.posterUrl?.startsWith("http")
+                      ? movie.posterUrl
+                      : `http://localhost:5001${movie.posterUrl}`
+                  }
+                  alt={movie.title}
+                />
               </div>
+
+              {/* Hover Info */}
+              <div className="hover-info">
+                <h4>{movie.title}</h4>
+                <p className="genre">{movie.genre}</p>
+
+                <div className="showtimes">
+                  {movie.showtimes && movie.showtimes.length > 0 ? (
+                    movie.showtimes.slice(0, 3).map((showtime, index) => {
+                      const showDateTime = new Date(showtime.time);
+                      const now = new Date();
+                      const isPast = showDateTime < now;
+
+                      return (
+                        <span
+                          key={index}
+                          className={`time-pill ${isPast ? "disabled" : ""}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isPast) {
+                              handleShowtime(movie._id, showtime);
+                            }
+                          }}
+                        >
+                          {showDateTime.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      );
+                    })
+                  ) : (
+                    <span className="no-showtime">
+                      No showtimes
+                    </span>
+                  )}
+                </div>
+              </div>
+
             </div>
-
-          </div>
-        ))
-      ) : (
-        <p className="no-movies">
-          No movies available for this date.
-        </p>
-      )}
+          ))
+        ) : (
+          <p className="no-movies">
+            No movies available for this date.
+          </p>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 };
-export default NowShowing;
 
+export default NowShowing;

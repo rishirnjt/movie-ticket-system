@@ -8,7 +8,6 @@ const Checkout = () => {
   const navigate = useNavigate();
 
   const [booking, setBooking] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,8 +32,8 @@ const Checkout = () => {
     fetchBooking();
   }, [bookingId]);
 
-  if (!booking) return <p>Loading checkout details...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!booking) return <p>Loading checkout details...</p>;
 
   // ticket price with mid-week discount
   const showtimeDate = new Date(booking.showtime?.time);
@@ -43,124 +42,128 @@ const Checkout = () => {
   if (day >= 2 && day <= 4) ticketPricePerSeat = ticketPricePerSeat / 2;
 
   const ticketTotal = booking.seats.length * ticketPricePerSeat;
-  const foodTotal = booking.foods?.reduce((sum, f) => sum + f.price * f.quantity, 0) || 0;
+  const foodTotal =
+    booking.foods?.reduce((sum, f) => sum + f.price * f.quantity, 0) || 0;
   const total = ticketTotal + foodTotal;
 
- const handlePayment = async () => {
-  if (!paymentMethod) {
-    alert("Please select a payment method.");
-    return;
-  }
+  const handlePayment = async () => {
+    setIsProcessing(true);
+    setError("");
 
-  setIsProcessing(true);
+    try {
+      const token = localStorage.getItem("token");
 
-  try {
-    const token = localStorage.getItem("token");
+      // ✅ Initiate Khalti payment
+      const res = await axios.post(
+        "http://localhost:5001/api/payment/initiate",
+        { bookingId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    const res = await axios.post(
-      `http://localhost:5001/api/bookings/checkout/${bookingId}`,
-      {},
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+      const { payment_url } = res.data;
 
-    console.log("Booking confirmed:", res.data);
-    alert(`Payment successful via ${paymentMethod}!`);
+      // ✅ Redirect to Khalti
+      window.location.href = payment_url;
+    } catch (err) {
+      console.error(
+        "Payment initiation failed:",
+        err.response?.data || err.message
+      );
+      setError(
+        err.response?.data?.message || "Payment initiation failed. Try again."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-    navigate("/myaccount", { state: { tab: "tickets" } }); 
-  } catch (err) {
-    console.error("Checkout failed:", err.response?.data || err);
-    alert("Payment failed, please try again!");
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
-
-   return (
-  <div className="checkout-cont">
-    <h2> Checkout Summary</h2>
-
-    <div className="checkout-layout">
-      
-      {/* LEFT SIDE */}
-      <div className="checkout-left">
-
-        {/* Booking Details */}
-        <div className="checkout-card">
-          <h3>Booking Details</h3>
-          <p><strong>Movie:</strong> {booking.movie?.title}</p>
-          <p>
-            <strong>Showtime:</strong> {booking.showtime?.hall} -{" "}
-            {showtimeDate.toLocaleString()}
-          </p>
-          <p><strong>Seats:</strong> {booking.seats.join(", ")}</p>
+  return (
+    <div>
+      {isProcessing && (
+        <div className="loading-overlay">
+          <div className="spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+          <p>Redirecting to Khalti...</p>
         </div>
+      )}
 
-        {/* Food Details */}
-        <div className="checkout-card">
-          <h3>Foods & Drinks</h3>
+      <div className="checkout-cont">
+        <h2> Checkout Summary</h2>
 
-          {booking.foods?.length > 0 ? (
-            <ul className="food-list">
-              {booking.foods.map((f, i) => (
-                <li key={i}>
-                  <span>{f.name} x {f.quantity}</span>
-                  <span>Rs. {f.price * f.quantity}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No food items selected.</p>
-          )}
-        </div>
+        <div className="checkout-layout">
+          {/* LEFT SIDE */}
+          <div className="checkout-left">
+            {/* Booking Details */}
+            <div className="checkout-card">
+              <h3>Booking Details</h3>
+              <p>
+                <strong>Movie:</strong> {booking.movie?.title}
+              </p>
+              <p>
+                <strong>Showtime:</strong> {booking.showtime?.hall} -{" "}
+                {showtimeDate.toLocaleString()}
+              </p>
+              <p>
+                <strong>Seats:</strong> {booking.seats.join(", ")}
+              </p>
+            </div>
 
-      </div>
-
-      {/* RIGHT SIDE (Sticky Summary) */}
-      <div className="checkout-right">
-        <div className="summary-card">
-          <h3>Payment Summary</h3>
-
-          <div className="summary-row">
-            <span>Tickets</span>
-            <span>Rs. {ticketTotal}</span>
-          </div>
-
-          <div className="summary-row">
-            <span>Foods</span>
-            <span>Rs. {foodTotal}</span>
-          </div>
-
-          <div className="summary-total">
-            <span>Total</span>
-            <span>Rs. {total}</span>
-          </div>
-
-          <div className="payment-options">
-            <div className="payment-option">
-              <input
-                type="radio"
-                name="payment"
-                value="Khalti"
-                checked={paymentMethod === "Khalti"}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <label>Khalti</label>
+            {/* Food Details */}
+            <div className="checkout-card">
+              <h3>Foods & Drinks</h3>
+              {booking.foods?.length > 0 ? (
+                <ul className="food-list">
+                  {booking.foods.map((f, i) => (
+                    <li key={i}>
+                      <span>
+                        {f.name} x {f.quantity}
+                      </span>
+                      <span>Rs. {f.price * f.quantity}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No food items selected.</p>
+              )}
             </div>
           </div>
 
-          <button
-            className="pay-btn"
-            onClick={handlePayment}
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Processing..." : "Confirm & Pay"}
-          </button>
+          {/* RIGHT SIDE */}
+          <div className="checkout-right">
+            <div className="summary-card">
+              <h3>Payment Summary</h3>
+              <div className="summary-row">
+                <span>Tickets</span>
+                <span>Rs. {ticketTotal}</span>
+              </div>
+              <div className="summary-row">
+                <span>Foods</span>
+                <span>Rs. {foodTotal}</span>
+              </div>
+              <div className="summary-total">
+                <span>Total</span>
+                <span>Rs. {total}</span>
+              </div>
+
+              <button
+                className="pay-btn"
+                onClick={handlePayment}
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Redirecting to Khalti..." : "Pay with Khalti"}
+              </button>
+
+              {error && <p style={{ color: "red" }}>{error}</p>}
+            </div>
+          </div>
         </div>
       </div>
-
     </div>
-  </div>
-);
+  );
 };
+
 export default Checkout;
