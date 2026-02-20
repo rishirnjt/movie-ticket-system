@@ -152,6 +152,14 @@
   box-shadow: 0 0 15px rgba(255, 0, 60, 0.7);
 }
 
+.time-pill.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: rgba(120, 120, 120, 0.2);
+}
+
+
 .no-showtime {
   font-size: 12px;
   opacity: 0.6;
