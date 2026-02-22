@@ -1,0 +1,157 @@
+/* Page Layout */
+.admin-users-page {
+  min-height: 100vh;
+  background: #0f0f0f;
+  padding: 40px 20px;
+  color: #fff;
+}
+
+.users-container {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* Header */
+.users-header h1 {
+  font-size: 32px;
+  margin-bottom: 5px;
+}
+
+.users-header p {
+  color: #bbb;
+  margin-bottom: 30px;
+}
+
+/* Stats Card */
+.stat-card {
+  background: linear-gradient(135deg, #e50914, #b20710);
+  padding: 25px;
+  border-radius: 12px;
+  width: 250px;
+  text-align: center;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.stats-card h2 {
+  font-size: 40px;
+  margin: 0;
+}
+
+.stats-card span {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Search */
+.search-box {
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  width: 100%;
+  max-width: 400px;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #1c1c1c;
+  color: white;
+  font-size: 14px;
+}
+
+.search-box input::placeholder {
+  color: #888;
+}
+
+/* Table */
+.users-table {
+  background: #1a1a1a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+.users-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background: #222;
+}
+
+.users-table th {
+  padding: 15px;
+  text-align: left;
+  font-size: 14px;
+  color: #ccc;
+  font-weight: 500;
+}
+
+.users-table td {
+  padding: 15px;
+  border-top: 1px solid #2a2a2a;
+  font-size: 14px;
+}
+
+.users-table tr:hover {
+  background: #262626;
+}
+
+/* Role Badge */
+.role-badge {
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.role-badge.Admin {
+  background: rgba(229, 9, 20, 0.2);
+  color: #ff4d4f;
+}
+
+.role-badge.Customer {
+  background: rgba(0, 200, 150, 0.2);
+  color: #00d084;
+}
+
+/* No Data */
+.no-data {
+  text-align: center;
+  padding: 30px;
+  color: #aaa;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats-card {
+    width: 100%;
+  }
+
+  .users-table table,
+  .users-table thead,
+  .users-table tbody,
+  .users-table th,
+  .users-table td,
+  .users-table tr {
+    display: block;
+  }
+
+  .users-table tr {
+    margin-bottom: 15px;
+    background: #1a1a1a;
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .users-table td {
+    border: none;
+    padding: 10px;
+  }
+
+  .users-table th {
+    display: none;
+  }
+}

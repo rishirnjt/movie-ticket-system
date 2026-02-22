@@ -260,4 +260,20 @@ router.get("/:ticketId", protect(["Customer"]), async (req, res) => {
   }
 });
 
+//Get Total Revenue
+router.get("/admin/revenue", protect(["Admin"]), async(req, res) => {
+  try{
+    const tickets = await Ticket.find({});
+
+    const totalRevenue = tickets.reduce(
+      (sum, t) => sum + (t.totalPrice || 0),
+      0
+    );
+
+    res.json({ revenue: totalRevenue });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to calculate revenue" });
+  }
+});
+
 module.exports = router;

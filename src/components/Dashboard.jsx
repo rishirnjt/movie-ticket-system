@@ -30,19 +30,19 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // ===== MOVIES =====
+      //Movies
       const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
       const movies = await moviesRes.json();
 
       setRecentMovies(movies?.slice(0, 5) || []);
 
-      // ===== USERS =====
+      //Users
       const usersRes = await fetch("http://localhost:5001/api/users/count", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const usersData = await usersRes.json();
 
-      // ===== BOOKINGS =====
+      // Bookings
       const bookingRes = await fetch(
         "http://localhost:5001/api/bookings/admin/all",
         {
@@ -67,10 +67,19 @@ const Dashboard = () => {
 
       setRecentBookings(latestBookings);
 
-      // ===== STATS =====
+      const revenueRes = await fetch(
+        "http://localhost:5001/api/tickets/admin/revenue",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const revenueData = await revenueRes.json();
+
+      //stats
       setStats({
         bookings: bookingsData?.length || 0,
-        revenue: 123456, // replace later with real calculation
+        revenue: revenueData?.revenue || 0,
         movies: movies?.length || 0,
         users: usersData?.totalUsers || 0,
       });
@@ -110,8 +119,7 @@ const Dashboard = () => {
               <i className="fa-solid fa-sack-dollar" />
             </div>
             <h5>Total Revenue</h5>
-            <h3>Rs. {stats.revenue}</h3>
-          </div>
+            <h3>Rs. {(stats.revenue || 0).toLocaleString()}</h3>          </div>
 
           <div className="stats-card">
             <div className="icon">
@@ -193,9 +201,8 @@ const Dashboard = () => {
                       <td>{m.title}</td>
                       <td>
                         <span
-                          className={`status ${
-                            m.isActive ? "active" : "inactive"
-                          }`}
+                          className={`status ${m.isActive ? "active" : "inactive"
+                            }`}
                         >
                           {m.isActive ? "Active" : "Inactive"}
                         </span>

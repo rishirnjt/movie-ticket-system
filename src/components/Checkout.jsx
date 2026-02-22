@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import khaltiLogo from "../assets/khalti.png";
+import esewaLogo from "../assets/esewa.png";
 import "./Checkout.css";
 
 const Checkout = () => {
@@ -53,7 +55,7 @@ const Checkout = () => {
     try {
       const token = localStorage.getItem("token");
 
-      // ✅ Initiate Khalti payment
+      // Initiate Khalti payment
       const res = await axios.post(
         "http://localhost:5001/api/payment/initiate",
         { bookingId },
@@ -62,7 +64,7 @@ const Checkout = () => {
 
       const { payment_url } = res.data;
 
-      // ✅ Redirect to Khalti
+      // Redirect to Khalti
       window.location.href = payment_url;
     } catch (err) {
       console.error(
@@ -149,13 +151,35 @@ const Checkout = () => {
                 <span>Rs. {total}</span>
               </div>
 
-              <button
-                className="pay-btn"
-                onClick={handlePayment}
-                disabled={isProcessing}
-              >
-                {isProcessing ? "Redirecting to Khalti..." : "Pay with Khalti"}
-              </button>
+              <div className="payment-methods">
+                <h3>Select Payment Method</h3>
+
+                <div className="payment-options">
+
+                  {/* Khalti */}
+                  <button
+                    className="payment-btn khalti"
+                    onClick={handlePayment}
+                    disabled={isProcessing}
+                  >
+                    <img src={khaltiLogo} alt="Khalti" />
+                    {isProcessing ? "Redirecting..." : "Pay with Khalti"}
+                  </button>
+
+                  {/* eSewa */}
+                  <button
+                    className="payment-btn esewa"
+                    onClick={handlePayment}
+                    disabled={isProcessing}
+                  >
+                    <img src={esewaLogo} alt="eSewa" />
+                    {isProcessing ? "Redirecting..." : "Pay with eSewa"}
+                  </button>
+
+                </div>
+
+                <p className="secure-text">🔒 Secure payment gateway</p>
+              </div>
 
               {error && <p style={{ color: "red" }}>{error}</p>}
             </div>

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
 const Sidebar = () => {
   const [openMenu, setOpenMenu] = useState(null);
+  const navigate = useNavigate();
 
   const toggleMenu = (menu) => {
     setOpenMenu(openMenu === menu ? null : menu);
@@ -11,6 +12,12 @@ const Sidebar = () => {
 
   const linkClass = ({ isActive }) =>
     isActive ? "nav-link active" : "nav-link";
+
+  //logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/admin/login", { replace: true });
+  }
 
   return (
     <aside className="sidebar d-flex flex-column p-3">
@@ -79,7 +86,7 @@ const Sidebar = () => {
         <i className="fas fa-cog me-2"></i> Settings
       </NavLink>
 
-      <div className="logout mt-auto">
+      <div className="logout mt-auto" onClick={handleLogout}>
         <i className="fas fa-sign-out-alt me-2"></i> Logout
       </div>
     </aside>

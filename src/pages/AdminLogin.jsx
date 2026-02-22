@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import bgImage from "../assets/movie.png";
 import "./AdminLogin.css";
 
 const AdminLogin = () => {
@@ -41,8 +42,11 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="admin-login-wrapper">
-      <div className="admin-login-overlay"></div>
+    <div
+      className="admin-login-wrapper"
+      style={{ backgroundImage: `url(${bgImage})` }}
+    >     
+     <div className="admin-login-overlay"></div>
 
       <form className="admin-login-form" onSubmit={handleAdminLogin}>
         <h1 className="admin-logo">
@@ -73,9 +77,8 @@ const AdminLogin = () => {
             onClick={() => setShowPassword((prev) => !prev)}
           >
             <i
-              className={`fa-solid ${
-                showPassword ? "fa-eye-slash" : "fa-eye"
-              }`}
+              className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"
+                }`}
             ></i>
           </button>
         </div>
