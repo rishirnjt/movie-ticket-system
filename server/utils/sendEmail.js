@@ -2,6 +2,28 @@ const transporter = require("../config/email");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 
+//Reservation Email
+const sendReservationEmail = async (userEmail, data) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: userEmail,
+    subject: "Seats Reserved - Cinemax",
+    html: `
+      <h2>Your Seats Are Reserved 🎬</h2>
+      <p><strong>Movie:</strong> ${data.movie}</p>
+      <p><strong>Date:</strong> ${data.date}</p>
+      <p><strong>Time:</strong> ${data.time}</p>
+      <p><strong>Seats:</strong> ${data.seats}</p>
+      <p><strong>Total:</strong> Rs ${data.total}</p>
+      <p>Please complete payment before expiry.</p>
+      <p>- Cinemax Team</p>
+    `
+  });
+
+  console.log("Reservation email sent");
+};
+
+
 // Purchase email (with PDF e-ticket + QR)
 const sendPurchaseEmail = async (
   userEmail,
@@ -92,4 +114,4 @@ const sendPurchaseEmail = async (
   console.log("Purchase email sent with QR e-ticket");
 };
 
-module.exports = { sendPurchaseEmail };
+module.exports = { sendReservationEmail, sendPurchaseEmail };

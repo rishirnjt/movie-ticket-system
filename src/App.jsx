@@ -29,6 +29,7 @@ import MovieDetails from "./components/MovieDetails";
 import SearchResults from "./pages/SearchResults";
 import TicketPage from "./pages/TicketPage";
 import Users from "./pages/Users";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 import "./App.css";
 
@@ -70,6 +71,7 @@ function AppWrapper() {
         <Route path="/ticket-rates" element={<TicketRates />} />
         <Route path="/myaccount" element={<MyAccount />} />
         <Route path="/ticket/:ticketId" element={<TicketPage />} />
+        <Route path="/payment-success/*" element={<PaymentSuccess />} />
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLogin />} />

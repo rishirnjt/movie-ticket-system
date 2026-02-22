@@ -128,28 +128,69 @@ body {
 }
 
 /* ===== BUTTON ===== */
-.pay-btn {
-  width: 100%;
+.payment-methods {
   margin-top: 20px;
-  padding: 14px;
-  background: #ff3b3b;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-btn {
+  width: 100%;
   border: none;
   border-radius: 10px;
-  color: #fff;
-  font-size: 1rem;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
   transition: 0.3s;
 }
 
-.pay-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
+/* Khalti */
+.payment-btn.khalti {
+  background: #5C2D91;
+  color: white;
 }
 
-.pay-btn:disabled {
-  background: #555;
+.payment-btn.khalti:hover {
+  background: #4a2375;
+}
+
+/* eSewa */
+.payment-btn.esewa {
+  background: #60BB46;
+  color: white;
+}
+
+.payment-btn.esewa:hover {
+  background: #4da537;
+}
+
+.payment-btn img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.payment-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
+}
+
+.secure-text {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #777;
+  text-align: center;
 }
 
 /* Overlay covering entire page */

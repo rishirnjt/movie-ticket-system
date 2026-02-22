@@ -73,8 +73,8 @@ router.post("/hold", protect(["Customer"]), async (req, res) => {
     try {
       await sendReservationEmail(user.email, {
         movie: booking.movie.title,
-        date: new Date(showtime.time).toLocaleDateString(),
-        time: new Date(showtime.time).toLocaleDateString(),
+        date: new Date(showtime.time).toLocaleString(),
+        time: new Date(showtime.time).toLocaleString(),
         seats: booking.seats.join(", "),
         total: booking.totalPrice
       });
@@ -221,7 +221,7 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
 
     console.log("Ticket created for user:", booking.user);
 
-    // 6️⃣ Send purchase email with PDF e-ticket
+    //Send purchase email with PDF e-ticket
     const user = await User.findById(req.user._id);
 
     try {

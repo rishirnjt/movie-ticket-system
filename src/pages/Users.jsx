@@ -43,7 +43,7 @@ const Users = () => {
           <p>Manage registered users of the system</p>
         </div>
 
-        <div className="stats-card">
+        <div className="stat-card">
           <h2>{users.length}</h2>
           <span>Registered Users</span>
         </div>

@@ -1,0 +1,23 @@
+.payment-container {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.spinner {
+  width: 70px;
+  height: 70px;
+  border: 6px solid #ddd;
+  border-top: 6px solid #e50914;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
