@@ -9,6 +9,7 @@ import {
 import Navbar from "./components/Navbar";
 import Carousel from "./components/Carousel";
 import NowShowing from "./components/NowShowing";
+// import Recommendation from "./components/Recommendation";
 import ComingSoon from "./components/ComingSoon";
 import Footer from "./components/Footer";
 import SeatSelection from "./components/SeatSelection";
@@ -40,6 +41,8 @@ function AppWrapper() {
   const state = location.state;
   const backgroundLocation = state && state.backgroundLocation;
 
+  const isAdmin = location.pathname.startsWith("/admin");
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
@@ -47,8 +50,9 @@ function AppWrapper() {
 
   return (
     <>
-      <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
-
+      {!isAdmin && (
+        <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+      )}
       {/* MAIN ROUTES */}
       <Routes location={backgroundLocation || location}>
         <Route
@@ -57,6 +61,7 @@ function AppWrapper() {
             <>
               <Carousel />
               <NowShowing />
+              {/* <Recommendation /> */}
               <ComingSoon />
             </>
           }
@@ -75,7 +80,7 @@ function AppWrapper() {
 
         {/* Admin */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        
+
         <Route
           path="/admin/dashboard"
           element={
@@ -109,14 +114,14 @@ function AppWrapper() {
           }
         />
         <Route
-         path="/admin/users"
-         element={
-          <AdminRoutes>
-            <Users /> 
-          </AdminRoutes>
-         }
-         />
-         
+          path="/admin/users"
+          element={
+            <AdminRoutes>
+              <Users />
+            </AdminRoutes>
+          }
+        />
+
         <Route
           path="/admin/bookings"
           element={
@@ -151,8 +156,7 @@ function AppWrapper() {
         </Routes>
       )}
 
-      <Footer />
-    </>
+      {!isAdmin && <Footer />}    </>
   );
 }
 

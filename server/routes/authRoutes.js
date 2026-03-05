@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const UserType = require("../models/UserType");
+const bcrypt = require("bcryptjs"); 
 
 const router = express.Router();
 
@@ -72,9 +73,12 @@ router.post("/login", async (req, res) => {
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     // Use matchPassword (bcrypt if hashed)
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+    console.log("Entered password:", password);
+    console.log("Stored hash:", user.password);
 
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    console.log("Password match result:", isMatch);
     const token = generateToken(user);
 
     res.json({

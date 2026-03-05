@@ -12,40 +12,41 @@ const NowShowing = () => {
   const location = useLocation();
 
   useEffect(() => {
-    axios.get('http://localhost:5001/api/movies')
+    axios.get('http://localhost:5001/api/movies/now-showing')
       .then(res => {
         const movies = res.data;
 
+        const grouped = {};
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Group movies by release date
-        const grouped = {};
+        // Group by showtime date (NOT releaseDate)
         movies.forEach(movie => {
-          if (!movie.releaseDate) return;
+          if (!movie.showtimes) return;
 
-          const date = new Date(movie.releaseDate)
-            .toLocaleDateString('en-CA'); // yyyy-mm-dd
+          movie.showtimes.forEach(showtime => {
+            const showDate = new Date(showtime.time);
+            showDate.setHours(0, 0, 0, 0);
 
-          if (!grouped[date]) grouped[date] = [];
-          grouped[date].push(movie);
+            const dateKey = showDate.toLocaleDateString('en-CA');
+
+            if (!grouped[dateKey]) grouped[dateKey] = [];
+
+            // Avoid duplicate movie per date
+            if (!grouped[dateKey].some(m => m._id === movie._id)) {
+              grouped[dateKey].push(movie);
+            }
+          });
         });
 
         const dates = Object.keys(grouped).sort();
+
         setGroupedByDate(grouped);
-
-        const todayString = today.toLocaleDateString('en-CA');
-
-        const defaultDate = dates.includes(todayString)
-          ? todayString
-          : dates[0];
-
         setAllDates(dates);
-        setSelectedDate(defaultDate);
+        setSelectedDate(dates[0] || "");
       })
       .catch(err => console.error("Failed to fetch movies", err));
   }, []);
-
   const movies = groupedByDate[selectedDate] || [];
 
   const handleShowtime = (movieId, showtime) => {

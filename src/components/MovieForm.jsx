@@ -70,7 +70,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
       let savedMovieId = movieId;
 
@@ -94,7 +93,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
           {
             movieId: savedMovieId,
             hall: s.hall,
-            // Ensure time is a valid ISO string for the backend
             time: new Date(s.time).toISOString()
           },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -102,8 +100,12 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       }
 
       alert(mode === "add" ? "🎬 Movie Added!" : "Movie Updated!");
-      setMovie(emptyMovie);
-      onSuccess && onSuccess();
+
+      if (addAnother) {
+        setMovie(emptyMovie);
+      } else {
+        onSuccess && onSuccess();
+      }
     } catch (err) {
       console.error("Save failed details:", err.response?.data || err.message);
       alert("Error saving movie.");
@@ -115,7 +117,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         {mode === "add" ? "Add New Movie 🎬" : "Edit Movie ✏️"}
       </h1>
 
-      <form id="movie-form" className="movie-form" onSubmit={handleSubmit}>
+      <form id="movie-form" className="movie-form">
         {/* LEFT COLUMN */}
         <div className="form-left">
           <div className="input-group">
@@ -191,6 +193,15 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
               value={movie.releaseDate ? movie.releaseDate.split("T")[0] : ""}
               onChange={(e) => handleChange("releaseDate", e.target.value)}
             />
+          </div>
+          <div className="input-group">
+            <label htmlFor="movie-status">Status</label>
+            <select id="movie-status" value={movie.status || "upcoming"} onChange={(e) => handleChange("status", e.target.value)} >
+              <option value="upcoming">Upcoming</option>
+              <option value="showing">Now Showing</option>
+              <option value="archived">Archived</option>
+
+            </select>
           </div>
         </div>
 
@@ -271,13 +282,27 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
             </button>
           </div>
 
-          <button
-            id="submit-movie-btn"
-            type="submit"
-            className="submit-btn"
-          >
-            {mode === "add" ? "Save Movie" : " Update Movie"}
-          </button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              id="submit-movie-btn"
+              type="button"
+              className="submit-btn"
+              onClick={(e) => handleSubmit(e, false)}
+            >
+              {mode === "add" ? "Save Movie" : "Update Movie"}
+            </button>
+
+            {mode === "add" && (
+              <button
+                type="button"
+                className="submit-btn"
+                style={{ backgroundColor: "#444" }}
+                onClick={(e) => handleSubmit(e, true)}
+              >
+                Save & Add Another
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>

@@ -181,10 +181,9 @@ router.post("/add-foods/:id", protect(["Customer"]), async (req, res) => {
 });
 
 // Checkout & confirm purchase
-// Checkout Route
 router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
   try {
-    // 1️⃣ Fetch booking and populate movie & showtime
+    // Fetch booking and populate movie & showtime
     const booking = await Booking.findById(req.params.id)
       .populate("showtime")
       .populate("movie");
@@ -193,22 +192,22 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // 2️⃣ Check if user owns this booking
+    //  Check if user owns this booking
     if (booking.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    // 3️⃣ Check payment window
+    //  Check payment window
     if (!booking.reservationExpiresAt || booking.reservationExpiresAt < new Date()) {
       return res.status(400).json({ message: "Payment window expired" });
     }
 
-    // 4️⃣ Update booking status to confirmed
+    //  Update booking status to confirmed
     booking.status = "confirmed";
     booking.reservationExpiresAt = null;
     await booking.save();
 
-    // 5️⃣ Create ticket record
+    // Create ticket record
     const ticket = await Ticket.create({
       userId: booking.user,
       movieId: booking.movie._id,
@@ -218,6 +217,7 @@ router.post("/checkout/:id", protect(["Customer"]), async (req, res) => {
       foods: booking.foods || [],
       status: "active"
     });
+    
 
     console.log("Ticket created for user:", booking.user);
 

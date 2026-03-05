@@ -48,32 +48,49 @@ const Checkout = () => {
     booking.foods?.reduce((sum, f) => sum + f.price * f.quantity, 0) || 0;
   const total = ticketTotal + foodTotal;
 
-  const handlePayment = async () => {
+  const handlePayment = async (gateway) => {
     setIsProcessing(true);
     setError("");
 
     try {
       const token = localStorage.getItem("token");
 
-      // Initiate Khalti payment
       const res = await axios.post(
         "http://localhost:5001/api/payment/initiate",
-        { bookingId },
+        { bookingId, gateway }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const { payment_url } = res.data;
+     //Khalti
+      if (gateway === "khalti") {
+        const { payment_url } = res.data;
+        window.location.href = payment_url;
+      }
 
-      // Redirect to Khalti
-      window.location.href = payment_url;
+      //Esewa
+      if (gateway === "esewa") {
+        const { url, formData } = res.data;
+
+        // Create auto submit form
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = url;
+
+        Object.keys(formData).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = formData[key];
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+      }
+
     } catch (err) {
-      console.error(
-        "Payment initiation failed:",
-        err.response?.data || err.message
-      );
-      setError(
-        err.response?.data?.message || "Payment initiation failed. Try again."
-      );
+      console.error("Payment initiation failed:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Payment initiation failed.");
     } finally {
       setIsProcessing(false);
     }
@@ -159,7 +176,7 @@ const Checkout = () => {
                   {/* Khalti */}
                   <button
                     className="payment-btn khalti"
-                    onClick={handlePayment}
+                    onClick={() => handlePayment("khalti")}
                     disabled={isProcessing}
                   >
                     <img src={khaltiLogo} alt="Khalti" />
@@ -169,7 +186,7 @@ const Checkout = () => {
                   {/* eSewa */}
                   <button
                     className="payment-btn esewa"
-                    onClick={handlePayment}
+                    onClick={() => handlePayment("esewa")}
                     disabled={isProcessing}
                   >
                     <img src={esewaLogo} alt="eSewa" />

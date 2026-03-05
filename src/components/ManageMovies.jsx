@@ -12,7 +12,7 @@ const ManageMovies = () => {
   // Fetch movies
   const fetchMovies = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/api/movies", {
+      const res = await axios.get("http://localhost:5001/api/movies/admin/movies", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMovies(res.data);
