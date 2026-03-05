@@ -1,40 +1,66 @@
-import Slider from "react-slick";
-import './ComingSoon.css';
-import war from "../assets/War2.jpg";
-import conjuring from "../assets/Conjuring.jpg";
-import batman from "../assets/Batman.webp";
-import avengers from "../assets/Avengers.jpg";
-
-const comingSoonMovies = [
-    {id:1, title: "War 2", poster: war},
-    {id:2, title:"Conjuring:The Last Rite", poster: conjuring},
-    {id:3, title:"Batman II", poster: batman},
-    {id:4, title:"Avengers", poster: avengers},
-];
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./ComingSoon.css";
 
 const ComingSoon = () => {
-    const settings = {
-        dots: false,
-        infinite: true,
-        speed: 900,
-        slidesToShow: 2,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 3000,
-        arrows: true,
-    };
-    
-    return(
-        <div className="coming-soon-cont">
-            <h2>Coming Soon</h2>
-            <Slider {...settings}>
-                {comingSoonMovies.map((movie) => (
-                    <div className="coming-card" key={movie.id}>
-                        <img src={movie.poster} alt={movie.title} />
-                        <h4>{movie.title}</h4>
+    const [movies, setMovies] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchUpcoming = async () => {
+            try {
+                const res = await fetch("http://localhost:5001/api/movies/coming-soon");
+                const data = await res.json();
+                setMovies(data);
+            } catch (err) {
+                console.error("Failed to fetch upcoming movies:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUpcoming();
+    }, []);
+
+    if (loading) return <p className="no-movies">Loading upcoming movies...</p>;
+    if (movies.length === 0) return <p className="no-movies">No upcoming movies yet.</p>;
+
+    return (
+        <div className="now-showing-container">
+            <div className="section-header">
+                <h2>Coming Soon</h2>
+                <p>Check out the upcoming movies releasing soon</p>
+            </div>
+            <div className="movies-grid">
+                {movies.map((movie) => (
+                    <div
+                        className="movie-card"
+                        key={movie._id}
+                        onClick={() => navigate(`/movie/${movie._id}`)}
+                    >
+                        <div className="poster-wrapper">
+                            <img
+                                src={
+                                    movie.posterUrl?.startsWith("http")
+                                        ? movie.posterUrl
+                                        : `http://localhost:5001/${movie.posterUrl?.replace(/^\/+/, "")}`
+                                }
+                                alt={movie.title}
+                                onError={(e) => {
+                                    e.target.src = "https://via.placeholder.com/300x450?text=No+Image";
+                                }}
+                            />                        </div>
+                        <div className="hover-info">
+                            <h4>{movie.title}</h4>
+                            <p className="genre">
+                                {Array.isArray(movie.genre) ? movie.genre.join(", ") : movie.genre || "Unknown Genre"}
+                            </p>
+                            <p>Releasing on: {new Date(movie.releaseDate).toLocaleDateString()}</p>
+                        </div>
                     </div>
                 ))}
-            </Slider>
+            </div>
         </div>
     );
 };

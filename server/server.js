@@ -7,6 +7,7 @@ const path = require('path');
 const connectDB = require('./config/db');
 const mongoose = require('mongoose');
 
+
 dotenv.config();
 const app = express();
 
@@ -34,6 +35,8 @@ require('./models/UserType');
 //Auto cancellation
 const cron = require("node-cron");
 const Booking = require("./models/Booking");
+const Movie = require("./models/Movie");
+
 
 cron.schedule("*/1 * * * *", async () => {
   try {
@@ -52,6 +55,24 @@ cron.schedule("*/1 * * * *", async () => {
   }
 });
 
+//Auto archieve old movies 
+cron.schedule("0 0 * * *", async () => {
+  try{
+    const today = new Date();
+
+    const result = await Movie.updateMany(
+      {
+        releaseDate: { $lt: today },
+        status: { $ne: "archived" }
+      },
+      { status: "archived" }
+    );
+    console.log(`Archieved ${result.modifiedCount} movies`);
+  } catch (err) {
+    console.log("Auto archive error:", err);
+  }
+});
+
 
 //routes
 const movieRoutes = require('./routes/movieRoutes');
@@ -64,6 +85,7 @@ const foodRoutes = require('./routes/foodRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const showtimeRoutes = require('./routes/showtimeRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+// const recommendationRoutes = require("./routes/recommendationRoutes");
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
@@ -75,6 +97,7 @@ app.use('/api/foods', foodRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/payment", paymentRoutes);
+// app.use("/api/recommendations", recommendationRoutes);
 
 //route testing
 app.get('/test', (req, res) => {

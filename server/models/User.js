@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "UserType",
         required: true
-    }
+    },
 });
 
 userSchema.pre('save',async function (next) {

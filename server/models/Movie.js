@@ -16,15 +16,20 @@ const movieSchema = new mongoose.Schema({
   duration: String, 
   rating: String,
   language: String,
+  status: {
+    type: String,
+    enum: ["upcoming", "showing", "archived"],
+    default: "upcoming"
+  }
 
-expiresAt: {
-  type: Date,
-  default: function () {
-    // Auto delete 24 hours after creation
-    return new Date(Date.now() + 24 * 60 * 60 * 1000);
-  },
-  index: { expires: 0 } // TTL: delete at expiresAt
-}
+// expiresAt: {
+//   type: Date,
+//   default: function () {
+//     // Auto delete 24 hours after creation
+//     return new Date(Date.now() + 24 * 60 * 60 * 1000);
+//   },
+//   index: { expires: 0 } // TTL: delete at expiresAt
+// }
 
 },
   { timestamps: true }

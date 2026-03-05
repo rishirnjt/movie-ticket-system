@@ -84,7 +84,7 @@ const SeatSelection = () => {
     if (!timerStarted) {
       const newExpiresAt = Date.now() + 5 * 60 * 1000; // 5 min
       setExpiresAt(newExpiresAt);
-      setTimeLeft(5 * 60); // 5 min in seconds
+      setTimeLeft(5 * 60); 
       setTimerStarted(true);
     }
   }, [heldSeats, soldSeats, timerStarted]);
