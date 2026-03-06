@@ -20,7 +20,7 @@ const NowShowing = () => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Group by showtime date (NOT releaseDate)
+        // Group by showtime date
         movies.forEach(movie => {
           if (!movie.showtimes) return;
 
@@ -32,10 +32,24 @@ const NowShowing = () => {
 
             if (!grouped[dateKey]) grouped[dateKey] = [];
 
-            // Avoid duplicate movie per date
-            if (!grouped[dateKey].some(m => m._id === movie._id)) {
-              grouped[dateKey].push(movie);
+            let existingMovie = grouped[dateKey].find(
+              m=> m._id === movie._id
+            );
+
+            if(!existingMovie) {
+              existingMovie = {
+                ...movie,
+                showtimes: []
+              };
+              grouped[dateKey].push(existingMovie);
             }
+
+            //add only specific showtime
+            existingMovie.showtimes.push(showtime);
+
+            existingMovie.showtimes.sort(
+              (a, b) => new Date(a.time) - new Date(b.time)
+            );
           });
         });
 

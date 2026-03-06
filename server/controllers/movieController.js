@@ -23,14 +23,13 @@ exports.searchMovies = async (req, res) => {
     }
 };
 
-/* =========================
-   COMING SOON
-   releaseDate > today
-========================= */
+//Coming Soon
 exports.getComingSoon = async (req, res) => {
     try {
+        const today = new Date();
+
         const movies = await Movie.find({
-            status: "upcoming",
+            movieStartDate: { $gt: today }
         }).lean();
 
         res.json(movies);
@@ -42,8 +41,11 @@ exports.getComingSoon = async (req, res) => {
 
 exports.getNowShowing = async (req, res) => {
     try {
+        const today = new Date();
+
         const movies = await Movie.find({
-            status: "showing"
+            movieStartDate: { $lte: today },
+            movieEndDate: { $gte: today }
         }).lean();
 
         const movieIds = movies.map(m => m._id);
@@ -65,9 +67,8 @@ exports.getNowShowing = async (req, res) => {
         res.status(500).json({ message: "Error fetching now showing movies" });
     }
 };
-/* =========================
-   GET ALL MOVIES
-========================= */
+
+//Get all movies
 exports.getAllMovies = async (req, res) => {
     try {
         const movies = await Movie.find({ isActive: true }).lean();
@@ -122,9 +123,8 @@ exports.getRecentMovies = async (req, res) => {
         res.status(500).json([]);
     }
 };
-/* =========================
-   CREATE MOVIE
-========================= */
+
+//Create Movie
 exports.createMovie = async (req, res) => {
     try {
         const data = req.body;
@@ -141,9 +141,7 @@ exports.createMovie = async (req, res) => {
     }
 };
 
-/* =========================
-   UPDATE MOVIE
-========================= */
+//Update Movie
 exports.updateMovie = async (req, res) => {
     try {
         const movie = await Movie.findByIdAndUpdate(

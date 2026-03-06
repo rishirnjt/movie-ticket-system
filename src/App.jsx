@@ -31,6 +31,7 @@ import SearchResults from "./pages/SearchResults";
 import TicketPage from "./pages/TicketPage";
 import Users from "./pages/Users";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import ResetPassword from "./components/ResetPassword";
 
 import "./App.css";
 
@@ -69,6 +70,7 @@ function AppWrapper() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
         <Route path="/auth" element={<AuthModal setIsLoggedIn={setIsLoggedIn} />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         <Route path="/seats/:movieId" element={<SeatSelection />} />
         <Route path="/foods/:bookingId" element={<Foods />} />

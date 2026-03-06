@@ -3,8 +3,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const UserType = require("../models/UserType");
 const bcrypt = require("bcryptjs"); 
+const crypto = require("crypto");
 
 const router = express.Router();
+
+const { sendResetPasswordEmail } = require("../utils/sendEmail");
 
 // Helper to generate JWT
 const generateToken = (user) => {
@@ -72,13 +75,16 @@ router.post("/login", async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    // Use matchPassword (bcrypt if hashed)
     console.log("Entered password:", password);
     console.log("Stored hash:", user.password);
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     console.log("Password match result:", isMatch);
+
+    if(!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials"});
+    }
     const token = generateToken(user);
 
     res.json({
@@ -94,6 +100,68 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/forgot-password", async (req, res) => {
+  try{
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if(!user){
+      return res.status(404).json({ message: "User not found "});
+    }
+
+    //create reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    //store hashed token 
+    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    await sendResetPasswordEmail(user.email, resetUrl);
+    console.log("Reset URL:", resetUrl);
+
+    res.json({
+      message: "Password reset link generated",
+      resetUrl
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Server error" });
+    }
+});
+
+//Reset password
+router.post("/reset-password/:token", async (req, res) => {
+  try{
+    const hashedToken = crypto.createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if(!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    user.password = req.body.password;
+    
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error("Reset password error: ", error);
+    res.status(500).json({ message: "Server error"});
   }
 });
 

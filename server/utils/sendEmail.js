@@ -73,7 +73,7 @@ const sendPurchaseEmail = async (
 
   doc.moveDown();
 
-  // ===== QR CODE =====
+  // QR CODE 
   doc.text("Scan at Entrance", { align: "center" });
   doc.moveDown();
 
@@ -114,4 +114,35 @@ const sendPurchaseEmail = async (
   console.log("Purchase email sent with QR e-ticket");
 };
 
-module.exports = { sendReservationEmail, sendPurchaseEmail };
+// Password Reset Email
+const sendResetPasswordEmail = async (userEmail, resetUrl) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: userEmail,
+    subject: "Password Reset Request - Cinemax",
+    html: `
+      <h2>Password Reset</h2>
+      <p>You requested to reset your password.</p>
+      <p>Click the link below to set a new password:</p>
+
+      <a href="${resetUrl}" 
+         style="display:inline-block;
+                padding:10px 20px;
+                background:#e50914;
+                color:white;
+                text-decoration:none;
+                border-radius:5px;">
+        Reset Password
+      </a>
+
+      <p>This link will expire in 10 minutes.</p>
+      <p>If you did not request this, please ignore this email.</p>
+
+      <p>- Cinemax Team</p>
+    `
+  });
+
+  console.log("Password reset email sent");
+};
+
+module.exports = { sendReservationEmail, sendPurchaseEmail, sendResetPasswordEmail };

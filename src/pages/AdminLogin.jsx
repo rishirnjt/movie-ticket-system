@@ -55,6 +55,7 @@ const AdminLogin = () => {
         <h2>Sign In</h2>
 
         <input
+          id="admin-email"
           type="email"
           placeholder="Admin Email"
           value={email}
@@ -64,6 +65,7 @@ const AdminLogin = () => {
 
         <div className="password-wrapper">
           <input
+            id="admin-password"
             type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
@@ -72,6 +74,7 @@ const AdminLogin = () => {
           />
 
           <button
+            id="toggle-password-btn"
             type="button"
             className="eye-btn"
             onClick={() => setShowPassword((prev) => !prev)}
@@ -83,7 +86,7 @@ const AdminLogin = () => {
           </button>
         </div>
 
-        <button type="submit" disabled={loading} className="submit-btn">
+        <button id="admin-login-btn" type="submit" disabled={loading} className="submit-btn">
           {loading ? "Signing In..." : "Sign In"}
         </button>
       </form>

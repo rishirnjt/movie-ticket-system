@@ -12,6 +12,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPwd, setShowLoginPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
 
   // sign-up
   const [reg, setReg] = useState({
@@ -91,6 +92,21 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5001/api/auth/forgot-password",
+        { email: forgotEmail }
+      );
+
+      alert(res.data.message || "Password reset email sent");
+    } catch (err) {
+      alert(err.response?.data?.message || "Something went wrong");
+    }
+  };
+
   const onRegChange = (e) => {
     const { name, value, type, checked } = e.target;
     setReg((p) => ({ ...p, [name]: type === "checkbox" ? checked : value }));
@@ -165,7 +181,21 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                   )}
                 </button>
 
-                <a className="forgot-link" href="#">
+                <a
+                  className="forgot-link"
+                  onClick={() => {
+                    const email = prompt("Enter your email to reset password:");
+                    if (email) {
+                      setForgotEmail(email);
+                      axios
+                        .post("http://localhost:5001/api/auth/forgot-password", { email })
+                        .then(() => alert("Reset link sent to your email"))
+                        .catch((err) =>
+                          alert(err.response?.data?.message || "Error sending reset email")
+                        );
+                    }
+                  }}
+                >
                   Forgot Your Password?
                 </a>
                 <p className="muted">

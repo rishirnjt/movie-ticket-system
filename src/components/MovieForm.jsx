@@ -9,6 +9,8 @@ const emptyMovie = {
   posterUrl: "",
   trailerUrl: "",
   releaseDate: "",
+  movieStartDate: "",
+  movieEndDate: "",
   duration: "",
   rating: "",
   language: "",
@@ -69,7 +71,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
     setMovie((prev) => ({ ...prev, posterUrl: res.data.url }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, addAnother = false) => {
     try {
       let savedMovieId = movieId;
 
@@ -194,14 +196,22 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
               onChange={(e) => handleChange("releaseDate", e.target.value)}
             />
           </div>
+          
           <div className="input-group">
-            <label htmlFor="movie-status">Status</label>
-            <select id="movie-status" value={movie.status || "upcoming"} onChange={(e) => handleChange("status", e.target.value)} >
-              <option value="upcoming">Upcoming</option>
-              <option value="showing">Now Showing</option>
-              <option value="archived">Archived</option>
-
-            </select>
+            <label>Movie Start Date</label>
+            <input
+              type="date"
+              value={movie.movieStartDate || ""}
+              onChange={(e) => handleChange("movieStartDate", e.target.value)}
+            />
+          </div>
+          <div className="input-group">
+            <label>Movie End Date</label>
+            <input
+              type="date"
+              value={movie.movieEndDate || ""}
+              onChange={(e) => handleChange("movieEndDate", e.target.value)}
+            />
           </div>
         </div>
 
