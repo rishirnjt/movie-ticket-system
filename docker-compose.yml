@@ -1,39 +1,3 @@
-# version: "3.9"
-
-# services:
-
-#   mongodb:
-#     image: mongo
-#     container_name: movie_mongo
-#     ports:
-#       - "27017:27017"
-#     volumes:
-#       - mongo_data:/data/db
-
-#   backend:
-#     build: ./server
-#     container_name: movie_backend
-#     ports:
-#       - "5001:5001"
-#     environment:
-#       - MONGO_URI=mongodb://mongodb:27017/movieDB
-#       - JWT_SECRET=secret123
-#     depends_on:
-#       - mongodb
-
-#   frontend:
-#     build: .
-#     container_name: movie_frontend
-#     ports:
-#       - "5173:5173"
-#     stdin_open: true
-#     tty: true
-#     depends_on:
-#       - backend
-
-# volumes:
-#   mongo_data:
-
 services:
   mongo:
     image: mongo:8.2
@@ -53,6 +17,7 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/cinemax
       - NODE_ENV=development
+      - JWT_SECRET=supersecret123
     depends_on:
       - mongo
 
@@ -63,6 +28,8 @@ services:
     container_name: movie_frontend
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://movie_backend:5001
     depends_on:
       - backend
 

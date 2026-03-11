@@ -1,5 +1,5 @@
 import React from "react";
-import MovieForm from "../components/MovieForm";
+import MovieForm from "./MovieForm";
 import { useParams, useNavigate } from "react-router-dom";
 import "./MovieForm.css";
 
