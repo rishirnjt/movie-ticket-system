@@ -1,9 +1,42 @@
-version: "3.9"
+# version: "3.9"
+
+# services:
+
+#   mongodb:
+#     image: mongo
+#     container_name: movie_mongo
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo_data:/data/db
+
+#   backend:
+#     build: ./server
+#     container_name: movie_backend
+#     ports:
+#       - "5001:5001"
+#     environment:
+#       - MONGO_URI=mongodb://mongodb:27017/movieDB
+#       - JWT_SECRET=secret123
+#     depends_on:
+#       - mongodb
+
+#   frontend:
+#     build: .
+#     container_name: movie_frontend
+#     ports:
+#       - "5173:5173"
+#     stdin_open: true
+#     tty: true
+#     depends_on:
+#       - backend
+
+# volumes:
+#   mongo_data:
 
 services:
-
-  mongodb:
-    image: mongo
+  mongo:
+    image: mongo:8.2
     container_name: movie_mongo
     ports:
       - "27017:27017"
@@ -11,23 +44,25 @@ services:
       - mongo_data:/data/db
 
   backend:
-    build: ./server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
     container_name: movie_backend
     ports:
       - "5001:5001"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/movieDB
-      - JWT_SECRET=secret123
+      - MONGO_URI=mongodb://mongo:27017/cinemax
+      - NODE_ENV=development
     depends_on:
-      - mongodb
+      - mongo
 
   frontend:
-    build: .
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: movie_frontend
     ports:
       - "5173:5173"
-    stdin_open: true
-    tty: true
     depends_on:
       - backend
 

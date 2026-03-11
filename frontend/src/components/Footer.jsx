@@ -1,7 +1,7 @@
 import React from "react";
 import esewaLogo from "../assets/esewa.png";
 import khaltiLogo from "../assets/khalti.png";
-import "./Footer.css";
+import "./footer.css";
 
 const Footer = () => {
   return (

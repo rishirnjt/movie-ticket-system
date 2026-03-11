@@ -34,6 +34,27 @@ const Dashboard = () => {
       const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
       const movies = await moviesRes.json();
 
+      const today = new Date();
+
+      const recentMoviesWithStatus = movies.map((m) => {
+        const today = new Date();
+        const start = m.movieStartDate ? new Date(m.movieStartDate) : null;
+        const end = m.movieEndDate ? new Date(m.movieEndDate) : null;
+
+        let displayStatus = "Coming Soon"; 
+
+        if (start && end) {
+          if (start <= today && end >= today) {
+            displayStatus = "Now Showing";
+          } else if (start > today) {
+            displayStatus = "Coming Soon";
+          } else if (end < today) {
+            displayStatus = "Archived";
+          }
+        }
+
+        return { ...m, displayStatus };
+      });
       setRecentMovies(movies?.slice(0, 5) || []);
 
       //Users
@@ -201,10 +222,10 @@ const Dashboard = () => {
                       <td>{m.title}</td>
                       <td>
                         <span
-                          className={`status ${m.isActive ? "active" : "inactive"
+                          className={`status ${(m.displayStatus || "coming soon").replace(" ", "-").toLowerCase()
                             }`}
                         >
-                          {m.isActive ? "Active" : "Inactive"}
+                          {m.displayStatus || "Coming Soon"}
                         </span>
                       </td>
                       <td>

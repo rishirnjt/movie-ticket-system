@@ -104,6 +104,13 @@ app.get('/test', (req, res) => {
   res.send('Server and routes are working fine');
 });
 
+// // Serve frontend
+// app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+// app.use((req, res) => {
+//   res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+// });
+
 //start server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
