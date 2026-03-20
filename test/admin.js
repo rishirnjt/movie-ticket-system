@@ -84,7 +84,7 @@ const path = require('path');
     await page.type('#showtime-hall-0', 'Hall 1');
 
     await page.focus('#showtime-time-0');
-    await page.keyboard.type('02102026'); // MMDDYYYY
+    await page.keyboard.type('19032026'); // MMDDYYYY
     await page.keyboard.press('Tab');
     await page.keyboard.type('0900PM');   // HHmmA
 

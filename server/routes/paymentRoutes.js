@@ -7,6 +7,7 @@ const router = express.Router();
 const Booking = require("../models/Booking");
 const Ticket = require("../models/Ticket");
 const User = require("../models/User");
+const Showtime = require("../models/Showtime");
 
 const { sendPurchaseEmail } = require("../utils/sendEmail");
 const { protect } = require("../middleware/authMiddleware");
@@ -15,7 +16,6 @@ const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY;
 const ESEWA_SECRET_KEY = process.env.ESEWA_SECRET_KEY;
 
 const PRODUCT_CODE = "EPAYTEST";
-
 
 function generateSignature(total_amount, transaction_uuid) {
   const message = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${PRODUCT_CODE}`;
@@ -26,7 +26,9 @@ function generateSignature(total_amount, transaction_uuid) {
     .digest("base64");
 }
 
-
+// =============================
+// INITIATE PAYMENT
+// =============================
 router.post("/initiate", protect(["Customer"]), async (req, res) => {
   try {
     const { bookingId, gateway } = req.body;
@@ -35,18 +37,35 @@ router.post("/initiate", protect(["Customer"]), async (req, res) => {
       .populate("movie")
       .populate("showtime");
 
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
 
-    if (booking.user.toString() !== req.user._id.toString())
+    if (booking.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
+    }
 
-    if (booking.status !== "holding")
+    if (booking.status !== "holding") {
       return res.status(400).json({ message: "Invalid booking status" });
+    }
 
-    const amount = booking.totalPrice;
+    if (!booking.movie) {
+      return res.status(400).json({ message: "Movie data not found" });
+    }
 
+    if (!booking.showtime) {
+      return res.status(400).json({ message: "Showtime data not found" });
+    }
 
-    //Khalti
+    const amount = Number(booking.totalPrice);
+
+    if (!amount || Number.isNaN(amount)) {
+      return res.status(400).json({ message: "Invalid booking amount" });
+    }
+
+    // =============================
+    // KHALTI
+    // =============================
     if (gateway === "khalti") {
       const payload = {
         return_url: "http://localhost:5173/payment-success?gateway=khalti",
@@ -55,7 +74,9 @@ router.post("/initiate", protect(["Customer"]), async (req, res) => {
         purchase_order_id: booking._id.toString(),
         purchase_order_name: booking.movie.title,
         customer_info: {
-          name: req.user.name || "Customer",
+          name:
+            `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() ||
+            "Customer",
           email: req.user.email,
         },
       };
@@ -63,7 +84,12 @@ router.post("/initiate", protect(["Customer"]), async (req, res) => {
       const response = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/initiate/",
         payload,
-        { headers: { Authorization: `Key ${KHALTI_SECRET_KEY}` } }
+        {
+          headers: {
+            Authorization: `Key ${KHALTI_SECRET_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       return res.json({
@@ -73,47 +99,56 @@ router.post("/initiate", protect(["Customer"]), async (req, res) => {
       });
     }
 
-
-    //Esewa
+    // =============================
+    // ESEWA
+    // =============================
     if (gateway === "esewa") {
-      const total_amount = amount;
+      const total_amount = String(amount);
       const transaction_uuid = booking._id.toString();
 
-      const signature = generateSignature(
-        total_amount,
-        transaction_uuid
-      );
+      const signature = generateSignature(total_amount, transaction_uuid);
+
+      const formData = {
+        amount: String(amount),
+        tax_amount: "0",
+        total_amount: total_amount,
+        transaction_uuid: transaction_uuid,
+        product_code: PRODUCT_CODE,
+        product_service_charge: "0",
+        product_delivery_charge: "0",
+        success_url: "http://localhost:5173/payment-success",
+        failure_url: "http://localhost:5173/checkout",
+        signed_field_names: "total_amount,transaction_uuid,product_code",
+        signature: signature,
+      };
+
+      console.log("eSewa formData:", formData);
 
       return res.json({
         gateway: "esewa",
         url: "https://rc-epay.esewa.com.np/api/epay/main/v2/form",
-        formData: {
-          amount: String(total_amount),
-          tax_amount: "0",
-          total_amount: String(total_amount),
-          transaction_uuid: String(transaction_uuid),
-          product_code: PRODUCT_CODE,
-          product_service_charge: "0",
-          product_delivery_charge: "0",
-          success_url: "http://localhost:5173/payment-success?gateway=esewa",
-          failure_url: "http://localhost:5173/payment-fail?gateway=esewa",
-          signed_field_names: "total_amount,transaction_uuid,product_code",
-          signature: signature,
-        },
+        formData,
       });
     }
 
-    res.status(400).json({ message: "Invalid payment gateway" });
-
+    return res.status(400).json({ message: "Invalid payment gateway" });
   } catch (err) {
     console.error("Initiate error:", err.response?.data || err.message);
-    res.status(500).json({ message: "Payment initiation failed" });
+
+    return res.status(err.response?.status || 500).json({
+      message:
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Payment initiation failed",
+      error: err.response?.data || null,
+    });
   }
 });
 
-
-
-//Verify payment
+// =============================
+// VERIFY PAYMENT
+// =============================
 router.post("/verify", protect(["Customer"]), async (req, res) => {
   try {
     const { gateway, bookingId, pidx } = req.body;
@@ -124,26 +159,34 @@ router.post("/verify", protect(["Customer"]), async (req, res) => {
       .populate("movie")
       .populate("showtime");
 
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
 
-    if (booking.status !== "holding")
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (booking.status !== "holding") {
       return res.status(400).json({ message: "Already processed" });
+    }
 
-    //Khalti verify
     if (gateway === "khalti") {
       const response = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/lookup/",
         { pidx },
-        { headers: { Authorization: `Key ${KHALTI_SECRET_KEY}` } }
+        {
+          headers: {
+            Authorization: `Key ${KHALTI_SECRET_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.status !== "Completed") {
         return res.status(400).json({ message: "Payment not completed" });
       }
-    }
-
-    //esewa verify
-    if (gateway === "esewa") {
+    } else if (gateway === "esewa") {
       const transaction_uuid = booking._id.toString();
       const total_amount = booking.totalPrice;
 
@@ -156,30 +199,20 @@ router.post("/verify", protect(["Customer"]), async (req, res) => {
       if (response.data.status !== "COMPLETE") {
         return res.status(400).json({ message: "Payment not completed" });
       }
+    } else {
+      return res.status(400).json({ message: "Invalid payment gateway" });
     }
 
-    // =============================
-    // CONFIRM BOOKING
-    // =============================
     booking.status = "confirmed";
     booking.reservationExpiresAt = null;
     await booking.save();
 
-    // MOVE SEATS → BOOKED
-    const Showtime = require("../models/Showtime");
+    await Showtime.findByIdAndUpdate(booking.showtime._id, {
+      $addToSet: {
+        bookedSeats: { $each: booking.seats },
+      },
+    });
 
-    await Showtime.findByIdAndUpdate(
-      booking.showtime._id,
-      {
-        $addToSet: {
-          bookedSeats: { $each: booking.seats }
-        }
-      }
-    );
-
-    // =============================
-    // CREATE TICKET
-    // =============================
     const ticket = await Ticket.create({
       userId: booking.user,
       movieId: booking.movie._id,
@@ -190,30 +223,36 @@ router.post("/verify", protect(["Customer"]), async (req, res) => {
       status: "active",
     });
 
-   
-
-
     const user = await User.findById(booking.user);
 
-    await sendPurchaseEmail(user.email, {
-      movie: booking.movie.title,
-      date: new Date(booking.showtime.time).toLocaleDateString(),
-      time: new Date(booking.showtime.time).toLocaleTimeString(),
-      seats: booking.seats.join(", "),
-      foods: booking.foods || [],
-      totalPaid: booking.totalPrice,
-      ticketId: ticket._id,
-    });
+    if (user?.email) {
+      await sendPurchaseEmail(user.email, {
+        movie: booking.movie.title,
+        date: new Date(booking.showtime.time).toLocaleDateString(),
+        time: new Date(booking.showtime.time).toLocaleTimeString(),
+        seats: booking.seats.join(", "),
+        foods: booking.foods || [],
+        totalPaid: booking.totalPrice,
+        ticketId: ticket._id,
+      });
+    }
 
-    res.json({
+    return res.json({
       message: "Payment successful",
       booking,
       ticket,
     });
-
   } catch (err) {
     console.error("Verify error:", err.response?.data || err.message);
-    res.status(500).json({ message: "Payment verification failed" });
+
+    return res.status(err.response?.status || 500).json({
+      message:
+        err.response?.data?.detail ||
+        err.response?.data?.message ||
+        err.message ||
+        "Payment verification failed",
+      error: err.response?.data || null,
+    });
   }
 });
 

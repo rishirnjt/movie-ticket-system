@@ -30,18 +30,17 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
 
-      //Movies
+      // ===== RECENT MOVIES =====
       const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
       const movies = await moviesRes.json();
 
       const today = new Date();
 
       const recentMoviesWithStatus = movies.map((m) => {
-        const today = new Date();
         const start = m.movieStartDate ? new Date(m.movieStartDate) : null;
         const end = m.movieEndDate ? new Date(m.movieEndDate) : null;
 
-        let displayStatus = "Coming Soon"; 
+        let displayStatus = "Coming Soon";
 
         if (start && end) {
           if (start <= today && end >= today) {
@@ -55,15 +54,16 @@ const Dashboard = () => {
 
         return { ...m, displayStatus };
       });
-      setRecentMovies(movies?.slice(0, 5) || []);
 
-      //Users
+      setRecentMovies(recentMoviesWithStatus.slice(0, 5) || []);
+
+      // ===== USERS COUNT =====
       const usersRes = await fetch("http://localhost:5001/api/users/count", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const usersData = await usersRes.json();
 
-      // Bookings
+      // ===== BOOKINGS =====
       const bookingRes = await fetch(
         "http://localhost:5001/api/bookings/admin/all",
         {
@@ -88,16 +88,16 @@ const Dashboard = () => {
 
       setRecentBookings(latestBookings);
 
+      // ===== REVENUE =====
       const revenueRes = await fetch(
         "http://localhost:5001/api/tickets/admin/revenue",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       const revenueData = await revenueRes.json();
 
-      //stats
+      // ===== STATS =====
       setStats({
         bookings: bookingsData?.length || 0,
         revenue: revenueData?.revenue || 0,
@@ -105,14 +105,34 @@ const Dashboard = () => {
         users: usersData?.totalUsers || 0,
       });
 
-      // ===== SALES CHART (TEMP STATIC) =====
-      setSalesData([
-        { month: "Jan", sales: 15000 },
-        { month: "Feb", sales: 18000 },
-        { month: "Mar", sales: 22000 },
-        { month: "Apr", sales: 26000 },
-        { month: "May", sales: 20000 },
-      ]);
+      // ===== DYNAMIC MONTHLY SALES CHART =====
+      const monthNames = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      ];
+
+      const monthlySales = {};
+
+      // Initialize all months with 0
+      monthNames.forEach((m) => {
+        monthlySales[m] = 0;
+      });
+
+      // Sum bookings into months
+      bookingsData.forEach((booking) => {
+        const date = new Date(booking.createdAt);
+        const month = monthNames[date.getMonth()];
+        const amount = booking.totalPrice || booking.totalAmount || 0;
+        monthlySales[month] += amount;
+      });
+
+      // Create chart data
+      const chartData = monthNames.map((month) => ({
+        month,
+        sales: monthlySales[month],
+      }));
+
+      setSalesData(chartData);
     } catch (err) {
       console.error("Dashboard load error:", err);
     }
@@ -140,7 +160,8 @@ const Dashboard = () => {
               <i className="fa-solid fa-sack-dollar" />
             </div>
             <h5>Total Revenue</h5>
-            <h3>Rs. {(stats.revenue || 0).toLocaleString()}</h3>          </div>
+            <h3>Rs. {(stats.revenue || 0).toLocaleString()}</h3>
+          </div>
 
           <div className="stats-card">
             <div className="icon">
@@ -186,9 +207,7 @@ const Dashboard = () => {
                       <td>{b.movie}</td>
                       <td>{b.seats.join(", ")}</td>
                       <td>
-                        <span
-                          className={`status ${b.status.toLowerCase()}`}
-                        >
+                        <span className={`status ${b.status.toLowerCase()}`}>
                           {b.status}
                         </span>
                       </td>
@@ -222,8 +241,9 @@ const Dashboard = () => {
                       <td>{m.title}</td>
                       <td>
                         <span
-                          className={`status ${(m.displayStatus || "coming soon").replace(" ", "-").toLowerCase()
-                            }`}
+                          className={`status ${(m.displayStatus || "coming soon")
+                            .replace(" ", "-")
+                            .toLowerCase()}`}
                         >
                           {m.displayStatus || "Coming Soon"}
                         </span>
@@ -251,10 +271,11 @@ const Dashboard = () => {
               <YAxis stroke="#ccc" />
               <Tooltip />
               <Line
+                type="monotone"
                 dataKey="sales"
-                stroke="#098c30ff"
+                stroke="#347a04ff"
                 strokeWidth={3}
-                dot={{ fill: "#4dff9aff" }}
+                dot={{ fill: "#065318ff" }}
               />
             </LineChart>
           </ResponsiveContainer>

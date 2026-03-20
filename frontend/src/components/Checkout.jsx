@@ -49,52 +49,82 @@ const Checkout = () => {
   const total = ticketTotal + foodTotal;
 
   const handlePayment = async (gateway) => {
-    setIsProcessing(true);
-    setError("");
+  setIsProcessing(true);
+  setError("");
 
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      const res = await axios.post(
-        "http://localhost:5001/api/payment/initiate",
-        { bookingId, gateway }, 
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-     //Khalti
-      if (gateway === "khalti") {
-        const { payment_url } = res.data;
-        window.location.href = payment_url;
-      }
-
-      //Esewa
-      if (gateway === "esewa") {
-        const { url, formData } = res.data;
-
-        // Create auto submit form
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = url;
-
-        Object.keys(formData).forEach((key) => {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = formData[key];
-          form.appendChild(input);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
-      }
-
-    } catch (err) {
-      console.error("Payment initiation failed:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Payment initiation failed.");
-    } finally {
-      setIsProcessing(false);
+    if (!token) {
+      throw new Error("User not authenticated");
     }
-  };
+
+    console.log("Initiating payment with:", { bookingId, gateway });
+
+    const res = await axios.post(
+      "http://localhost:5001/api/payment/initiate",
+      { bookingId, gateway },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    console.log("Initiate response:", res.data);
+
+    if (gateway === "khalti") {
+      const { payment_url } = res.data;
+
+      if (!payment_url) {
+        throw new Error("Khalti payment URL not received");
+      }
+
+      window.location.href = payment_url;
+      return;
+    }
+
+    if (gateway === "esewa") {
+      const { url, formData } = res.data;
+
+      if (!url || !formData) {
+        throw new Error("eSewa form data not received");
+      }
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = url;
+
+      Object.keys(formData).forEach((key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = formData[key];
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+      return;
+    }
+
+    throw new Error("Invalid payment gateway selected");
+  } catch (err) {
+    console.error("Payment initiation failed:", {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      bookingId,
+      gateway,
+    });
+
+    setError(
+      err.response?.data?.message ||
+      err.message ||
+      "Payment initiation failed."
+    );
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   return (
     <div>

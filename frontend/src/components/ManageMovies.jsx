@@ -44,80 +44,75 @@ const ManageMovies = () => {
   };
 
   return (
-    <div className="admin-layout" id="manage-movies-page">
+    <div className="content-wrapper manage-movies" id="manage-movies-content">
+      <h2 className="page-title" id="manage-movies-title">
+        Manage Movies
+      </h2>
 
-      <div className="content-wrapper manage-movies" id="manage-movies-content">
-        <h2 className="page-title" id="manage-movies-title">
-          Manage Movies
-        </h2>
+      {loading ? (
+        <p id="movies-loading">Loading movies...</p>
+      ) : movies.length === 0 ? (
+        <p id="no-movies-msg">No movies found. Add some!</p>
+      ) : (
+        <table id="manage-movies-table" className="table movie-table">
+          <thead>
+            <tr>
+              <th>Poster</th>
+              <th>Title</th>
+              <th>Genre</th>
+              <th>Language</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
 
-        {loading ? (
-          <p id="movies-loading">Loading movies...</p>
-        ) : movies.length === 0 ? (
-          <p id="no-movies-msg">No movies found. Add some!</p>
-        ) : (
-          <table id="manage-movies-table" className="table movie-table">
-            <thead>
-              <tr>
-                <th>Poster</th>
-                <th>Title</th>
-                <th>Genre</th>
-                <th>Language</th>
-                <th>Duration</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {movies.map((movie, index) => (
-                <tr key={movie._id} id={`movie-row-${index}`}>
-                  <td>
-                    {movie.posterUrl ? (
-                      <img
-                        id={`movie-poster-${index}`}
-                        src={
-                          movie.posterUrl.startsWith("http")
-                            ? movie.posterUrl
-                            : `http://localhost:5001${movie.posterUrl}`
-                        }
-                        alt={movie.title}
-                        className="movie-poster"
-                      />
-                    ) : (
-                      <span id={`movie-no-poster-${index}`}>—</span>
-                    )}
-                  </td>
-
-                  <td id={`movie-title-${index}`}>{movie.title}</td>
-                  <td id={`movie-genre-${index}`}>{movie.genre}</td>
-                  <td id={`movie-language-${index}`}>{movie.language}</td>
-                  <td id={`movie-duration-${index}`}>{movie.duration}</td>
-
-                  <td className="actions">
-                    <button
-                      id={`edit-movie-${movie._id}`}
-                      className="btn edit"
-                      onClick={() =>
-                        navigate(`/admin/edit-movie/${movie._id}`)
+          <tbody>
+            {movies.map((movie, index) => (
+              <tr key={movie._id} id={`movie-row-${index}`}>
+                <td>
+                  {movie.posterUrl ? (
+                    <img
+                      id={`movie-poster-${index}`}
+                      src={
+                        movie.posterUrl.startsWith("http")
+                          ? movie.posterUrl
+                          : `http://localhost:5001${movie.posterUrl}`
                       }
-                    >
-                      Edit
-                    </button>
+                      alt={movie.title}
+                      className="movie-poster"
+                    />
+                  ) : (
+                    <span id={`movie-no-poster-${index}`}>—</span>
+                  )}
+                </td>
 
-                    <button
-                      id={`delete-movie-${movie._id}`}
-                      className="btn delete"
-                      onClick={() => handleDelete(movie._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+                <td id={`movie-title-${index}`}>{movie.title}</td>
+                <td id={`movie-genre-${index}`}>{movie.genre}</td>
+                <td id={`movie-language-${index}`}>{movie.language}</td>
+                <td id={`movie-duration-${index}`}>{movie.duration}</td>
+
+                <td className="actions">
+                  <button
+                    id={`edit-movie-${movie._id}`}
+                    className="btn edit"
+                    onClick={() => navigate(`/admin/edit-movie/${movie._id}`)}
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    id={`delete-movie-${movie._id}`}
+                    className="btn delete"
+                    onClick={() => handleDelete(movie._id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

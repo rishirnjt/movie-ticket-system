@@ -30,11 +30,28 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       const res = await axios.get(`http://localhost:5001/api/movies/${movieId}`);
       setMovie({
         ...res.data,
+
+        releaseDate: res.data.releaseDate
+          ? res.data.releaseDate.split("T"[0])
+          : "",
+        movieStartDate: res.data.movieStartDate
+          ? new Date(res.data.movieStartDate).toISOString().split("T")[0]
+          : "",
+
+        movieEndDate: res.data.movieEndDate
+          ? new Date(res.data.movieEndDate).toISOString().split("T")[0]
+          : "",
+
         showtimes:
           res.data.showtimes?.length > 0
             ? res.data.showtimes.map((s) => ({
               hall: s.hall,
-              time: s.time?.slice(0, 16) || "",
+              time: s.time
+                ? new Date(s.time)
+                  .toLocaleString("sv-SE", { timeZone: "Asia/Kathmandu" })
+                  .replace(" ", "T")
+                  .slice(0, 16)
+                : ""
             }))
             : [{ hall: "", time: "" }],
       });
@@ -192,16 +209,16 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
             <input
               id="movie-release-date"
               type="date"
-              value={movie.releaseDate ? movie.releaseDate.split("T")[0] : ""}
+              value={movie.releaseDate ? new Date(movie.releaseDate).toISOString().split("T")[0] : ""}
               onChange={(e) => handleChange("releaseDate", e.target.value)}
             />
           </div>
-          
+
           <div className="input-group">
             <label>Movie Start Date</label>
             <input
               type="date"
-              value={movie.movieStartDate || ""}
+              value={movie.movieStartDate ? new Date(movie.movieStartDate).toISOString().split("T")[0] : ""}
               onChange={(e) => handleChange("movieStartDate", e.target.value)}
             />
           </div>
@@ -209,7 +226,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
             <label>Movie End Date</label>
             <input
               type="date"
-              value={movie.movieEndDate || ""}
+              value={movie.movieEndDate ? new Date(movie.movieEndDate).toISOString().split("T")[0] : ""}
               onChange={(e) => handleChange("movieEndDate", e.target.value)}
             />
           </div>

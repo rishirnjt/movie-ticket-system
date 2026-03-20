@@ -1,157 +1,120 @@
-/* Page Layout */
-.admin-users-page {
-  min-height: 100vh;
-  background: #0f0f0f;
-  padding: 40px 20px;
-  color: #fff;
-}
+/* ===== USERS TABLE ===== */
 
-.users-container {
-  max-width: 1200px;
-  margin: auto;
-}
-
-/* Header */
-.users-header h1 {
-  font-size: 32px;
-  margin-bottom: 5px;
-}
-
-.users-header p {
-  color: #bbb;
-  margin-bottom: 30px;
-}
-
-/* Stats Card */
-.stat-card {
-  background: linear-gradient(135deg, #e50914, #b20710);
-  padding: 25px;
-  border-radius: 12px;
-  width: 250px;
-  text-align: center;
-  margin-bottom: 30px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-}
-
-.stats-card h2 {
-  font-size: 40px;
-  margin: 0;
-}
-
-.stats-card span {
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-/* Search */
-.search-box {
-  margin-bottom: 20px;
-}
-
-.search-box input {
+.user-table {
   width: 100%;
-  max-width: 400px;
-  padding: 12px 15px;
-  border-radius: 8px;
-  border: none;
-  outline: none;
-  background: #1c1c1c;
-  color: white;
-  font-size: 14px;
+  border-collapse: separate;
+  border-spacing: 0 12px;
 }
 
-.search-box input::placeholder {
-  color: #888;
-}
+/* HEADER */
 
-/* Table */
-.users-table {
-  background: #1a1a1a;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-.users-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.users-table thead {
-  background: #222;
-}
-
-.users-table th {
-  padding: 15px;
+.user-table th {
   text-align: left;
-  font-size: 14px;
-  color: #ccc;
-  font-weight: 500;
-}
-
-.users-table td {
-  padding: 15px;
-  border-top: 1px solid #2a2a2a;
-  font-size: 14px;
-}
-
-.users-table tr:hover {
-  background: #262626;
-}
-
-/* Role Badge */
-.role-badge {
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  text-transform: capitalize;
-}
-
-.role-badge.Admin {
-  background: rgba(229, 9, 20, 0.2);
-  color: #ff4d4f;
-}
-
-.role-badge.Customer {
-  background: rgba(0, 200, 150, 0.2);
-  color: #00d084;
-}
-
-/* No Data */
-.no-data {
-  text-align: center;
-  padding: 30px;
+  padding: 12px 14px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: #aaa;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .stats-card {
-    width: 100%;
-  }
+.users-page .container {
+  width: 100%;
+  max-width: 1600px;   /* increase width */
+  margin: auto;
+}
 
-  .users-table table,
-  .users-table thead,
-  .users-table tbody,
-  .users-table th,
-  .users-table td,
-  .users-table tr {
-    display: block;
-  }
+/* ROW STYLE */
 
-  .users-table tr {
-    margin-bottom: 15px;
-    background: #1a1a1a;
-    border-radius: 10px;
-    padding: 10px;
-  }
+.user-table tbody tr {
+  background: linear-gradient(
+    145deg,
+    rgba(60, 12, 18, 0.9),
+    rgba(20, 5, 8, 0.95)
+  );
+  border-radius: 14px;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition: all 0.3s ease;
+}
 
-  .users-table td {
-    border: none;
-    padding: 10px;
-  }
+/* ROW HOVER */
 
-  .users-table th {
-    display: none;
-  }
+.user-table tbody tr:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.9),
+    0 0 25px rgba(255, 77, 79, 0.35);
+}
+
+/* CELLS */
+
+.user-table td {
+  padding: 14px;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+/* STATUS */
+
+.status {
+  padding: 5px 14px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status.active {
+  background: linear-gradient(135deg, #34d399, #1c8c4c);
+  color: #fff;
+}
+
+.status.inactive {
+  background: linear-gradient(135deg, #ef4444, #7a0c0c);
+  color: #fff;
+}
+
+/* ACTION BUTTONS */
+
+.actions button {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-right: 6px;
+  transition: all 0.25s ease;
+}
+
+/* EDIT */
+
+.edit {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: #fff;
+}
+
+/* DELETE */
+
+.delete {
+  background: linear-gradient(135deg, #ef4444, #7a0c0c);
+  color: #fff;
+}
+
+/* HOVER EFFECT */
+
+.actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+}
+
+.user-table tbody tr td:first-child {
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.user-table tbody tr td:last-child {
+  border-top-right-radius: 14px;
+  border-bottom-right-radius: 14px;
 }

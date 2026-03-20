@@ -1,6 +1,7 @@
 import React from "react";
 import esewaLogo from "../assets/esewa.png";
 import khaltiLogo from "../assets/khalti.png";
+import stripeLogo from "../assets/stripe.png";
 import "./footer.css";
 
 const Footer = () => {
@@ -38,6 +39,7 @@ const Footer = () => {
           <div className="payment-logos">
             <img src={esewaLogo} alt="eSewa" />
             <img src={khaltiLogo} alt="Khalti" />
+            <img src={stripeLogo} alt="Stripe" />
           </div>
         </div>
       </div>

@@ -170,20 +170,9 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
-
-.status.confirmed,
-.status.active {
-  background: linear-gradient(135deg, #34d399, #1c8c4c);
-}
-
-.status.cancelled,
-.status.inactive {
-  background: linear-gradient(135deg, #ef4444, #7a0c0c);
-}
-
-.status.reserved {
-  background: linear-gradient(135deg, #facc15, #e6a700);
-}
+.status.now-showing { background: #22c55e; }
+.status.coming-soon { background: #facc15; }
+.status.archived { background: #ef4444; }
 
 /* ================= FOOTER ================= */
 footer {

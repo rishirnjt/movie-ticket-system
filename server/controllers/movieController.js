@@ -27,9 +27,11 @@ exports.searchMovies = async (req, res) => {
 exports.getComingSoon = async (req, res) => {
     try {
         const today = new Date();
+        today.setHours(0,0,0,0);
 
         const movies = await Movie.find({
-            movieStartDate: { $gt: today }
+            movieStartDate: { $gt: today },
+            status: { $ne: "archived" }
         }).lean();
 
         res.json(movies);
@@ -42,10 +44,12 @@ exports.getComingSoon = async (req, res) => {
 exports.getNowShowing = async (req, res) => {
     try {
         const today = new Date();
+        today.setHours(0,0,0,0);
 
         const movies = await Movie.find({
             movieStartDate: { $lte: today },
-            movieEndDate: { $gte: today }
+            movieEndDate: { $gte: today },
+            status: { $ne: "archived"}
         }).lean();
 
         const movieIds = movies.map(m => m._id);

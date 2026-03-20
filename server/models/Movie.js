@@ -24,6 +24,11 @@ const movieSchema = new mongoose.Schema({
   movieEndDate: {
     type: Date,
     required: true,
+  },
+  status:{
+    type: String,
+    enum: ["coming", "showing", "archived"],
+    default: "coming"
   }
 
 },

@@ -33,10 +33,10 @@ const NowShowing = () => {
             if (!grouped[dateKey]) grouped[dateKey] = [];
 
             let existingMovie = grouped[dateKey].find(
-              m=> m._id === movie._id
+              m => m._id === movie._id
             );
 
-            if(!existingMovie) {
+            if (!existingMovie) {
               existingMovie = {
                 ...movie,
                 showtimes: []
@@ -117,14 +117,7 @@ const NowShowing = () => {
 
               {/* Poster */}
               <div className="poster-wrapper">
-                <img
-                  src={
-                    movie.posterUrl?.startsWith("http")
-                      ? movie.posterUrl
-                      : `http://localhost:5001${movie.posterUrl}`
-                  }
-                  alt={movie.title}
-                />
+                <img src={`http://localhost:5001${movie.posterUrl}`} alt={movie.title} />
               </div>
 
               {/* Hover Info */}

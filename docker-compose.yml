@@ -18,8 +18,12 @@ services:
       - MONGO_URI=mongodb://mongo:27017/cinemax
       - NODE_ENV=development
       - JWT_SECRET=supersecret123
+      - KHALTI_SECRET_KEY=f20ad250558c467bbae44416642c88e7
+
     depends_on:
       - mongo
+    volumes:
+      - ./server/uploads:/app/uploads
 
   frontend:
     build:

@@ -10,47 +10,61 @@ function PaymentSuccess() {
   const [statusText, setStatusText] = useState("Verifying payment...");
   const [loading, setLoading] = useState(true);
 
-  const gatewayRaw = searchParams.get("gateway");
-  const gateway = gatewayRaw?.split("/")[0]; // safety fix
-
-  // Khalti params
-  const pidx = searchParams.get("pidx");
-  const bookingIdKhalti = searchParams.get("purchase_order_id");
-
-  // eSewa encoded data
-  const esewaData = searchParams.get("data");
-
   useEffect(() => {
+    console.log("PAYMENT_SUCCESS_V2_LOADED");
+
     const verifyPayment = async () => {
       try {
         const token = localStorage.getItem("token");
+        if (!token) throw new Error("User not authenticated");
 
+        const pidx = searchParams.get("pidx");
+        const purchaseOrderId = searchParams.get("purchase_order_id");
+        const esewaData = searchParams.get("data");
+
+        let gateway = searchParams.get("gateway");
+
+        console.log("Current URL:", window.location.href);
+        console.log("All params:", Object.fromEntries(searchParams.entries()));
         console.log("Gateway:", gateway);
-        console.log("Search params:", Object.fromEntries(searchParams));
+        console.log("pidx:", pidx);
+        console.log("purchase_order_id:", purchaseOrderId);
+        console.log("esewa data:", esewaData);
+
+        if (!gateway && esewaData) {
+          gateway = "esewa";
+        }
+
+        if (!gateway && (pidx || purchaseOrderId)) {
+          gateway = "khalti";
+        }
+
+        console.log("FINAL GATEWAY CHECK:", gateway);
 
         let payload = {};
 
-        // ======================
-        // KHALTI
-        // ======================
-        if (gateway === "khalti") {
-          payload = {
-            gateway: "khalti",
-            pidx,
-            bookingId: bookingIdKhalti,
-          };
-        }
-
-        // ======================
-        // ESEWA
-        // ======================
-        if (gateway === "esewa" && esewaData) {
+        if (gateway === "esewa") {
           const decoded = JSON.parse(atob(esewaData));
+          console.log("Decoded eSewa data:", decoded);
+
+          const transactionUuid = decoded.transaction_uuid;
+
+          if (!transactionUuid) {
+            throw new Error("transaction_uuid missing in eSewa response");
+          }
 
           payload = {
             gateway: "esewa",
-            bookingId: decoded.transaction_uuid,
+            bookingId: transactionUuid,
           };
+        } else if (gateway === "khalti") {
+          payload = {
+            gateway: "khalti",
+            pidx,
+            bookingId: purchaseOrderId,
+          };
+        } else {
+          throw new Error("Unknown payment gateway");
         }
 
         console.log("Verify payload:", payload);
@@ -70,31 +84,32 @@ function PaymentSuccess() {
         setStatusText("Payment Successful 🎉");
         setLoading(false);
 
-        const ticketId = res.data.ticket._id;
+        const ticketId = res.data.ticket?._id;
+        if (!ticketId) {
+          throw new Error("Ticket ID missing in response");
+        }
 
         setTimeout(() => {
           navigate(`/ticket/${ticketId}`, { replace: true });
-        }, 2000);
-
+        }, 1500);
       } catch (error) {
-        console.error("VERIFY ERROR:", error.response?.data || error.message);
-        setStatusText("Payment verification failed");
+        console.error("VERIFY ERROR:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
+
+        setStatusText(
+          error.response?.data?.message ||
+            error.message ||
+            "Payment verification failed"
+        );
         setLoading(false);
       }
     };
 
-    if (
-      (gateway === "khalti" && pidx && bookingIdKhalti) ||
-      (gateway === "esewa" && esewaData)
-    ) {
-      verifyPayment();
-    } else {
-      console.log("Missing params");
-      setStatusText("Missing payment parameters");
-      setLoading(false);
-    }
-
-  }, [gateway, pidx, bookingIdKhalti, esewaData, navigate, searchParams]);
+    verifyPayment();
+  }, [navigate, searchParams]);
 
   return (
     <div className="payment-container">

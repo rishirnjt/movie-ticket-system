@@ -58,20 +58,42 @@ cron.schedule("*/1 * * * *", async () => {
 
 //Auto archieve old movies 
 cron.schedule("0 0 * * *", async () => {
-  try{
+  try {
     const today = new Date();
+    today.setHours(0,0,0,0);
 
-    const result = await Movie.updateMany(
+    // Coming Soon → Now Showing
+    await Movie.updateMany(
       {
-        releaseDate: { $lt: today },
-        status: { $ne: "archived" }
+        movieStartDate: { $lte: today },
+        movieEndDate: { $gte: today }
+      },
+      { status: "showing" }
+    );
+
+    // Now Showing → Archived
+    await Movie.updateMany(
+      {
+        movieEndDate: { $lt: today }
       },
       { status: "archived" }
     );
-    console.log(`Archieved ${result.modifiedCount} movies`);
+
+    // Future movies
+    await Movie.updateMany(
+      {
+        movieStartDate: { $gt: today }
+      },
+      { status: "coming" }
+    );
+
+    console.log("Movie statuses updated");
+
   } catch (err) {
-    console.log("Auto archive error:", err);
+    console.error("Movie status cron error:", err);
   }
+}, {
+  timezone: "Asia/Kathmandu"
 });
 
 
