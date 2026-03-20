@@ -76,6 +76,23 @@ const generateSeats = async (req, res) => {
     }
 };
 
+const getSeatsByScreen = async (req, res) => {
+    try{
+        const { screenId } = req.params;
+
+        if(!mongoose.Types.ObjectId.isValid(screenId)){
+            return res.status(400).json({ message: "Invalid screenId" });
+        }
+
+        const seats = await Seat.find({ screenId, isActive: true}).sort({ row: 1, number: 1 });
+        res.json(seats);
+    } catch (err) {
+        console.error("Get seats by screen error:", err);
+        res.status(500).json({ message: "Failed to fetch seats", error: err.message });
+    }
+};
+
 module.exports = {
     generateSeats,
+    getSeatsByScreen,
 };

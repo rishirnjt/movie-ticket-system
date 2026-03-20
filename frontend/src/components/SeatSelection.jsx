@@ -1,10 +1,7 @@
-import React, { useEffect, useState, useMemo, useCallback} from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./SeatSelection.css";
-
-const rows = 13;
-const cols = 10;
 
 const SeatSelection = () => {
   const { movieId } = useParams();
@@ -16,6 +13,23 @@ const SeatSelection = () => {
   const [soldSeats, setSoldSeats] = useState([]);
   const [heldSeats, setHeldSeats] = useState([]);
   const [movie, setMovie] = useState(null);
+  const [seats, setSeats] = useState([]);
+
+   const groupedSeats = useMemo(() => {
+    const grouped = {};
+
+    seats.forEach((seat) => {
+      if(!grouped[seat.row]) grouped[seat.row] = [];
+      grouped[seat.row].push(seat);
+    });
+
+    Object.keys(grouped).forEach((row) =>{
+      grouped[row].sort((a, b) => a.number -b.number);
+    });
+
+    return grouped;
+  }, [seats]);
+
 
   const [bookingId, setBookingId] = useState(null);
   const [expiresAt, setExpiresAt] = useState(null);
@@ -28,6 +42,22 @@ const SeatSelection = () => {
   });
   const [buyPopup, setBuyPopup] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+
+  const fetchScreenSeats = async () => {
+    const screenId = 
+      selectedShowtime?.screenId._id || selectedShowtime?.screenId;
+
+    if(!screenId) return;
+
+    try{
+      const res = await axios.get(
+          `http://localhost:5001/api/screens/${screenId}/seats`
+      );
+      setSeats(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch screen seats:", err);
+    }
+  };
 
   //Fetch movie and book seats
   useEffect(() => {
@@ -43,6 +73,8 @@ const SeatSelection = () => {
           setSoldSeats(seatsRes.data.soldSeats || []);
           setHeldSeats(seatsRes.data.heldSeats || []);
         }
+
+        await fetchScreenSeats();
       } catch (err) {
         console.error("Fetch error:", err);
       }
@@ -50,6 +82,7 @@ const SeatSelection = () => {
 
     fetchData();
   }, [movieId, selectedShowtime]);
+
 
   /* ---------------- TIMER EFFECT ---------------- */
   useEffect(() => {
@@ -84,7 +117,7 @@ const SeatSelection = () => {
     if (!timerStarted) {
       const newExpiresAt = Date.now() + 5 * 60 * 1000; // 5 min
       setExpiresAt(newExpiresAt);
-      setTimeLeft(5 * 60); 
+      setTimeLeft(5 * 60);
       setTimerStarted(true);
     }
   }, [heldSeats, soldSeats, timerStarted]);
@@ -226,34 +259,39 @@ const SeatSelection = () => {
     navigate(`/foods/${bookingId}`);
   };
 
-  //render seats
   const seatElements = useMemo(() => {
-    const seats = [];
+    return Object.keys(groupedSeats)
+      .sort()
+      .map((row) => (
+        <div key={row} className="seat-row">
+          <div className="row-label">{row}</div>
 
-    for (let r = 0; r < rows; r++) {
-      const row = String.fromCharCode(65 + r);
+          <div className="row-seats">
+            {groupedSeats[row].map((seat) => {
+              const seatId = seat._id;
 
-      for (let c = 1; c <= cols; c++) {
-        const seatId = `${row}${c}`;
-        const seatClass =  soldSeats.includes(seatId)
-          ?"sold": heldSeats.includes(seatId)
-          ?"held": selectedSeats.includes(seatId)
-          ?"selected": "available";
-          
-        seats.push(
-          <div
-            key={seatId}
-            className={`seat ${seatClass}`}
-            onClick={() => handleSeatClick(seatId)}
-          >
-            {seatId}
+              const seatClass = soldSeats.includes(seatId)
+                ? "sold"
+                : heldSeats.includes(seatId)
+                ? "held"
+                : selectedSeats.includes(seatId)
+                ? "selected"
+                : "available";
+
+                return(
+                  <div 
+                    key={seat._id}
+                    className={`seat ${seatClass}`}
+                    onClick={() => handleSeatClick(seatId)}
+                  >
+                    {seat.number}
+                    </div>
+                );
+            })}
           </div>
-        );
-      }
-    }
-    return seats;
-  }, [soldSeats, heldSeats, selectedSeats, handleSeatClick]);
-
+        </div>
+      ));
+  }, [groupedSeats, soldSeats, heldSeats, selectedSeats, handleSeatClick]);
   return (
     <div className="seat-selection">
       <h2>Select Your Seats</h2>
@@ -263,13 +301,13 @@ const SeatSelection = () => {
       {selectedShowtime && (
         <p className="showtime">
           <strong>
-            {selectedShowtime.hall} –{" "}
-            {new Date(selectedShowtime.time).toLocaleDateString("en-GB", {
+            {selectedShowtime.screenId?.name || selectedShowtime.screenName || "Screen"} –{" "}
+            {new Date(selectedShowtime.startTime).toLocaleDateString("en-GB", {
               weekday: "short",
               day: "numeric",
               month: "short",
             })}{" "}
-            {new Date(selectedShowtime.time).toLocaleTimeString([], {
+            {new Date(selectedShowtime.startTime).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}

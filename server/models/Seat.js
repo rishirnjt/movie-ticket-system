@@ -46,5 +46,6 @@ const seatSchema = new mongoose.Schema(
 
 //one seat is unique inside one screen
 seatSchema.index({ screenId: 1, label: 1 }, { unique: true });
+seatSchema.index({ screenId: 1, row: 1, number: 1 }, { unique: true });
 
 module.exports = mongoose.model("Seat", seatSchema);

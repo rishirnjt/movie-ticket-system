@@ -1,8 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { generateSeats } = require("../controllers/seatController");
-const { verifyToken, isAdmin } = require("../middleware/auth");
 
-router.post("/screens/:screenId/generate-seats", verifyToken, isAdmin, generateSeats);
+const {
+  generateSeats,
+  getSeatsByScreen,
+} = require("../controllers/seatController");
+
+router.post("/screens/:screenId/generate-seats", generateSeats);
+router.get("/screens/:screenId/seats", getSeatsByScreen);
 
 module.exports = router;

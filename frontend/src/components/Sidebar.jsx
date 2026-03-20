@@ -62,6 +62,9 @@ const Sidebar = () => {
             <NavLink to="/admin/manage-screens" className={linkClass}>
               <i className="fas fa-list me-2"></i> Manage Screens
             </NavLink>
+            <NavLink to="/admin/generate-seats" className={linkClass}>
+              <i className="fas fa-chair me-2"></i> Generate Seats
+            </NavLink>
           </div>
         )}
       </div>

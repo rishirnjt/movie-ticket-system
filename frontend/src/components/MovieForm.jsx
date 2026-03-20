@@ -68,9 +68,9 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
   };
 
   const fetchScreens = async () => {
-    try{
-      const res = await axios.get("http://localhost:5001/api/screens",{
-        headers: {Authorization: `Bearer ${token}` },
+    try {
+      const res = await axios.get("http://localhost:5001/api/screens", {
+        headers: { Authorization: `Bearer ${token}` },
       });
       console.log("Loaded screens:", res.data);
       setScreens(res.data);
@@ -104,14 +104,14 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
     }));
 
   const uploadPoster = async (file) => {
-    if(!file) return;
-    try{
+    if (!file) return;
+    try {
 
-    
-    const data = new FormData();
-    data.append("image", file);
-    const res = await axios.post("http://localhost:5001/api/upload", data);
-    setMovie((prev) => ({ ...prev, posterUrl: res.data.url }));
+
+      const data = new FormData();
+      data.append("image", file);
+      const res = await axios.post("http://localhost:5001/api/upload", data);
+      setMovie((prev) => ({ ...prev, posterUrl: res.data.url }));
     } catch (err) {
       console.error("Upload failed:", err.response?.data || err.message);
       alert("Poster upload failed");
@@ -184,8 +184,11 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         onSuccess && onSuccess();
       }
     } catch (err) {
-      console.error("Save failed details:", err.response?.data || err.message);
-      alert("Error saving movie.");
+      console.error("Save failed details:", {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
+      }); alert("Error saving movie.");
     }
   };
 

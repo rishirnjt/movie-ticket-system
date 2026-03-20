@@ -33,6 +33,7 @@ import Users from "./pages/Users";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import ResetPassword from "./components/ResetPassword";
 import CreateScreen from "./pages/CreateScreen";
+import GenerateSeats from "./components/GenerateSeats";
 
 import "./App.css";
 
@@ -149,6 +150,14 @@ function AppWrapper() {
               <CreateScreen />
             </AdminRoutes>
           }
+        />
+        <Route
+         path="/admin/generate-seats"
+         element={
+          <AdminRoutes>
+              <GenerateSeats />
+          </AdminRoutes>
+         }
         />
       </Routes>
 
