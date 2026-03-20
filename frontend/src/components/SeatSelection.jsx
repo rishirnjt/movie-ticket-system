@@ -268,7 +268,7 @@ const SeatSelection = () => {
 
           <div className="row-seats">
             {groupedSeats[row].map((seat) => {
-              const seatId = seat._id;
+              const seatId = seat.label;
 
               const seatClass = soldSeats.includes(seatId)
                 ? "sold"
@@ -282,7 +282,7 @@ const SeatSelection = () => {
                   <div 
                     key={seat._id}
                     className={`seat ${seatClass}`}
-                    onClick={() => handleSeatClick(seatId)}
+                    onClick={() => handleSeatClick(seat.label)}
                   >
                     {seat.number}
                     </div>
@@ -367,7 +367,13 @@ const SeatSelection = () => {
           <div className="popup-box">
             <button className="popup-close" onClick={() => setBuyPopup(false)}>✕</button>
             <h2>Confirm Purchase</h2>
-            <p>Seats: {selectedSeats.join(", ")}</p>
+            <p>Seats: {
+                seats
+                  .filter(seat => selectedSeats.includes(seat._id))
+                  .map(seat => seat.label)
+                  .join(", ")
+              } 
+            </p>
             <p>Total: NPR {selectedSeats.length * 300}</p>
             <div className="terms">
               <input
