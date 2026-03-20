@@ -32,6 +32,7 @@ import TicketPage from "./pages/TicketPage";
 import Users from "./pages/Users";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import ResetPassword from "./components/ResetPassword";
+import CreateScreen from "./pages/CreateScreen";
 
 import "./App.css";
 
@@ -138,6 +139,14 @@ function AppWrapper() {
           element={
             <AdminRoutes>
               <AdminFoods />
+            </AdminRoutes>
+          }
+        />
+        <Route
+          path="/admin/create-screen"
+          element={
+            <AdminRoutes>
+              <CreateScreen />
             </AdminRoutes>
           }
         />

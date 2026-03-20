@@ -32,6 +32,7 @@ require('./models/Booking');
 require('./models/User');
 require('./models/Ticket');
 require('./models/UserType');
+require('./models/Screen');
 
 //Auto cancellation
 const cron = require("node-cron");
@@ -108,7 +109,7 @@ const foodRoutes = require('./routes/foodRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const showtimeRoutes = require('./routes/showtimeRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-// const recommendationRoutes = require("./routes/recommendationRoutes");
+const screenRoutes = require('./routes/screenRoutes');
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
@@ -120,7 +121,7 @@ app.use('/api/foods', foodRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/payment", paymentRoutes);
-// app.use("/api/recommendations", recommendationRoutes);
+app.use("/api/screens", screenRoutes);
 
 //route testing
 app.get('/test', (req, res) => {

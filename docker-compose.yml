@@ -23,6 +23,8 @@ services:
     depends_on:
       - mongo
     volumes:
+      - ./server:/app
+      - /app/node_modules
       - ./server/uploads:/app/uploads
 
   frontend:
@@ -36,6 +38,9 @@ services:
       - VITE_API_URL=http://movie_backend:5001
     depends_on:
       - backend
+    volumes: 
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   mongo_data:

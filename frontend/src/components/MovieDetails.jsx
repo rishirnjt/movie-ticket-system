@@ -102,7 +102,7 @@ const MovieDetails = () => {
           {movie.showtimes?.length > 0 ? (
             <div className="showtimes">
               {movie.showtimes.map((showtime) => {
-                const showtimeDate = new Date(showtime.time);
+                const showtimeDate = new Date(showtime.startTime);
                 const now = new Date();
                 const isPast = showtimeDate < now;
 
@@ -117,7 +117,7 @@ const MovieDetails = () => {
                       })
                     }
                   >
-                    {showtime.hall} — {showtimeDate.toLocaleDateString()}{" "}
+                    {showtime.screenId?.name || "Screen"} — {showtimeDate.toLocaleDateString()}{" "}
                     {showtimeDate.toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",

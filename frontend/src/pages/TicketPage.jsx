@@ -53,8 +53,8 @@ const TicketPage = () => {
 
   if (!ticket) return <p>Loading ticket...</p>;
 
-  const showTime = ticket.showtimeId?.time
-    ? new Date(ticket.showtimeId.time)
+  const showTime = ticket.showtimeId?.startTime
+    ? new Date(ticket.showtimeId.startTime)
     : null;
 
   return (
@@ -65,7 +65,7 @@ const TicketPage = () => {
 
           <p>{showTime?.toLocaleDateString()}</p>
           <p>{showTime?.toLocaleTimeString()}</p>
-          <p>Hall: {ticket.showtimeId?.hall}</p>
+          <p>Screen: {ticket.showtimeId?.screenId?.name || "Screen"}</p>
 
           <p>Seat: {seat}</p>
 

@@ -14,49 +14,68 @@ const emptyMovie = {
   duration: "",
   rating: "",
   language: "",
-  showtimes: [{ hall: "", time: "" }],
+  showtimes: [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
 };
 
 const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
   const [movie, setMovie] = useState(emptyMovie);
+  const [screens, setScreens] = useState([]);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+    fetchScreens();
     if (mode === "edit" && movieId) fetchMovie();
   }, [mode, movieId]);
 
   const fetchMovie = async () => {
     try {
       const res = await axios.get(`http://localhost:5001/api/movies/${movieId}`);
+
       setMovie({
         ...res.data,
-
         releaseDate: res.data.releaseDate
-          ? res.data.releaseDate.split("T"[0])
+          ? new Date(res.data.releaseDate).toISOString().split("T")[0]
           : "",
         movieStartDate: res.data.movieStartDate
           ? new Date(res.data.movieStartDate).toISOString().split("T")[0]
           : "",
-
         movieEndDate: res.data.movieEndDate
           ? new Date(res.data.movieEndDate).toISOString().split("T")[0]
           : "",
-
         showtimes:
           res.data.showtimes?.length > 0
             ? res.data.showtimes.map((s) => ({
-              hall: s.hall,
-              time: s.time
-                ? new Date(s.time)
+              screenId: s.screenId?._id || s.screenId || "",
+              startTime: s.startTime
+                ? new Date(s.startTime)
                   .toLocaleString("sv-SE", { timeZone: "Asia/Kathmandu" })
                   .replace(" ", "T")
                   .slice(0, 16)
-                : ""
+                : "",
+              endTime: s.endTime
+                ? new Date(s.endTime)
+                  .toLocaleString("sv-SE", { timeZone: "Asia/Kathmandu" })
+                  .replace(" ", "T")
+                  .slice(0, 16)
+                : "",
+              basePrice: s.basePrice ?? "",
             }))
-            : [{ hall: "", time: "" }],
+            : [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
       });
     } catch (err) {
       console.error("Error loading movie:", err);
+    }
+  };
+
+  const fetchScreens = async () => {
+    try{
+      const res = await axios.get("http://localhost:5001/api/screens",{
+        headers: {Authorization: `Bearer ${token}` },
+      });
+      console.log("Loaded screens:", res.data);
+      setScreens(res.data);
+    } catch (err) {
+      console.error("Error loading screens:", err.response?.data || err.message);
     }
   };
 
@@ -72,7 +91,10 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
   const addShowtime = () =>
     setMovie((prev) => ({
       ...prev,
-      showtimes: [...prev.showtimes, { hall: "", time: "" }],
+      showtimes: [
+        ...prev.showtimes,
+        { screenId: "", startTime: "", endTime: "", basePrice: "" },
+      ],
     }));
 
   const removeShowtime = (i) =>
@@ -82,39 +104,75 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
     }));
 
   const uploadPoster = async (file) => {
+    if(!file) return;
+    try{
+
+    
     const data = new FormData();
     data.append("image", file);
     const res = await axios.post("http://localhost:5001/api/upload", data);
     setMovie((prev) => ({ ...prev, posterUrl: res.data.url }));
+    } catch (err) {
+      console.error("Upload failed:", err.response?.data || err.message);
+      alert("Poster upload failed");
+    }
   };
 
   const handleSubmit = async (e, addAnother = false) => {
     try {
       let savedMovieId = movieId;
 
+      const moviePayload = {
+        ...movie,
+        showtimes: undefined,
+      };
+
       if (mode === "add") {
-        const res = await axios.post("http://localhost:5001/api/movies", movie, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axios.post(
+          "http://localhost:5001/api/movies",
+          moviePayload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         savedMovieId = res.data._id;
       } else {
-        await axios.put(`http://localhost:5001/api/movies/${movieId}`, movie, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        await axios.delete(`http://localhost:5001/api/showtimes/movie/${movieId}`);
+        await axios.put(
+          `http://localhost:5001/api/movies/${movieId}`,
+          moviePayload,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        await axios.delete(
+          `http://localhost:5001/api/showtimes/movie/${movieId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       }
 
       for (const s of movie.showtimes) {
-        if (!s.hall || !s.time) continue;
+        if (!s.screenId || !s.startTime || !s.endTime || s.basePrice === "") {
+          continue;
+        }
+
+        console.log("Submitting showtime:", s);
+        console.log("screenId:", s.screenId);
 
         await axios.post(
           "http://localhost:5001/api/showtimes",
           {
             movieId: savedMovieId,
-            hall: s.hall,
-            time: new Date(s.time).toISOString()
+            screenId: s.screenId,
+            startTime: new Date(s.startTime).toISOString(),
+            endTime: new Date(s.endTime).toISOString(),
+            basePrice: Number(s.basePrice),
           },
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
       }
 
@@ -130,6 +188,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       alert("Error saving movie.");
     }
   };
+
   return (
     <div className="movie-form-container">
       <h1 id="movie-form-title">
@@ -137,7 +196,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       </h1>
 
       <form id="movie-form" className="movie-form">
-        {/* LEFT COLUMN */}
         <div className="form-left">
           <div className="input-group">
             <label htmlFor="movie-title">Movie Title</label>
@@ -187,7 +245,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
               <label htmlFor="movie-duration">Duration</label>
               <input
                 id="movie-duration"
-                placeholder="2hr 30min"
+                placeholder="150"
                 value={movie.duration}
                 onChange={(e) => handleChange("duration", e.target.value)}
               />
@@ -209,7 +267,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
             <input
               id="movie-release-date"
               type="date"
-              value={movie.releaseDate ? new Date(movie.releaseDate).toISOString().split("T")[0] : ""}
+              value={movie.releaseDate}
               onChange={(e) => handleChange("releaseDate", e.target.value)}
             />
           </div>
@@ -218,21 +276,21 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
             <label>Movie Start Date</label>
             <input
               type="date"
-              value={movie.movieStartDate ? new Date(movie.movieStartDate).toISOString().split("T")[0] : ""}
+              value={movie.movieStartDate}
               onChange={(e) => handleChange("movieStartDate", e.target.value)}
             />
           </div>
+
           <div className="input-group">
             <label>Movie End Date</label>
             <input
               type="date"
-              value={movie.movieEndDate ? new Date(movie.movieEndDate).toISOString().split("T")[0] : ""}
+              value={movie.movieEndDate}
               onChange={(e) => handleChange("movieEndDate", e.target.value)}
             />
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
         <div className="form-right">
           <div className="poster-upload">
             <label htmlFor="movie-poster">Movie Poster</label>
@@ -270,21 +328,40 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
 
             {movie.showtimes.map((s, i) => (
               <div className="showtime-row" key={i}>
+                <select
+                  value={s.screenId}
+                  onChange={(e) => handleShowtimeChange(i, "screenId", e.target.value)}
+                >
+                  <option value="">Select Screen</option>
+                  {screens.map((screen) => (
+                    <option key={screen._id} value={screen._id}>
+                      {screen.name} ({screen.format})
+                    </option>
+                  ))}
+                </select>
+
                 <input
-                  id={`showtime-hall-${i}`}
-                  placeholder="Hall"
-                  value={s.hall}
+                  type="datetime-local"
+                  value={s.startTime}
                   onChange={(e) =>
-                    handleShowtimeChange(i, "hall", e.target.value)
+                    handleShowtimeChange(i, "startTime", e.target.value)
                   }
                 />
 
                 <input
-                  id={`showtime-time-${i}`}
                   type="datetime-local"
-                  value={s.time}
+                  value={s.endTime}
                   onChange={(e) =>
-                    handleShowtimeChange(i, "time", e.target.value)
+                    handleShowtimeChange(i, "endTime", e.target.value)
+                  }
+                />
+
+                <input
+                  type="number"
+                  placeholder="Base Price"
+                  value={s.basePrice}
+                  onChange={(e) =>
+                    handleShowtimeChange(i, "basePrice", e.target.value)
                   }
                 />
 

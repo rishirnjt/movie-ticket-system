@@ -1,3 +1,4 @@
+/* CONTAINER */
 .movie-form-container {
   max-width: 1200px;
   margin: 40px auto;
@@ -13,12 +14,12 @@
   letter-spacing: 1px;
 }
 
-/* FORM CARD */
+/* MAIN FORM */
 .movie-form {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 30px;
-  padding: 32px;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  padding: 30px;
   background: rgba(55, 8, 16, 0.78);
   backdrop-filter: blur(18px);
   border-radius: 20px;
@@ -28,24 +29,40 @@
     inset 0 0 25px rgba(255, 60, 90, 0.12);
 }
 
-/* Columns */
+/* COLUMN STRUCTURE */
 .form-left,
 .form-right {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
-/* Labels */
+/* SECTION GROUP (NEW - IMPORTANT) */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* INPUT GROUP */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .input-group label {
   font-size: 0.85rem;
-  margin-bottom: 6px;
   color: #f2c6c6;
 }
 
-/* Inputs */
+/* INPUTS */
 .input-group input,
-.input-group textarea {
+.input-group textarea,
+.showtime-row input,
+.showtime-row select {
   width: 100%;
   padding: 11px 14px;
   border-radius: 10px;
@@ -57,32 +74,39 @@
 }
 
 .input-group input:focus,
-.input-group textarea:focus {
+.input-group textarea:focus,
+.showtime-row input:focus {
   border-color: #ff3b5c;
   box-shadow: 0 0 10px rgba(255, 59, 92, 0.6);
 }
 
+/* TEXTAREA */
 textarea {
   resize: none;
   min-height: 90px;
 }
 
+/* ROW */
 .row {
   display: flex;
-  gap: 16px;
+  gap: 14px;
 }
 
-/* Poster Upload */
-.poster-upload label {
-  margin-bottom: 8px;
-  display: block;
-  color: #f2c6c6;
+.row .input-group {
+  flex: 1;
+}
+
+/* POSTER */
+.poster-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .upload-box {
-  height: 160px;
+  height: 150px;
   border: 2px dashed rgba(255, 80, 110, 0.45);
-  border-radius: 16px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,34 +127,41 @@ textarea {
 }
 
 .poster-preview {
-  margin-top: 12px;
-  width: 160px;
+  width: 100%;
+  max-width: 180px;
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+  margin-top: 10px;
 }
 
-/* Showtimes */
+/* SHOWTIME */
+.showtime-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .showtime-box h3 {
-  margin-bottom: 10px;
   color: #ffd1d1;
 }
 
+/* SHOWTIME ROW FIXED ALIGNMENT */
 .showtime-row {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.showtime-row input {
-  flex: 1;
+/* DATE ICON FIX */
+.showtime-row input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }
 
-/* Remove Button */
+/* REMOVE BTN */
 .remove-btn {
   background: linear-gradient(135deg, #7a0c0c, #4a0707);
   border: none;
-  color: white;
-  padding: 6px 12px;
+  padding: 10px 12px;
   border-radius: 8px;
   cursor: pointer;
   transition: 0.2s;
@@ -140,34 +171,31 @@ textarea {
   background: #a31212;
 }
 
-/* Add Showtime */
+/* ADD BTN */
 .add-showtime {
-  margin-top: 10px;
+  margin-top: 6px;
   background: transparent;
   border: 1px solid #ff3b5c;
   color: #ffd1d1;
-  padding: 8px;
+  padding: 10px;
   border-radius: 10px;
   cursor: pointer;
-  transition: 0.25s;
 }
 
 .add-showtime:hover {
   background: rgba(255, 60, 90, 0.15);
 }
 
-/* Submit Button */
+/* SUBMIT */
 .submit-btn {
-  margin-top: 22px;
+  margin-top: 20px;
   padding: 14px;
   background: linear-gradient(135deg, #ff3b5c, #7a0c0c);
   border: none;
   border-radius: 14px;
-  color: white;
-  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.25s, box-shadow 0.25s;
+  transition: 0.25s;
 }
 
 .submit-btn:hover {
@@ -175,9 +203,27 @@ textarea {
   box-shadow: 0 12px 30px rgba(255, 59, 92, 0.45);
 }
 
-/* Responsive */
+/* RESPONSIVE */
 @media (max-width: 900px) {
   .movie-form {
     grid-template-columns: 1fr;
+  }
+
+  .showtime-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .movie-form {
+    padding: 20px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
+  .submit-btn {
+    width: 100%;
   }
 }

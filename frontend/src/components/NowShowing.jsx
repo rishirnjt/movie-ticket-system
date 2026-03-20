@@ -1,54 +1,53 @@
-import './NowShowing.css';
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import "./NowShowing.css";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 
 const NowShowing = () => {
   const [groupedByDate, setGroupedByDate] = useState({});
   const [allDates, setAllDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState("");
 
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    axios.get('http://localhost:5001/api/movies/now-showing')
-      .then(res => {
+    axios
+      .get("http://localhost:5001/api/movies/now-showing")
+      .then((res) => {
         const movies = res.data;
 
         const grouped = {};
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
 
-        // Group by showtime date
-        movies.forEach(movie => {
-          if (!movie.showtimes) return;
+        movies.forEach((movie) => {
+          if (!movie.showtimes || movie.showtimes.length === 0) return;
 
-          movie.showtimes.forEach(showtime => {
-            const showDate = new Date(showtime.time);
+          movie.showtimes.forEach((showtime) => {
+            if (!showtime.startTime) return;
+
+            const showDate = new Date(showtime.startTime);
             showDate.setHours(0, 0, 0, 0);
 
-            const dateKey = showDate.toLocaleDateString('en-CA');
+            const dateKey = showDate.toLocaleDateString("en-CA");
 
             if (!grouped[dateKey]) grouped[dateKey] = [];
 
             let existingMovie = grouped[dateKey].find(
-              m => m._id === movie._id
+              (m) => m._id === movie._id
             );
 
             if (!existingMovie) {
               existingMovie = {
                 ...movie,
-                showtimes: []
+                showtimes: [],
               };
               grouped[dateKey].push(existingMovie);
             }
 
-            //add only specific showtime
             existingMovie.showtimes.push(showtime);
 
             existingMovie.showtimes.sort(
-              (a, b) => new Date(a.time) - new Date(b.time)
+              (a, b) => new Date(a.startTime) - new Date(b.startTime)
             );
           });
         });
@@ -59,8 +58,9 @@ const NowShowing = () => {
         setAllDates(dates);
         setSelectedDate(dates[0] || "");
       })
-      .catch(err => console.error("Failed to fetch movies", err));
+      .catch((err) => console.error("Failed to fetch movies", err));
   }, []);
+
   const movies = groupedByDate[selectedDate] || [];
 
   const handleShowtime = (movieId, showtime) => {
@@ -69,13 +69,13 @@ const NowShowing = () => {
     if (!token) {
       localStorage.setItem("redirectAfterLogin", `/seats/${movieId}`);
       navigate("/auth?tab=signin", {
-        state: { backgroundLocation: location }
+        state: { backgroundLocation: location },
       });
       return;
     }
 
     navigate(`/seats/${movieId}`, {
-      state: { selectedShowtime: showtime }
+      state: { selectedShowtime: showtime },
     });
   };
 
@@ -85,7 +85,6 @@ const NowShowing = () => {
 
   return (
     <div className="now-showing-container">
-
       <div className="section-header">
         <h2>Now Showing</h2>
       </div>
@@ -114,13 +113,13 @@ const NowShowing = () => {
               key={movie._id}
               onClick={() => handleMovieClick(movie._id)}
             >
-
-              {/* Poster */}
               <div className="poster-wrapper">
-                <img src={`http://localhost:5001${movie.posterUrl}`} alt={movie.title} />
+                <img
+                  src={`http://localhost:5001${movie.posterUrl}`}
+                  alt={movie.title}
+                />
               </div>
 
-              {/* Hover Info */}
               <div className="hover-info">
                 <h4>{movie.title}</h4>
                 <p className="genre">{movie.genre}</p>
@@ -128,7 +127,7 @@ const NowShowing = () => {
                 <div className="showtimes">
                   {movie.showtimes && movie.showtimes.length > 0 ? (
                     movie.showtimes.slice(0, 3).map((showtime, index) => {
-                      const showDateTime = new Date(showtime.time);
+                      const showDateTime = new Date(showtime.startTime);
                       const now = new Date();
                       const isPast = showDateTime < now;
 
@@ -151,19 +150,14 @@ const NowShowing = () => {
                       );
                     })
                   ) : (
-                    <span className="no-showtime">
-                      No showtimes
-                    </span>
+                    <span className="no-showtime">No showtimes</span>
                   )}
                 </div>
               </div>
-
             </div>
           ))
         ) : (
-          <p className="no-movies">
-            No movies available for this date.
-          </p>
+          <p className="no-movies">No movies available for this date.</p>
         )}
       </div>
     </div>

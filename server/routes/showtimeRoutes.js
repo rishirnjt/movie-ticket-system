@@ -1,39 +1,35 @@
 const express = require("express");
 const router = express.Router();
-const Showtime = require("../models/Showtime");
 
-//add showtime
-router.post("/", async(req,res) => {
-    try{
-        const { movieId, hall, time } = req.body;
+const {
+  createShowtime,
+  getAllShowtimes,
+  getShowtimeById,
+  getShowtimesByMovie,
+  updateShowtime,
+  deleteShowtime,
+  deleteShowtimesByMovie,
+} = require("../controllers/showtimeController");
 
-        const showtime = await Showtime.create({
-            movie: movieId,
-            hall,
-            time,
-        });
+// Create showtime
+router.post("/", createShowtime);
 
-        res.status(201).json(showtime);
-    } catch (err) {
-        res.status(500).json({ message: "Failed to add showtime"});
-    }
-});
+// Get all showtimes
+router.get("/", getAllShowtimes);
 
-//get showtime for a movie
-router.get("/movie/:movieId", async (req, res) => {
-    try{
-        const showtimes = await Showtime.find({ movie: req.params.movieId })
-            .sort({ time: 1 });
+// Get showtimes for a movie
+router.get("/movie/:movieId", getShowtimesByMovie);
 
-        res.json(showtimes);
-    } catch (err) {
-        res.status(500).json({ message: "Failed to fetch showtimes" });
-    }
-});
+// Get one showtime by ID
+router.get("/:id", getShowtimeById);
 
-router.delete("/movie/:movieId", async (req, res) => {
-    await Showtime.deleteMany({ movie: req.params.movieId });
-    res.json({ message: "Showrtimes deleted"});
-});
+// Update one showtime
+router.put("/:id", updateShowtime);
+
+// Delete all showtimes for a movie
+router.delete("/movie/:movieId", deleteShowtimesByMovie);
+
+// Delete one showtime
+router.delete("/:id", deleteShowtime);
 
 module.exports = router;

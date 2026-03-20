@@ -48,11 +48,28 @@ const Sidebar = () => {
           </div>
         )}
       </div>
-    
-        {/* Users */}
-        <NavLink to="/admin/users" className={linkClass}>
-          <i className="fas fa-users me-2"></i> Users
-        </NavLink>
+
+      {/*Screens */}
+      <div className="menu-group">
+        <div className="menu-title" onClick={() => toggleMenu("screens")}>
+          <i className="fas fa-tv me-2"></i> Screens
+        </div>
+        {openMenu === "screens" && (
+          <div className="submenu">
+            <NavLink to="/admin/create-screen" className={linkClass}>
+              <i className="fas fa-plus me-2"></i> Create Screen
+            </NavLink>
+            <NavLink to="/admin/manage-screens" className={linkClass}>
+              <i className="fas fa-list me-2"></i> Manage Screens
+            </NavLink>
+          </div>
+        )}
+      </div>
+
+      {/* Users */}
+      <NavLink to="/admin/users" className={linkClass}>
+        <i className="fas fa-users me-2"></i> Users
+      </NavLink>
 
       {/* Bookings */}
       <NavLink to="/admin/bookings" className={linkClass}>
