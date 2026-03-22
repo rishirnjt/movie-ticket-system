@@ -124,9 +124,19 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
 
       const moviePayload = {
         ...movie,
+
+        duration: movie.duration ? Number(movie.duration) : undefined,
+        rating: movie.rating ? Number(movie.rating) : undefined,
+
+        posterUrl: movie.posterUrl || undefined,
+        trailerUrl: movie.trailerUrl || undefined,
+
+        releaseDate: movie.releaseDate || undefined,
+        movieStartDate: movie.movieStartDate || undefined,
+        movieEndDate: movie.movieEndDate || undefined,
+
         showtimes: undefined,
       };
-
       if (mode === "add") {
         const res = await axios.post(
           "http://localhost:5001/api/movies",

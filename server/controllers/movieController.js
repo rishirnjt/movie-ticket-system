@@ -23,53 +23,58 @@ exports.searchMovies = async (req, res) => {
   }
 };
 
-/* =========================
-   COMING SOON
-========================= */
+//Coming Soon
 exports.getComingSoon = async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
     const movies = await Movie.find({
-      movieStartDate: { $gt: today },
-      status: { $ne: "archived" },
-    }).lean();
+      movieStartDate: { $exists: true, $gt: now },
+    })
+      .sort({ movieStartDate: 1 })
+      .lean();
 
     res.json(movies);
   } catch (err) {
+    console.error("Coming soon error:", err);
     res.status(500).json({ message: "Error fetching coming soon movies" });
   }
 };
 
-/* =========================
-   NOW SHOWING
-========================= */
+//Now Showing
 exports.getNowShowing = async (req, res) => {
   try {
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
     const movies = await Movie.find({
       movieStartDate: { $lte: today },
       movieEndDate: { $gte: today },
-      status: { $ne: "archived" },
     }).lean();
 
     const movieIds = movies.map((m) => m._id);
 
     const showtimes = await Showtime.find({
       movieId: { $in: movieIds },
+      startTime: { $gte: now },
     })
+      .populate("screenId", "name format")
       .sort({ startTime: 1 })
       .lean();
 
-    const moviesWithShowtimes = movies.map((movie) => ({
-      ...movie,
-      showtimes: showtimes.filter(
-        (st) => st.movieId.toString() === movie._id.toString()
-      ),
-    }));
+    const moviesWithShowtimes = movies
+      .map((movie) => {
+        const movieShowtimes = showtimes.filter(
+          (st) => st.movieId.toString() === movie._id.toString()
+        );
+
+        return {
+          ...movie,
+          showtimes: movieShowtimes,
+        };
+      })
+      .filter((movie) => movie.showtimes.length > 0);
 
     res.json(moviesWithShowtimes);
   } catch (err) {
@@ -77,13 +82,14 @@ exports.getNowShowing = async (req, res) => {
     res.status(500).json({ message: "Error fetching now showing movies" });
   }
 };
-
 /* =========================
    GET ALL MOVIES
 ========================= */
 exports.getAllMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({ isActive: true }).lean();
+    const movies = await Movie.find({
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
+    }).lean();
     res.json(movies);
   } catch (err) {
     res.status(500).json({ message: "Error fetching movies" });
@@ -154,6 +160,9 @@ exports.createMovie = async (req, res) => {
 
     const movie = await Movie.create({
       ...data,
+      releaseDate: data.releaseDate ? new Date(`${data.releaseDate}T00:00:00`) : null,
+      movieStartDate: data.movieStartDate ? new Date(`${data.movieStartDate}T00:00:00`) : null,
+      movieEndDate: data.movieEndDate ? new Date(`${data.movieEndDate}T23:59:59`) : null,
       isActive: typeof data.isActive === "boolean" ? data.isActive : true,
     });
 
@@ -164,18 +173,34 @@ exports.createMovie = async (req, res) => {
   }
 };
 
-/* =========================
-   UPDATE MOVIE
-========================= */
+//Update movie
 exports.updateMovie = async (req, res) => {
   try {
-    const movie = await Movie.findByIdAndUpdate(req.params.id, req.body, {
+    const data = req.body;
+
+    const updatePayload = {
+      ...data,
+      releaseDate: data.releaseDate ? new Date(`${data.releaseDate}T00:00:00`) : null,
+      movieStartDate: data.movieStartDate ? new Date(`${data.movieStartDate}T00:00:00`) : null,
+      movieEndDate: data.movieEndDate ? new Date(`${data.movieEndDate}T23:59:59`) : null,
+    };
+
+    const movie = await Movie.findByIdAndUpdate(req.params.id, updatePayload, {
       new: true,
+      runValidators: true,
     });
 
     res.json(movie);
   } catch (err) {
     console.error("Update movie error:", err);
+
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: err.errors,
+      });
+    }
+
     res.status(500).json({ message: "Update failed" });
   }
 };

@@ -24,8 +24,9 @@ const seatLockSchema = new mongoose.Schema(
 
     expiresAt: {
       type: Date,
-      required: true
-    }
+      required: true,
+      index: true,
+    },
   },
   {
     timestamps: true

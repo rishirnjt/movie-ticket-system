@@ -1,36 +1,26 @@
 const express = require("express");
 const router = express.Router();
+
+const bookingController = require("../controllers/bookingController");
 const { protect } = require("../middleware/authMiddleware");
 
-const {
-  holdBooking,
-  buyBooking,
-  addFoodsToBooking,
-  checkoutBooking,
-  cancelBooking,
-  getBookedSeats,
-  getMyReservations,
-  getAllBookingsAdmin,
-  getSingleBookingAdmin,
-  updateBookingStatusAdmin,
-  getBookingById,
-  expireBooking
-} = require("../controllers/bookingController");
+// customer actions
+router.post("/hold", protect(["Customer"]), bookingController.holdBooking);
+router.post("/buy", protect(["Customer"]), bookingController.buyBooking);
+router.post("/checkout/:id", protect(["Customer"]), bookingController.checkoutBooking);
+router.post("/cancel/:id", protect(["Customer"]), bookingController.cancelBooking);
+router.delete("/expire/:id", protect(["Customer"]), bookingController.expireBooking);
 
-router.post("/hold", protect(["Customer"]), holdBooking);
-router.post("/buy", protect(["Customer"]), buyBooking);
-router.post("/add-foods/:id", protect(["Customer"]), addFoodsToBooking);
-router.post("/checkout/:id", protect(["Customer"]), checkoutBooking);
-router.post("/cancel/:id", protect(["Customer"]), cancelBooking);
+// seat status
+router.get("/booked-seats/:movieId/:showtimeId", bookingController.getBookedSeats);
 
-router.get("/booked-seats/:movieId/:showtimeId", getBookedSeats);
-router.get("/my-reservations", protect(["Customer"]), getMyReservations);
+// reservations
+router.get("/my-reservations", protect(["Customer"]), bookingController.getMyReservations);
 
-router.get("/admin/all", protect(["Admin"]), getAllBookingsAdmin);
-router.get("/admin/:id", protect(["Admin"]), getSingleBookingAdmin);
-router.put("/admin/:id/status", protect(["Admin"]), updateBookingStatusAdmin);
+// admin
+router.get("/admin/all", protect(["Admin"]), bookingController.getAllBookingsAdmin);
 
-router.get("/:id", protect(["Customer"]), getBookingById);
-router.delete("/expire/:id", expireBooking);
+// single booking
+router.get("/:id", protect(["Customer"]), bookingController.getBookingById);
 
 module.exports = router;

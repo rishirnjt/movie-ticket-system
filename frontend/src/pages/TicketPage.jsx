@@ -8,25 +8,25 @@ const TicketPage = () => {
   const [ticket, setTicket] = useState(null);
 
   const downloadTicket = async () => {
-    try{
-        const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-        const response = await axios.get(
-            `http://localhost:5001/api/tickets/${ticketId}/download`,
-            {
-                headers: { Authorization: `Bearer ${token}`},
-                responseType: "blob",
-            }
-        );
+      const response = await axios.get(
+        `http://localhost:5001/api/tickets/${ticketId}/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
 
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "ticket.pdf");
-        document.body.appendChild(link);
-        link.click();
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "ticket.pdf");
+      document.body.appendChild(link);
+      link.click();
     } catch (error) {
-        console.error("Download failed", error);
+      console.error("Download failed", error);
     }
   };
 
@@ -57,36 +57,54 @@ const TicketPage = () => {
     ? new Date(ticket.showtimeId.startTime)
     : null;
 
+  const getSeatLabel = (seat, index) => {
+    if (typeof seat === "string") return seat;       
+    if (seat?.label) return seat.label;             
+    if (ticket.seatSnapshot?.[index]?.label) {
+      return ticket.seatSnapshot[index].label;      
+    }
+    return "Seat";
+  };
+
   return (
     <div className="ticket-page">
-      {ticket.seats.map((seat, index) => (
-        <div key={index} className="e-ticket-card">
-          <h2>{ticket.movieId?.title}</h2>
+      {(ticket.seats || []).map((seat, index) => {
+        const seatLabel = getSeatLabel(seat, index);
 
-          <p>{showTime?.toLocaleDateString()}</p>
-          <p>{showTime?.toLocaleTimeString()}</p>
-          <p>Screen: {ticket.showtimeId?.screenId?.name || "Screen"}</p>
+        return (
+          <div key={seat?._id || index} className="e-ticket-card">
+            <h2>{ticket.movieId?.title}</h2>
 
-          <p>Seat: {seat}</p>
+            <p>{showTime?.toLocaleDateString()}</p>
+            <p>
+              {showTime?.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+            <p>Screen: {ticket.showtimeId?.screenId?.name || "Screen"}</p>
 
-          <p className="ticket-order">
-            #{ticket._id.slice(-8).toUpperCase()}-{seat}
-          </p>
+            <p>Seat: {seatLabel}</p>
 
-          {ticket.qrCode && (
-            <img
-              src={ticket.qrCode}
-              alt="QR"
-              className="ticket-qr"
-            />
-          )}
-        </div>
-      ))}
+            <p className="ticket-order">
+              #{ticket._id.slice(-8).toUpperCase()}-{seatLabel}
+            </p>
+
+            {ticket.qrCode && (
+              <img
+                src={ticket.qrCode}
+                alt="QR"
+                className="ticket-qr"
+              />
+            )}
+          </div>
+        );
+      })}
+
       <button className="download-btn" onClick={downloadTicket}>
         Download Ticket
-    </button>
+      </button>
     </div>
-    
   );
 };
 

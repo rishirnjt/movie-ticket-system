@@ -34,6 +34,7 @@ require('./models/Ticket');
 require('./models/UserType');
 require('./models/Screen');
 require('./models/Seat');
+require('./models/SeatLock');
 
 //Auto cancellation
 const cron = require("node-cron");
@@ -48,9 +49,14 @@ cron.schedule("*/1 * * * *", async () => {
     await Booking.updateMany(
       {
         status: "holding",
-        purchaseDeadline: { $lte: now }
+        reservationExpiresAt: { $lte: now }
       },
-      { status: "cancelled" }
+      {
+        $set: {
+          status: "cancelled",
+          reservationExpiresAt: null
+        }
+      }
     );
 
   } catch (err) {
@@ -62,7 +68,9 @@ cron.schedule("*/1 * * * *", async () => {
 cron.schedule("0 0 * * *", async () => {
   try {
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
+
+    today.setMinutes(today.getMinutes() - today.getTimezoneOffset())
 
     // Coming Soon → Now Showing
     await Movie.updateMany(
@@ -112,6 +120,7 @@ const showtimeRoutes = require('./routes/showtimeRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const screenRoutes = require('./routes/screenRoutes');
 const seatRoutes = require('./routes/seatRoutes');
+const seatLockRoutes = require('./routes/seatLockRoutes');
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
@@ -125,6 +134,7 @@ app.use("/api/showtimes", showtimeRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/screens", screenRoutes);
 app.use("/api", seatRoutes);
+app.use("/api/seat-locks", seatLockRoutes);
 
 //route testing
 app.get('/test', (req, res) => {

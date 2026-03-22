@@ -8,33 +8,15 @@ const SeatSelection = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [selectedShowtime] = useState(location.state?.selectedShowtime || null);
-  const [selectedSeats, setSelectedSeats] = useState([]);
+  const selectedShowtime = location.state?.selectedShowtime || null; const [selectedSeats, setSelectedSeats] = useState([]);
   const [soldSeats, setSoldSeats] = useState([]);
-  const [heldSeats, setHeldSeats] = useState([]);
+  const [lockedSeats, setLockedSeats] = useState([]);
   const [movie, setMovie] = useState(null);
   const [seats, setSeats] = useState([]);
-
-   const groupedSeats = useMemo(() => {
-    const grouped = {};
-
-    seats.forEach((seat) => {
-      if(!grouped[seat.row]) grouped[seat.row] = [];
-      grouped[seat.row].push(seat);
-    });
-
-    Object.keys(grouped).forEach((row) =>{
-      grouped[row].sort((a, b) => a.number -b.number);
-    });
-
-    return grouped;
-  }, [seats]);
-
 
   const [bookingId, setBookingId] = useState(null);
   const [expiresAt, setExpiresAt] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [timerStarted, setTimerStarted] = useState(false);
 
   const [bookSuccessPopup, setBookSuccessPopup] = useState({
     open: false,
@@ -43,100 +25,149 @@ const SeatSelection = () => {
   const [buyPopup, setBuyPopup] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const fetchScreenSeats = async () => {
-    const screenId = 
-      selectedShowtime?.screenId._id || selectedShowtime?.screenId;
+  const token = localStorage.getItem("token");
 
-    if(!screenId) return;
+  const groupedSeats = useMemo(() => {
+    const grouped = {};
 
-    try{
+    seats.forEach((seat) => {
+      if (!grouped[seat.row]) grouped[seat.row] = [];
+      grouped[seat.row].push(seat);
+    });
+
+    Object.keys(grouped).forEach((row) => {
+      grouped[row].sort((a, b) => a.number - b.number);
+    });
+
+    return grouped;
+  }, [seats]);
+
+  const fetchScreenSeats = useCallback(async () => {
+    const screenId =
+      selectedShowtime?.screenId?._id || selectedShowtime?.screenId;
+
+    if (!screenId) return;
+
+    try {
       const res = await axios.get(
-          `http://localhost:5001/api/screens/${screenId}/seats`
+        `http://localhost:5001/api/screens/${screenId}/seats`
       );
       setSeats(res.data || []);
     } catch (err) {
-      console.error("Failed to fetch screen seats:", err);
+      console.error("Failed to fetch screen seats:", err.response?.data || err.message);
     }
-  };
+  }, [selectedShowtime]);
 
-  //Fetch movie and book seats
+  const refreshSeatStatus = useCallback(async () => {
+    if (!selectedShowtime?._id || !token) return;
+
+    try {
+      const res = await axios.get(
+        `http://localhost:5001/api/seat-locks/showtime/${selectedShowtime._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setSoldSeats(res.data.soldSeatIds || []);
+      setLockedSeats(res.data.lockedSeatIds || []);
+      setSelectedSeats(res.data.myLockedSeatIds || []);
+
+      if (res.data.expiresAt) {
+        setExpiresAt(new Date(res.data.expiresAt).getTime());
+      } else {
+        setExpiresAt(null);
+        setTimeLeft(null);
+      }
+    } catch (err) {
+      console.error("Failed to refresh seat status:", err.response?.data || err.message);
+    }
+  }, [selectedShowtime, token]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const movieRes = await axios.get(`http://localhost:5001/api/movies/${movieId}`);
         setMovie(movieRes.data);
 
-        if (selectedShowtime && selectedShowtime._id) {
-          const seatsRes = await axios.get(
-            `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
-          );
-          setSoldSeats(seatsRes.data.soldSeats || []);
-          setHeldSeats(seatsRes.data.heldSeats || []);
-        }
-
         await fetchScreenSeats();
+        await refreshSeatStatus();
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error("Fetch error:", err.response?.data || err.message);
       }
     };
 
     fetchData();
-  }, [movieId, selectedShowtime]);
+  }, [movieId, fetchScreenSeats, refreshSeatStatus]);
 
-
-  /* ---------------- TIMER EFFECT ---------------- */
   useEffect(() => {
     if (!expiresAt) return;
 
-    const tick = () => {
+    const tick = async () => {
       const seconds = Math.floor((expiresAt - Date.now()) / 1000);
+
       if (seconds <= 0) {
         setTimeLeft(0);
-        handleBookingExpiry();
+        await refreshSeatStatus();
       } else {
         setTimeLeft(seconds);
       }
     };
 
-    tick(); // immediate render
+    tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [expiresAt]);
+  }, [expiresAt, refreshSeatStatus]);
 
-  //Seat click
-  const handleSeatClick = useCallback((seatId) => {
-    if (heldSeats.includes(seatId) || soldSeats.includes(seatId)) return;
+  const handleSeatClick = useCallback(
+    async (seatId) => {
+      if (!token) {
+        alert("You must be logged in");
+        return;
+      }
 
-    setSelectedSeats(prev =>
-      prev.includes(seatId)
-        ? prev.filter(s => s !== seatId)
-        : [...prev, seatId]
-    );
+      try {
+        if (selectedSeats.includes(seatId)) {
+          await axios.delete("http://localhost:5001/api/seat-locks/unlock", {
+            headers: { Authorization: `Bearer ${token}` },
+            data: {
+              showtimeId: selectedShowtime._id,
+              seatId,
+            },
+          });
+        } else {
+          await axios.post(
+            "http://localhost:5001/api/seat-locks/lock",
+            {
+              showtimeId: selectedShowtime._id,
+              seatId,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+        }
 
-    // start timer immediately when first seat is selected
-    if (!timerStarted) {
-      const newExpiresAt = Date.now() + 5 * 60 * 1000; // 5 min
-      setExpiresAt(newExpiresAt);
-      setTimeLeft(5 * 60);
-      setTimerStarted(true);
-    }
-  }, [heldSeats, soldSeats, timerStarted]);
+        await refreshSeatStatus();
+      } catch (err) {
+        alert(err.response?.data?.message || "Seat action failed");
+      }
+    },
+    [selectedSeats, selectedShowtime, token, refreshSeatStatus]
+  );
 
-  //Handle booking
   const handleBook = async () => {
-    console.log("MOVIE ID:", movieId);
-    console.log("SHOWTIME:", selectedShowtime);
-    console.log("SEATS:", selectedSeats);
-
     if (!movieId) return alert("Movie not found");
-    if (!selectedShowtime || !selectedShowtime._id) return alert("Showtime not selected");
-    if (selectedSeats.length === 0) return alert("Please select at least one seat");
-
-    const token = localStorage.getItem("token");
+    if (!selectedShowtime || !selectedShowtime._id) {
+      return alert("Showtime not selected");
+    }
+    if (selectedSeats.length === 0) {
+      return alert("Please select at least one seat");
+    }
     if (!token) return alert("You must be logged in to book");
 
     try {
-      const totalPrice = selectedSeats.length * 300; // seat price
+      const totalPrice = selectedSeats.length * 300;
 
       const res = await axios.post(
         "http://localhost:5001/api/bookings/hold",
@@ -147,7 +178,9 @@ const SeatSelection = () => {
           totalPrice,
           foods: [],
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       const booking = res.data;
@@ -156,58 +189,25 @@ const SeatSelection = () => {
       }
 
       setBookingId(booking._id);
-      setExpiresAt(new Date(booking.expiresAt).getTime());
-      setTimeLeft(Math.floor((new Date(booking.expiresAt) - Date.now()) / 1000));
+      setExpiresAt(
+        booking.reservationExpiresAt
+          ? new Date(booking.reservationExpiresAt).getTime()
+          : null
+      );
 
       setBookSuccessPopup({
         open: true,
         message: "Seats reserved successfully. Complete payment before timer ends.",
       });
 
-      // Refresh booked seats
-      const seatsRes = await axios.get(
-        `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
-      );
-      setSoldSeats(seatsRes.data.soldSeats || []);
-      setHeldSeats(seatsRes.data.heldSeats || []);
+      await refreshSeatStatus();
     } catch (err) {
       alert(err.response?.data?.message || "Booking failed");
     }
   };
 
-  //booking expiry
-  const handleBookingExpiry = async () => {
-    if (!bookingId) return;
-
-    try {
-      await axios.delete(`http://localhost:5001/api/bookings/expire/${bookingId}`);
-
-      alert("Booking expired. Seats released.");
-
-      setBookingId(null);
-      setExpiresAt(null);
-      setTimeLeft(null);
-      setSelectedSeats([]);
-      setTimerStarted(false);
-
-      // Refresh booked seats
-      if (selectedShowtime && selectedShowtime._id) {
-        const seatsRes = await axios.get(
-          `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
-        );
-        setSoldSeats(seatsRes.data.soldSeats || []);
-        setHeldSeats(seatsRes.data.heldSeats || []);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  //Buy Ticket//
   const handleBuyClick = async () => {
     if (selectedSeats.length === 0) return alert("Please select seats first");
-
-    const token = localStorage.getItem("token");
     if (!token) return alert("You must be logged in to buy");
 
     try {
@@ -218,7 +218,9 @@ const SeatSelection = () => {
           showtimeId: selectedShowtime._id,
           seats: selectedSeats,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       const booking = res.data;
@@ -226,31 +228,32 @@ const SeatSelection = () => {
         return alert("Buy failed");
       }
 
-      setBookingId(booking._id); // store bookingId for food page
+      setBookingId(booking._id);
       setBuyPopup(true);
 
+      await refreshSeatStatus();
     } catch (err) {
-      console.error("Direct buy error:", err);
+      console.error("Direct buy error:", err.response?.data || err.message);
       alert(err.response?.data?.message || "Buy failed");
     }
   };
 
-  const fetchSeats = async () => {
-    if (!selectedShowtime?._id) return;
+  const handleReset = async () => {
+    if (!selectedShowtime?._id || !token) return;
 
     try {
-      const res = await axios.get(
-        `http://localhost:5001/api/bookings/booked-seats/${movieId}/${selectedShowtime._id}`
+      await axios.delete(
+        `http://localhost:5001/api/seat-locks/clear/${selectedShowtime._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      setSoldSeats(res.data.soldSeats || []);
-      setHeldSeats(res.data.heldSeats || []);
-    } catch (error) {
-      console.error("Seat fetch error:", error);
+      await refreshSeatStatus();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to clear seat locks");
     }
   };
-
-
 
   const handleConfirmBuy = () => {
     if (!agreeTerms) return alert("You must agree to terms");
@@ -268,36 +271,36 @@ const SeatSelection = () => {
 
           <div className="row-seats">
             {groupedSeats[row].map((seat) => {
-              const seatId = seat.label;
+              const seatId = seat._id;
 
               const seatClass = soldSeats.includes(seatId)
                 ? "sold"
-                : heldSeats.includes(seatId)
-                ? "held"
-                : selectedSeats.includes(seatId)
-                ? "selected"
-                : "available";
+                : lockedSeats.includes(seatId) && !selectedSeats.includes(seatId)
+                  ? "held"
+                  : selectedSeats.includes(seatId)
+                    ? "selected"
+                    : "available";
 
-                return(
-                  <div 
-                    key={seat._id}
-                    className={`seat ${seatClass}`}
-                    onClick={() => handleSeatClick(seat.label)}
-                  >
-                    {seat.number}
-                    </div>
-                );
+              return (
+                <div
+                  key={seat._id}
+                  className={`seat ${seatClass}`}
+                  onClick={() => handleSeatClick(seat._id)}
+                >
+                  {seat.number}
+                </div>
+              );
             })}
           </div>
         </div>
       ));
-  }, [groupedSeats, soldSeats, heldSeats, selectedSeats, handleSeatClick]);
+  }, [groupedSeats, soldSeats, lockedSeats, selectedSeats, handleSeatClick]);
+
   return (
     <div className="seat-selection">
       <h2>Select Your Seats</h2>
       {movie && <h3>{movie.title}</h3>}
 
-      {/* SHOWTIME */}
       {selectedShowtime && (
         <p className="showtime">
           <strong>
@@ -315,7 +318,6 @@ const SeatSelection = () => {
         </p>
       )}
 
-      {/* TIMER */}
       {timeLeft !== null && timeLeft > 0 && (
         <div className="timer-box">
           ⏳ Time Remaining:
@@ -334,7 +336,6 @@ const SeatSelection = () => {
       <div className="screen">SCREEN</div>
       <div className="seats-grid">{seatElements}</div>
 
-      {/* LEGEND */}
       <div className="seat-legend">
         <div className="legend-item">
           <div className="legend-box legend-available" />
@@ -346,7 +347,7 @@ const SeatSelection = () => {
         </div>
         <div className="legend-item">
           <div className="legend-box legend-booked" />
-          <span>Booked</span>
+          <span>Locked</span>
         </div>
         <div className="legend-item">
           <div className="legend-box legend-bought" />
@@ -354,25 +355,31 @@ const SeatSelection = () => {
         </div>
       </div>
 
-      {/* ACTION BUTTONS */}
       <div className="actions">
-        <button className="book-btn" onClick={handleBook}>Book</button>
-        <button className="buy-btn" onClick={handleBuyClick}>Buy</button>
-        <button className="reset-btn" onClick={() => setSelectedSeats([])}>Reset</button>
+        <button className="book-btn" onClick={handleBook}>
+          Book
+        </button>
+        <button className="buy-btn" onClick={handleBuyClick}>
+          Buy
+        </button>
+        <button className="reset-btn" onClick={handleReset}>
+          Reset
+        </button>
       </div>
 
-      {/* BUY POPUP */}
       {buyPopup && (
         <div className="popup-overlay">
           <div className="popup-box">
-            <button className="popup-close" onClick={() => setBuyPopup(false)}>✕</button>
+            <button className="popup-close" onClick={() => setBuyPopup(false)}>
+              ✕
+            </button>
             <h2>Confirm Purchase</h2>
-            <p>Seats: {
-                seats
-                  .filter(seat => selectedSeats.includes(seat._id))
-                  .map(seat => seat.label)
-                  .join(", ")
-              } 
+            <p>
+              Seats:{" "}
+              {seats
+                .filter((seat) => selectedSeats.includes(seat._id))
+                .map((seat) => seat.label)
+                .join(", ")}
             </p>
             <p>Total: NPR {selectedSeats.length * 300}</p>
             <div className="terms">
@@ -383,12 +390,13 @@ const SeatSelection = () => {
               />
               <label>I agree to the terms and conditions</label>
             </div>
-            <button className="confirm-btn" onClick={handleConfirmBuy}>Confirm</button>
+            <button className="confirm-btn" onClick={handleConfirmBuy}>
+              Confirm
+            </button>
           </div>
         </div>
       )}
 
-      {/* SUCCESS POPUP */}
       {bookSuccessPopup.open && (
         <div className="success-overlay">
           <div className="success-box">
@@ -403,7 +411,7 @@ const SeatSelection = () => {
             <button
               className="success-ok-btn"
               onClick={() => {
-                setBookSuccessPopup({ open: false, message: "" })
+                setBookSuccessPopup({ open: false, message: "" });
                 navigate("/myaccount");
               }}
             >

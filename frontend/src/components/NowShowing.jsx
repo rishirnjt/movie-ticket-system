@@ -1,7 +1,8 @@
-import "./NowShowing.css";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import "./NowShowing.css";
+
 
 const NowShowing = () => {
   const [groupedByDate, setGroupedByDate] = useState({});

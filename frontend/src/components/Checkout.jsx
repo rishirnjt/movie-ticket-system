@@ -37,94 +37,99 @@ const Checkout = () => {
   if (error) return <p style={{ color: "red" }}>{error}</p>;
   if (!booking) return <p>Loading checkout details...</p>;
 
-  // ticket price with mid-week discount
-  const showtimeDate = new Date(booking.showtime?.time);
-  const day = showtimeDate.getDay();
-  let ticketPricePerSeat = 300;
-  if (day >= 2 && day <= 4) ticketPricePerSeat = ticketPricePerSeat / 2;
+  const showtimeDate = booking.showtime?.startTime
+    ? new Date(booking.showtime.startTime)
+    : null;
 
-  const ticketTotal = booking.seats.length * ticketPricePerSeat;
+  const day = showtimeDate ? showtimeDate.getDay() : null;
+
+  let ticketPricePerSeat = 300;
+  if (day !== null && day >= 2 && day <= 4) {
+    ticketPricePerSeat = ticketPricePerSeat / 2;
+  }
+
+  const seatLabels = (booking.seats || [])
+    .map((seat) => (typeof seat === "string" ? seat : seat.label))
+    .join(", ");
+
+  const ticketTotal = (booking.seats?.length || 0) * ticketPricePerSeat;
   const foodTotal =
     booking.foods?.reduce((sum, f) => sum + f.price * f.quantity, 0) || 0;
   const total = ticketTotal + foodTotal;
 
   const handlePayment = async (gateway) => {
-  setIsProcessing(true);
-  setError("");
+    setIsProcessing(true);
+    setError("");
 
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    console.log("Initiating payment with:", { bookingId, gateway });
-
-    const res = await axios.post(
-      "http://localhost:5001/api/payment/initiate",
-      { bookingId, gateway },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    console.log("Initiate response:", res.data);
-
-    if (gateway === "khalti") {
-      const { payment_url } = res.data;
-
-      if (!payment_url) {
-        throw new Error("Khalti payment URL not received");
+      if (!token) {
+        throw new Error("User not authenticated");
       }
 
-      window.location.href = payment_url;
-      return;
-    }
+      const res = await axios.post(
+        "http://localhost:5001/api/payment/initiate",
+        { bookingId, gateway },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    if (gateway === "esewa") {
-      const { url, formData } = res.data;
+      if (gateway === "khalti") {
+        const { payment_url } = res.data;
 
-      if (!url || !formData) {
-        throw new Error("eSewa form data not received");
+        if (!payment_url) {
+          throw new Error("Khalti payment URL not received");
+        }
+
+        window.location.href = payment_url;
+        return;
       }
 
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = url;
+      if (gateway === "esewa") {
+        const { url, formData } = res.data;
 
-      Object.keys(formData).forEach((key) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = formData[key];
-        form.appendChild(input);
+        if (!url || !formData) {
+          throw new Error("eSewa form data not received");
+        }
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = url;
+
+        Object.keys(formData).forEach((key) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = formData[key];
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      throw new Error("Invalid payment gateway selected");
+    } catch (err) {
+      console.error("Payment initiation failed:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+        bookingId,
+        gateway,
       });
 
-      document.body.appendChild(form);
-      form.submit();
-      return;
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "Payment initiation failed."
+      );
+    } finally {
+      setIsProcessing(false);
     }
-
-    throw new Error("Invalid payment gateway selected");
-  } catch (err) {
-    console.error("Payment initiation failed:", {
-      message: err.message,
-      status: err.response?.status,
-      data: err.response?.data,
-      bookingId,
-      gateway,
-    });
-
-    setError(
-      err.response?.data?.message ||
-      err.message ||
-      "Payment initiation failed."
-    );
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  };
 
   return (
     <div>
@@ -136,32 +141,30 @@ const Checkout = () => {
             <div></div>
             <div></div>
           </div>
-          <p>Redirecting to Khalti...</p>
+          <p>Redirecting to payment...</p>
         </div>
       )}
 
       <div className="checkout-cont">
-        <h2> Checkout Summary</h2>
+        <h2>Checkout Summary</h2>
 
         <div className="checkout-layout">
-          {/* LEFT SIDE */}
           <div className="checkout-left">
-            {/* Booking Details */}
             <div className="checkout-card">
               <h3>Booking Details</h3>
               <p>
                 <strong>Movie:</strong> {booking.movie?.title}
               </p>
               <p>
-                <strong>Showtime:</strong> {booking.showtime?.hall} -{" "}
-                {showtimeDate.toLocaleString()}
+                <strong>Showtime:</strong>{" "}
+                {booking.showtime?.screenId?.name || "Screen"} -{" "}
+                {showtimeDate ? showtimeDate.toLocaleString() : "N/A"}
               </p>
               <p>
-                <strong>Seats:</strong> {booking.seats.join(", ")}
+                <strong>Seats:</strong> {seatLabels || "No seats selected"}
               </p>
             </div>
 
-            {/* Food Details */}
             <div className="checkout-card">
               <h3>Foods & Drinks</h3>
               {booking.foods?.length > 0 ? (
@@ -181,7 +184,6 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
           <div className="checkout-right">
             <div className="summary-card">
               <h3>Payment Summary</h3>
@@ -202,8 +204,6 @@ const Checkout = () => {
                 <h3>Select Payment Method</h3>
 
                 <div className="payment-options">
-
-                  {/* Khalti */}
                   <button
                     className="payment-btn khalti"
                     onClick={() => handlePayment("khalti")}
@@ -213,7 +213,6 @@ const Checkout = () => {
                     {isProcessing ? "Redirecting..." : "Pay with Khalti"}
                   </button>
 
-                  {/* eSewa */}
                   <button
                     className="payment-btn esewa"
                     onClick={() => handlePayment("esewa")}
@@ -222,7 +221,6 @@ const Checkout = () => {
                     <img src={esewaLogo} alt="eSewa" />
                     {isProcessing ? "Redirecting..." : "Pay with eSewa"}
                   </button>
-
                 </div>
 
                 <p className="secure-text">🔒 Secure payment gateway</p>
