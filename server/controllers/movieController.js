@@ -74,7 +74,6 @@ exports.getNowShowing = async (req, res) => {
           showtimes: movieShowtimes,
         };
       })
-      .filter((movie) => movie.showtimes.length > 0);
 
     res.json(moviesWithShowtimes);
   } catch (err) {

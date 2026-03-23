@@ -103,7 +103,7 @@ exports.holdBooking = async (req, res) => {
       reservationExpiresAt: lockExpiry,
     });
 
-    // ✅ remove locks once booking is created
+    // remove locks once booking is created
     await SeatLock.deleteMany({
       userId: req.user._id,
       showtimeId,
@@ -155,8 +155,8 @@ exports.buyBooking = async (req, res) => {
       return res.status(400).json({ message: "Invalid seat id" });
     }
 
-    // ✅ verify seats are locked by this user
-    const lockExpiry = await verifyUserOwnsSeatLocks(
+    //  verify seats are locked by this user
+    const lockExpiry = await verifyUserOwnSeatLocks(
       req.user._id,
       showtimeId,
       seats
@@ -209,6 +209,44 @@ exports.buyBooking = async (req, res) => {
     res.status(500).json({ message: "Buy failed" });
   }
 };
+
+exports.addFoodsToBooking = async (req, res) => {
+  try {
+    const { foods } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (booking.status !== "holding" && booking.status !== "confirmed") {
+      return res.status(400).json({ message: "Invalid booking status" });
+    }
+
+    booking.foods = foods || [];
+
+    const foodTotal = (foods || []).reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    const seatTotal = booking.seats.length * 300;
+    booking.totalPrice = seatTotal + foodTotal;
+
+    await booking.save();
+
+    res.json(booking);
+  } catch (err) {
+    console.error("Add foods error:", err);
+    res.status(500).json({ message: "Failed to add foods" });
+  }
+};
+
 /* =========================
    CHECKOUT
 ========================= */
@@ -421,13 +459,39 @@ exports.getBookedSeats = async (req, res) => {
 exports.getAllBookingsAdmin = async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate("user")
-      .populate("movie")
-      .populate("showtime")
-      .sort({ createdAt: -1 });
+      .populate("user", "firstName lastName email")
+      .populate("movie", "title")
+      .populate({
+        path: "showtime",
+        populate: {
+          path: "screenId",
+          select: "name format",
+        },
+      })
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.json(bookings);
+    const allSeatIds = bookings.flatMap((b) => b.seats || []);
+    const uniqueSeatIds = [...new Set(allSeatIds.map(String))];
+
+    const seatDocs = await Seat.find({ _id: { $in: uniqueSeatIds } })
+      .select("_id label row number")
+      .lean();
+
+    const seatMap = new Map(
+      seatDocs.map((seat) => [seat._id.toString(), seat.label])
+    );
+
+    const bookingsWithSeatLabels = bookings.map((booking) => ({
+      ...booking,
+      seatLabels: (booking.seats || []).map(
+        (seatId) => seatMap.get(String(seatId)) || String(seatId)
+      ),
+    }));
+
+    res.json(bookingsWithSeatLabels);
   } catch (err) {
+    console.error("Failed to fetch bookings:", err);
     res.status(500).json({ message: "Failed to fetch bookings" });
   }
 };

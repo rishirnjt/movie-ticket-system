@@ -7,6 +7,7 @@ const { protect } = require("../middleware/authMiddleware");
 // customer actions
 router.post("/hold", protect(["Customer"]), bookingController.holdBooking);
 router.post("/buy", protect(["Customer"]), bookingController.buyBooking);
+router.post("/add-foods/:id",protect(["Customer"]),bookingController.addFoodsToBooking);
 router.post("/checkout/:id", protect(["Customer"]), bookingController.checkoutBooking);
 router.post("/cancel/:id", protect(["Customer"]), bookingController.cancelBooking);
 router.delete("/expire/:id", protect(["Customer"]), bookingController.expireBooking);

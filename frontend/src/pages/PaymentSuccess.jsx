@@ -11,43 +11,54 @@ function PaymentSuccess() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("PAYMENT_SUCCESS_V2_LOADED");
+    const decodeEsewaData = (encoded) => {
+      if (!encoded) return null;
+
+      try {
+        const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+        return JSON.parse(atob(padded));
+      } catch (err) {
+        console.error("Failed to decode eSewa data:", err);
+        return null;
+      }
+    };
 
     const verifyPayment = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) throw new Error("User not authenticated");
 
+        const rawGateway = searchParams.get("gateway");
+        const gateway = rawGateway?.toLowerCase()?.trim();
+
         const pidx = searchParams.get("pidx");
-        const purchaseOrderId = searchParams.get("purchase_order_id");
+        const purchaseOrderId =
+          searchParams.get("purchase_order_id") || searchParams.get("bookingId");
+
         const esewaData = searchParams.get("data");
+        const decodedEsewa = decodeEsewaData(esewaData);
 
-        let gateway = searchParams.get("gateway");
-
-        console.log("Current URL:", window.location.href);
+        console.log("Payment success URL:", window.location.href);
         console.log("All params:", Object.fromEntries(searchParams.entries()));
-        console.log("Gateway:", gateway);
+        console.log("Gateway from query:", gateway);
         console.log("pidx:", pidx);
-        console.log("purchase_order_id:", purchaseOrderId);
-        console.log("esewa data:", esewaData);
+        console.log("purchase_order_id / bookingId:", purchaseOrderId);
+        console.log("Decoded eSewa:", decodedEsewa);
 
-        if (!gateway && esewaData) {
-          gateway = "esewa";
-        }
-
-        if (!gateway && (pidx || purchaseOrderId)) {
-          gateway = "khalti";
-        }
-
-        console.log("FINAL GATEWAY CHECK:", gateway);
-
+        let finalGateway = gateway;
         let payload = {};
 
-        if (gateway === "esewa") {
-          const decoded = JSON.parse(atob(esewaData));
-          console.log("Decoded eSewa data:", decoded);
+        if (!finalGateway) {
+          if (esewaData || decodedEsewa) {
+            finalGateway = "esewa";
+          } else if (pidx || purchaseOrderId) {
+            finalGateway = "khalti";
+          }
+        }
 
-          const transactionUuid = decoded.transaction_uuid;
+        if (finalGateway === "esewa") {
+          const transactionUuid = decodedEsewa?.transaction_uuid;
 
           if (!transactionUuid) {
             throw new Error("transaction_uuid missing in eSewa response");
@@ -57,7 +68,15 @@ function PaymentSuccess() {
             gateway: "esewa",
             bookingId: transactionUuid,
           };
-        } else if (gateway === "khalti") {
+        } else if (finalGateway === "khalti") {
+          if (!pidx) {
+            throw new Error("pidx missing in Khalti response");
+          }
+
+          if (!purchaseOrderId) {
+            throw new Error("purchase_order_id missing in Khalti response");
+          }
+
           payload = {
             gateway: "khalti",
             pidx,
@@ -67,6 +86,7 @@ function PaymentSuccess() {
           throw new Error("Unknown payment gateway");
         }
 
+        console.log("Final gateway:", finalGateway);
         console.log("Verify payload:", payload);
 
         const res = await axios.post(
@@ -81,7 +101,7 @@ function PaymentSuccess() {
 
         console.log("Verify response:", res.data);
 
-        setStatusText("Payment Successful 🎉");
+        setStatusText("Payment Successful");
         setLoading(false);
 
         const ticketId = res.data.ticket?._id;

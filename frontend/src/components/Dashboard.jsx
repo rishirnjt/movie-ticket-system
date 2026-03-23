@@ -73,19 +73,22 @@ const Dashboard = () => {
 
       const bookingsData = await bookingRes.json();
 
-      const latestBookings = bookingsData
-        ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5)
-        .map((b) => ({
-          _id: b._id,
-          user: b.user
-            ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
-            : "Unknown",
-          movie: b.movie?.title || "Unknown",
-          seats: b.seats || [],
-          status: b.status || "unknown",
-        })) || [];
-
+      const latestBookings =
+        bookingsData
+          ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 5)
+          .map((b) => ({
+            _id: b._id,
+            user: b.user
+              ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
+              : "Unknown",
+            movie: b.movie?.title || "Unknown",
+            seats:
+              b.seats?.map((seat) =>
+                typeof seat === "string" ? seat : seat.label || seat._id
+              ) || [],
+            status: b.status || "unknown",
+          })) || [];
       setRecentBookings(latestBookings);
 
       // ===== REVENUE =====
