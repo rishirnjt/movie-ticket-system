@@ -47,7 +47,7 @@ const sendPurchaseEmail = async (
   const pdfEnd = new Promise(resolve => doc.on("end", resolve));
 
   // ===== PDF DESIGN =====
-  doc.fontSize(22).text("🎟️ Cinemax E-Ticket", { align: "center" });
+  doc.fontSize(22).text(" Cinemax E-Ticket", { align: "center" });
   doc.moveDown();
 
   doc.fontSize(14).text(`Movie: ${movie}`);

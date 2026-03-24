@@ -75,6 +75,14 @@ router.post("/login", async (req, res) => {
 
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
+    // blocked user check
+    if (user.status === "blocked") {
+      return res.status(403).json({
+        message: "Your account has been blocked by admin",
+        code: "ACCOUNT_BLOCKED",
+      });
+    }
+
     console.log("Entered password:", password);
     console.log("Stored hash:", user.password);
 
@@ -82,9 +90,10 @@ router.post("/login", async (req, res) => {
 
     console.log("Password match result:", isMatch);
 
-    if(!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials"});
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
     }
+
     const token = generateToken(user);
 
     res.json({

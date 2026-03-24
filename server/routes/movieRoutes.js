@@ -12,6 +12,9 @@ router.get("/coming-soon", movieController.getComingSoon);
 /* NOW SHOWING */
 router.get("/now-showing", movieController.getNowShowing);
 
+/*Archived*/
+router.get("/archive", movieController.getArchivedMovies);
+
 /* ADMIN MOVIES */
 router.get("/admin/movies", protect(['admin']), movieController.getAllMoviesAdmin);
 

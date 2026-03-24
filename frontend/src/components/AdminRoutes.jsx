@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import './AdminRoutes.css';
 
 const AdminRoutes = ({ children }) => {
   const token = localStorage.getItem("token");

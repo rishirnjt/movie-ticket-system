@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const UserType = require("../models/UserType");
 
 const protect = (roles = []) => async (req, res, next) => {
   let token;
@@ -20,6 +21,15 @@ const protect = (roles = []) => async (req, res, next) => {
       if(!user) {
         return res.status(401).json({ message: "User not found" });
       }
+
+      //blocked user check
+      if(user.status === "blocked"){
+        return res.status(403).json({
+          message: "Your account has been blocked by admin",
+          code: "ACCOUNT_BLOCKED",
+        });
+      }
+      
       //role check
       if(
         roles.length > 0 &&

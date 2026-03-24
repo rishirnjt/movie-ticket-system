@@ -10,27 +10,31 @@ const Users = () => {
     fetchUsers();
   }, []);
 
+  const getAuthConfig = () => {
+    const token = localStorage.getItem("token");
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
+
   // Fetch users
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get("http://localhost:5001/api/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.get(
+        "http://localhost:5001/api/users",
+        getAuthConfig()
+      );
 
       const data = Array.isArray(res.data) ? res.data : [];
 
       const normalizedUsers = data.map((user) => ({
         _id: user._id,
-        name:
-          `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-          "No Name",
+        name:`${user.firstName || ""} ${user.lastName || ""}`.trim() || "No Name",
         email: user.email || "No Email",
-        role: user.userType?.name || "User",
-        status: user.isActive ? "Active" : "Inactive",
+        role: user.userType?.type || "User",
+        status: user.status || "active",
       }));
 
       setUsers(normalizedUsers);
@@ -44,40 +48,52 @@ const Users = () => {
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase())
+      user.email.toLowerCase().includes(search.toLowerCase()) ||
+      user.role.toLowerCase().includes(search.toLowerCase())
   );
 
   // Edit user
   const handleEdit = (id) => {
     console.log("Edit user:", id);
-    // Example:
     // navigate(`/admin/users/edit/${id}`)
   };
 
-  // Delete user
-  const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete this user?"
+  // Block / Unblock user
+  const handleToggleBlock = async (user) => {
+    const isBlocked = user.status === "blocked";
+
+    const confirmAction = window.confirm(
+      isBlocked
+        ? `Unblock ${user.name}?`
+        : `Block ${user.name}?`
     );
 
-    if (!confirmDelete) return;
+    if (!confirmAction) return;
 
     try {
-      const token = localStorage.getItem("token");
+      const endpoint = isBlocked
+        ? `http://localhost:5001/api/users/${user._id}/unblock`
+        : `http://localhost:5001/api/users/${user._id}/block`;
 
-      await axios.delete(`http://localhost:5001/api/users/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await axios.put(endpoint, {}, getAuthConfig());
 
-      // update UI instantly
-      setUsers(users.filter((user) => user._id !== id));
+      const updatedUser = res.data?.user;
 
-      alert("User deleted successfully");
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === user._id
+            ? {
+                ...u,
+                status: updatedUser?.status || (isBlocked ? "active" : "blocked"),
+              }
+            : u
+        )
+      );
+
+      alert(isBlocked ? "User unblocked successfully" : "User blocked successfully");
     } catch (err) {
-      console.error("Delete failed:", err);
-      alert("Failed to delete user");
+      console.error("Block/unblock failed:", err);
+      alert("Failed to update user status");
     }
   };
 
@@ -85,7 +101,6 @@ const Users = () => {
     <div className="container users-page">
       <h1>User Management</h1>
 
-      {/* Search */}
       <div className="search-box">
         <input
           type="text"
@@ -95,7 +110,6 @@ const Users = () => {
         />
       </div>
 
-      {/* Table */}
       <table className="user-table">
         <thead>
           <tr>
@@ -122,13 +136,11 @@ const Users = () => {
                 <td>{user.name}</td>
                 <td>{user.email}</td>
                 <td>{user.role}</td>
-
                 <td>
                   <span className={`status ${user.status.toLowerCase()}`}>
-                    {user.status}
+                    {user.status === "blocked" ? "Blocked" : "Active"}
                   </span>
                 </td>
-
                 <td className="actions">
                   <button
                     className="edit"
@@ -138,10 +150,12 @@ const Users = () => {
                   </button>
 
                   <button
-                    className="delete"
-                    onClick={() => handleDelete(user._id)}
+                    className={
+                      user.status === "blocked" ? "unblock" : "block"
+                    }
+                    onClick={() => handleToggleBlock(user)}
                   >
-                    Delete
+                    {user.status === "blocked" ? "Unblock" : "Block"}
                   </button>
                 </td>
               </tr>

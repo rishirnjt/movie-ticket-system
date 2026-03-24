@@ -1,9 +1,7 @@
 const Movie = require("../models/Movie");
 const Showtime = require("../models/Showtime");
 
-/* =========================
-   SEARCH MOVIES
-========================= */
+//Search Movie
 exports.searchMovies = async (req, res) => {
   try {
     const query = req.query.q;
@@ -26,10 +24,12 @@ exports.searchMovies = async (req, res) => {
 //Coming Soon
 exports.getComingSoon = async (req, res) => {
   try {
-    const now = new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const movies = await Movie.find({
-      movieStartDate: { $exists: true, $gt: now },
+      movieStartDate: { $exists: true, $gt: today },
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
     })
       .sort({ movieStartDate: 1 })
       .lean();
@@ -81,9 +81,26 @@ exports.getNowShowing = async (req, res) => {
     res.status(500).json({ message: "Error fetching now showing movies" });
   }
 };
-/* =========================
-   GET ALL MOVIES
-========================= */
+
+//Archive Movies
+exports.getArchivedMovies = async (req, res) => {
+  try{
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const movies = await Movie.find({
+      movieEndDate: { $lt: today },
+    })
+      .sort({ movieEndDate: -1 })
+      .lean();
+    res.json(movies);
+  } catch (err) {
+    console.error("Archieve movie error:", err);
+    res.status(500).json({ message: "Error fetchning archived movies" });
+  }
+};
+
+//Get all movies
 exports.getAllMovies = async (req, res) => {
   try {
     const movies = await Movie.find({
@@ -95,9 +112,7 @@ exports.getAllMovies = async (req, res) => {
   }
 };
 
-/* =========================
-   GET SINGLE MOVIE + SHOWTIMES
-========================= */
+//Get Single movies + showtimes
 exports.getMovieById = async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id).lean();
@@ -121,9 +136,7 @@ exports.getMovieById = async (req, res) => {
   }
 };
 
-/* =========================
-   ADMIN: GET ALL MOVIES
-========================= */
+//Admin: Get all movies
 exports.getAllMoviesAdmin = async (req, res) => {
   try {
     const movies = await Movie.find().lean();
@@ -133,12 +146,12 @@ exports.getAllMoviesAdmin = async (req, res) => {
   }
 };
 
-/* =========================
-   RECENT MOVIES
-========================= */
+//Recent Movies
 exports.getRecentMovies = async (req, res) => {
   try {
-    const movies = await Movie.find({})
+    const movies = await Movie.find({
+      $or: [{ isActive: true}, { isActive: { $exists: false } }],
+    })
       .sort({ createdAt: -1 })
       .limit(8)
       .lean();
@@ -150,9 +163,7 @@ exports.getRecentMovies = async (req, res) => {
   }
 };
 
-/* =========================
-   CREATE MOVIE
-========================= */
+//Create Movie
 exports.createMovie = async (req, res) => {
   try {
     const data = req.body;
@@ -204,9 +215,7 @@ exports.updateMovie = async (req, res) => {
   }
 };
 
-/* =========================
-   DELETE MOVIE + SHOWTIMES
-========================= */
+//Delete movie and showtime
 exports.deleteMovie = async (req, res) => {
   try {
     await Movie.findByIdAndDelete(req.params.id);

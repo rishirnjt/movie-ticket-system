@@ -3,9 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./NowShowing.css";
 
-
 const NowShowing = () => {
-  const [groupedByDate, setGroupedByDate] = useState({});
+  const [movies, setMovies] = useState([]);
   const [allDates, setAllDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
 
@@ -16,53 +15,57 @@ const NowShowing = () => {
     axios
       .get("http://localhost:5001/api/movies/now-showing")
       .then((res) => {
-        const movies = res.data;
 
-        const grouped = {};
+          console.log("NOW SHOWING API RESPONSE:", res.data);
 
-        movies.forEach((movie) => {
-          if (!movie.showtimes || movie.showtimes.length === 0) return;
+        const fetchedMovies = res.data || [];
 
-          movie.showtimes.forEach((showtime) => {
+        const uniqueDates = new Set();
+
+        fetchedMovies.forEach((movie) => {
+          (movie.showtimes || []).forEach((showtime) => {
             if (!showtime.startTime) return;
 
             const showDate = new Date(showtime.startTime);
             showDate.setHours(0, 0, 0, 0);
 
             const dateKey = showDate.toLocaleDateString("en-CA");
-
-            if (!grouped[dateKey]) grouped[dateKey] = [];
-
-            let existingMovie = grouped[dateKey].find(
-              (m) => m._id === movie._id
-            );
-
-            if (!existingMovie) {
-              existingMovie = {
-                ...movie,
-                showtimes: [],
-              };
-              grouped[dateKey].push(existingMovie);
-            }
-
-            existingMovie.showtimes.push(showtime);
-
-            existingMovie.showtimes.sort(
-              (a, b) => new Date(a.startTime) - new Date(b.startTime)
-            );
+            uniqueDates.add(dateKey);
           });
         });
 
-        const dates = Object.keys(grouped).sort();
+        const dates = Array.from(uniqueDates).sort();
 
-        setGroupedByDate(grouped);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayKey = today.toLocaleDateString("en-CA");
+
+        setMovies(fetchedMovies);
         setAllDates(dates);
-        setSelectedDate(dates[0] || "");
+        setSelectedDate(dates.includes(todayKey) ? todayKey : dates[0] || "");
       })
       .catch((err) => console.error("Failed to fetch movies", err));
   }, []);
 
-  const movies = groupedByDate[selectedDate] || [];
+  const moviesForSelectedDate = movies
+    .map((movie) => {
+      const filteredShowtimes = (movie.showtimes || [])
+        .filter((showtime) => {
+          if (!showtime.startTime || !selectedDate) return false;
+
+          const showDate = new Date(showtime.startTime);
+          showDate.setHours(0, 0, 0, 0);
+
+          return showDate.toLocaleDateString("en-CA") === selectedDate;
+        })
+        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+      return {
+        ...movie,
+        showtimes: filteredShowtimes,
+      };
+    })
+    .filter((movie) => movie.showtimes.length > 0);
 
   const handleShowtime = (movieId, showtime) => {
     const token = localStorage.getItem("token");
@@ -107,8 +110,8 @@ const NowShowing = () => {
       </div>
 
       <div className="movies-grid">
-        {movies.length > 0 ? (
-          movies.map((movie) => (
+        {moviesForSelectedDate.length > 0 ? (
+          moviesForSelectedDate.map((movie) => (
             <div
               className="movie-card"
               key={movie._id}
@@ -126,33 +129,29 @@ const NowShowing = () => {
                 <p className="genre">{movie.genre}</p>
 
                 <div className="showtimes">
-                  {movie.showtimes && movie.showtimes.length > 0 ? (
-                    movie.showtimes.slice(0, 3).map((showtime, index) => {
-                      const showDateTime = new Date(showtime.startTime);
-                      const now = new Date();
-                      const isPast = showDateTime < now;
+                  {movie.showtimes.slice(0, 3).map((showtime) => {
+                    const showDateTime = new Date(showtime.startTime);
+                    const now = new Date();
+                    const isPast = showDateTime < now;
 
-                      return (
-                        <span
-                          key={index}
-                          className={`time-pill ${isPast ? "disabled" : ""}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (!isPast) {
-                              handleShowtime(movie._id, showtime);
-                            }
-                          }}
-                        >
-                          {showDateTime.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      );
-                    })
-                  ) : (
-                    <span className="no-showtime">No showtimes</span>
-                  )}
+                    return (
+                      <span
+                        key={showtime._id}
+                        className={`time-pill ${isPast ? "disabled" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isPast) {
+                            handleShowtime(movie._id, showtime);
+                          }
+                        }}
+                      >
+                        {showDateTime.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>

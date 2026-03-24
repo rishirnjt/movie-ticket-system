@@ -83,10 +83,7 @@ const Dashboard = () => {
               ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
               : "Unknown",
             movie: b.movie?.title || "Unknown",
-            seats:
-              b.seats?.map((seat) =>
-                typeof seat === "string" ? seat : seat.label || seat._id
-              ) || [],
+            seats: b.seatLabels || [], 
             status: b.status || "unknown",
           })) || [];
       setRecentBookings(latestBookings);

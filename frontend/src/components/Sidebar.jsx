@@ -45,6 +45,9 @@ const Sidebar = () => {
             <NavLink to="/admin/manage-movies" className={linkClass}>
               <i className="fas fa-list me-2"></i> Manage Movies
             </NavLink>
+           <NavLink to="/admin/archived-movies" className={linkClass}>
+              <i className="fas fa-box-archive me-2"></i> Archived Movies
+            </NavLink>
           </div>
         )}
       </div>

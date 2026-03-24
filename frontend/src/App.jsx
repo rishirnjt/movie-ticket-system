@@ -9,7 +9,6 @@ import {
 import Navbar from "./components/Navbar";
 import Carousel from "./components/Carousel";
 import NowShowing from "./components/NowShowing";
-// import Recommendation from "./components/Recommendation";
 import ComingSoon from "./components/ComingSoon";
 import Footer from "./components/Footer";
 import SeatSelection from "./components/SeatSelection";
@@ -18,6 +17,7 @@ import TicketRates from "./components/TicketRates";
 import AddMovie from "./components/AddMovie";
 import EditMovie from "./components/EditMovie";
 import ManageMovies from "./components/ManageMovies";
+import ArchivedMovies from "./components/ArchivedMovies";
 import AuthModal from "./components/AuthModel";
 import AdminLogin from "./pages/AdminLogin";
 import MyAccount from "./components/MyAccount";
@@ -34,6 +34,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import ResetPassword from "./components/ResetPassword";
 import CreateScreen from "./pages/CreateScreen";
 import GenerateSeats from "./components/GenerateSeats";
+import Reports from "./pages/Reports";
 
 import "./App.css";
 
@@ -109,6 +110,15 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
+
+        <Route
+          path="/admin/archived-movies"
+          element={
+            <AdminRoutes>
+              <ArchivedMovies />
+            </AdminRoutes>
+          }
+        />
         <Route
           path="/admin/edit-movie/:id"
           element={
@@ -143,6 +153,16 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
+
+         <Route
+        path="/admin/reports"
+        element={
+          <AdminRoutes>
+            <Reports />
+          </AdminRoutes>
+        }
+      />
+      
         <Route
           path="/admin/create-screen"
           element={
@@ -152,15 +172,15 @@ function AppWrapper() {
           }
         />
         <Route
-         path="/admin/generate-seats"
-         element={
-          <AdminRoutes>
+          path="/admin/generate-seats"
+          element={
+            <AdminRoutes>
               <GenerateSeats />
-          </AdminRoutes>
-         }
+            </AdminRoutes>
+          }
         />
       </Routes>
-
+     
       {/* AUTH MODAL ROUTE (overlay) */}
       {backgroundLocation && (
         <Routes>
