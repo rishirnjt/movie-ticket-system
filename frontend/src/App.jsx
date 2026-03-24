@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import SeatSelection from "./components/SeatSelection";
 import Dashboard from "./components/Dashboard";
 import TicketRates from "./components/TicketRates";
+import Contact from "./pages/ContactPage";
 import AddMovie from "./components/AddMovie";
 import EditMovie from "./components/EditMovie";
 import ManageMovies from "./components/ManageMovies";
@@ -67,6 +68,7 @@ function AppWrapper() {
         <Route path="/foods/:bookingId" element={<Foods />} />
         <Route path="/checkout/:bookingId" element={<Checkout />} />
         <Route path="/ticket-rates" element={<TicketRates />} />
+        <Route path="contact" element={<Contact />} />
         <Route path="/myaccount" element={<MyAccount />} />
         <Route path="/ticket/:ticketId" element={<TicketPage />} />
         <Route path="/payment-success/*" element={<PaymentSuccess />} />
