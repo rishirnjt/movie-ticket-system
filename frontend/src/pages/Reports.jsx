@@ -23,7 +23,7 @@ const Reports = () => {
   const [end, setEnd] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const COLORS = ["#b91c1c", "#ef4444"];
+  const COLORS = ["#0d7d26ff", "#b91c1c"];
   const token = localStorage.getItem("token");
 
   useEffect(() => {

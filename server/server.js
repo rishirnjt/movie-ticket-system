@@ -64,49 +64,6 @@ cron.schedule("*/1 * * * *", async () => {
   }
 });
 
-//Auto archieve old movies 
-cron.schedule("0 0 * * *", async () => {
-  try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    today.setMinutes(today.getMinutes() - today.getTimezoneOffset())
-
-    // Coming Soon → Now Showing
-    await Movie.updateMany(
-      {
-        movieStartDate: { $lte: today },
-        movieEndDate: { $gte: today }
-      },
-      { status: "showing" }
-    );
-
-    // Now Showing → Archived
-    await Movie.updateMany(
-      {
-        movieEndDate: { $lt: today }
-      },
-      { status: "archived" }
-    );
-
-    // Future movies
-    await Movie.updateMany(
-      {
-        movieStartDate: { $gt: today }
-      },
-      { status: "coming" }
-    );
-
-    console.log("Movie statuses updated");
-
-  } catch (err) {
-    console.error("Movie status cron error:", err);
-  }
-}, {
-  timezone: "Asia/Kathmandu"
-});
-
-
 //routes
 const movieRoutes = require('./routes/movieRoutes');
 const authRoutes = require('./routes/authRoutes');

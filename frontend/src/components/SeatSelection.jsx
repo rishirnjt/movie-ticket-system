@@ -13,6 +13,9 @@ const SeatSelection = () => {
   const [lockedSeats, setLockedSeats] = useState([]);
   const [movie, setMovie] = useState(null);
   const [seats, setSeats] = useState([]);
+  const [purchaseSeats, setPurchaseSeats] = useState([]);
+  const [purchaseSummary, setPurchaseSummary] = useState(null);
+  const [buying, setBuying] = useState(false);
 
   const [bookingId, setBookingId] = useState(null);
   const [expiresAt, setExpiresAt] = useState(null);
@@ -206,38 +209,51 @@ const SeatSelection = () => {
     }
   };
 
-  const handleBuyClick = async () => {
+  // const handleBuyClick = async () => {
+  //   if (selectedSeats.length === 0) return alert("Please select seats first");
+  //   if (!token) return alert("You must be logged in to buy");
+
+  //   try {
+  //     const currentSelectedSeats = [...selectedSeats];
+
+  //     const res = await axios.post(
+  //       "http://localhost:5001/api/bookings/buy",
+  //       {
+  //         movieId,
+  //         showtimeId: selectedShowtime._id,
+  //         seats: selectedSeats,
+  //       },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+
+  //     const booking = res.data;
+  //     if (!booking || !booking._id) {
+  //       return alert("Buy failed");
+  //     }
+
+  //     setPurchaseSeats(currentSelectedSeats);
+  //     setBookingId(booking._id);
+  //     setBuyPopup(true);
+
+  //     await refreshSeatStatus();
+  //   } catch (err) {
+  //     console.error("Direct buy error:", err.response?.data || err.message);
+  //     alert(err.response?.data?.message || "Buy failed");
+  //   }
+  // };
+  const handleBuyClick = () => {
     if (selectedSeats.length === 0) return alert("Please select seats first");
     if (!token) return alert("You must be logged in to buy");
 
-    try {
-      const res = await axios.post(
-        "http://localhost:5001/api/bookings/buy",
-        {
-          movieId,
-          showtimeId: selectedShowtime._id,
-          seats: selectedSeats,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const booking = res.data;
-      if (!booking || !booking._id) {
-        return alert("Buy failed");
-      }
-
-      setBookingId(booking._id);
-      setBuyPopup(true);
-
-      await refreshSeatStatus();
-    } catch (err) {
-      console.error("Direct buy error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Buy failed");
-    }
+    setPurchaseSeats([...selectedSeats]);
+    setPurchaseSummary({
+      totalPrice: selectedSeats.length * 300,
+    });
+    setAgreeTerms(false);
+    setBuyPopup(true);
   };
-
   const handleReset = async () => {
     if (!selectedShowtime?._id || !token) return;
 
@@ -255,11 +271,48 @@ const SeatSelection = () => {
     }
   };
 
-  const handleConfirmBuy = () => {
+  const handleConfirmBuy = async () => {
     if (!agreeTerms) return alert("You must agree to terms");
-    if (!bookingId) return alert("Booking not found");
+    if (purchaseSeats.length === 0) return alert("No seats selected");
+    if (!token) return alert("You must be logged in to buy");
 
-    navigate(`/foods/${bookingId}`);
+    try {
+      setBuying(true);
+
+      const res = await axios.post(
+        "http://localhost:5001/api/bookings/buy",
+        {
+          movieId,
+          showtimeId: selectedShowtime._id,
+          seats: purchaseSeats,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const booking = res.data;
+
+      if (!booking || !booking._id) {
+        return alert("Buy failed");
+      }
+
+      setBookingId(booking._id);
+      setPurchaseSummary({
+        totalPrice: booking.totalPrice ?? purchaseSeats.length * 300,
+        seats: booking.seats ?? purchaseSeats,
+      });
+
+      setBuyPopup(false);
+      await refreshSeatStatus();
+
+      navigate(`/foods/${booking._id}`);
+    } catch (err) {
+      console.error("Confirm buy error:", err.response?.data || err.message);
+      alert(err.response?.data?.message || "Buy failed");
+    } finally {
+      setBuying(false);
+    }
   };
 
   const seatElements = useMemo(() => {
@@ -370,19 +423,24 @@ const SeatSelection = () => {
       {buyPopup && (
         <div className="popup-overlay">
           <div className="popup-box">
-            <button className="popup-close" onClick={() => setBuyPopup(false)}>
+            <button className="popup-close" onClick={() => {
+              setBuyPopup(false);
+              setPurchaseSeats([]);
+              setPurchaseSummary(null);
+              setAgreeTerms(false);
+            }}
+            >
               ✕
             </button>
             <h2>Confirm Purchase</h2>
             <p>
               Seats:{" "}
               {seats
-                .filter((seat) => selectedSeats.includes(seat._id))
-                .map((seat) => seat.label)
+                .filter((seat) => purchaseSeats.includes(seat._id))
+                .map((seat) => seat.label || `${seat.row}${seat.number}`)
                 .join(", ")}
             </p>
-            <p>Total: NPR {selectedSeats.length * 300}</p>
-            <div className="terms">
+            <p>Total: NPR {purchaseSummary?.totalPrice || purchaseSeats.length * 300}</p>            <div className="terms">
               <input
                 type="checkbox"
                 checked={agreeTerms}
@@ -390,8 +448,8 @@ const SeatSelection = () => {
               />
               <label>I agree to the terms and conditions</label>
             </div>
-            <button className="confirm-btn" onClick={handleConfirmBuy}>
-              Confirm
+            <button className="confirm-btn" onClick={handleConfirmBuy} disabled={buying}>
+              {buying ? "Processing..." : "Confirm"}
             </button>
           </div>
         </div>

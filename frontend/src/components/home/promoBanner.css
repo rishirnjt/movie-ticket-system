@@ -1,0 +1,59 @@
+.promo-banner {
+  margin: 2rem;
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+
+  background: linear-gradient(
+      135deg,
+      rgba(20, 20, 20, 0.85),
+      rgba(229, 9, 20, 0.85)
+    ),
+    url("https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=1600");
+
+  background-size: cover;
+  background-position: center;
+
+  min-height: 180px;
+  
+  display: flex;
+  align-items: center;
+}
+
+.promo-content {
+  padding: 2rem;
+  color: white;
+  max-width: 520px;
+}
+
+.promo-content h2 {
+  font-size: 1.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.promo-content p {
+  font-size: 1.05rem;
+  margin-bottom: 1rem;
+  color: #eaeaea;
+}
+
+.highlight {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.promo-btn {
+  background: #ffd700;
+  color: black;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.promo-btn:hover {
+  background: #fff;
+  transform: scale(1.05);
+}

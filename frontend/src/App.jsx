@@ -7,9 +7,7 @@ import {
 } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
-import Carousel from "./components/Carousel";
-import NowShowing from "./components/NowShowing";
-import ComingSoon from "./components/ComingSoon";
+import HomePage from "./pages/HomePage";
 import Footer from "./components/Footer";
 import SeatSelection from "./components/SeatSelection";
 import Dashboard from "./components/Dashboard";
@@ -59,17 +57,7 @@ function AppWrapper() {
       )}
       {/* MAIN ROUTES */}
       <Routes location={backgroundLocation || location}>
-        <Route
-          path="/"
-          element={
-            <>
-              <Carousel />
-              <NowShowing />
-              {/* <Recommendation /> */}
-              <ComingSoon />
-            </>
-          }
-        />
+        <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
         <Route path="/auth" element={<AuthModal setIsLoggedIn={setIsLoggedIn} />} />
@@ -154,15 +142,15 @@ function AppWrapper() {
           }
         />
 
-         <Route
-        path="/admin/reports"
-        element={
-          <AdminRoutes>
-            <Reports />
-          </AdminRoutes>
-        }
-      />
-      
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoutes>
+              <Reports />
+            </AdminRoutes>
+          }
+        />
+
         <Route
           path="/admin/create-screen"
           element={
@@ -180,7 +168,7 @@ function AppWrapper() {
           }
         />
       </Routes>
-     
+
       {/* AUTH MODAL ROUTE (overlay) */}
       {backgroundLocation && (
         <Routes>
