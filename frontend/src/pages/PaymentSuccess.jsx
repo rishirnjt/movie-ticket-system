@@ -10,6 +10,8 @@ const PaymentSuccess = () => {
   const [ticket, setTicket] = useState(null);
   const [message, setMessage] = useState("Processing payment...");
 
+  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
+
   useEffect(() => {
     const verify = async () => {
       try {
@@ -28,7 +30,7 @@ const PaymentSuccess = () => {
         });
 
         const res = await axios.post(
-          "http://localhost:5001/api/payments/verify",
+          `${API_URL}/api/payments/verify`,
           {
             gateway,
             bookingId,
@@ -49,19 +51,28 @@ const PaymentSuccess = () => {
           setMessage("Payment Successful");
           toast.success("Payment successful!");
         } else {
-          setMessage(res.data.message || "Payment processed, but ticket info was not found.");
+          setMessage(
+            res.data.message || "Payment processed, but ticket info was not found."
+          );
         }
       } catch (err) {
-        console.error("Payment verification failed:", err.response?.data || err.message);
-        setMessage(err.response?.data?.message || "Payment verification failed");
-        toast.error(err.response?.data?.message || "Payment verification failed");
+        console.error(
+          "Payment verification failed:",
+          err.response?.data || err.message
+        );
+        setMessage(
+          err.response?.data?.message || "Payment verification failed"
+        );
+        toast.error(
+          err.response?.data?.message || "Payment verification failed"
+        );
       } finally {
         setLoading(false);
       }
     };
 
     verify();
-  }, [params]);
+  }, [params, API_URL]);
 
   if (loading) {
     return <div>Processing payment...</div>;
