@@ -1,0 +1,47 @@
+.contact-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.contact-action-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.contact-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.read-btn {
+  background: #ffd166;
+  color: #111;
+}
+
+.read-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.resolved-btn {
+  background: #2f9e44;
+  color: white;
+}
+
+.resolved-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.new-btn {
+  background: #ff4d4f;
+  color: white;
+}
+
+.new-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}

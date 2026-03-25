@@ -1,97 +1,40 @@
-import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./PaymentSuccess.css";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
-function PaymentSuccess() {
-  const [searchParams] = useSearchParams();
+const PaymentSuccess = () => {
+  const [params] = useSearchParams();
   const navigate = useNavigate();
-
-  const [statusText, setStatusText] = useState("Verifying payment...");
   const [loading, setLoading] = useState(true);
+  const [ticket, setTicket] = useState(null);
+  const [message, setMessage] = useState("Processing payment...");
 
   useEffect(() => {
-    const decodeEsewaData = (encoded) => {
-      if (!encoded) return null;
-
-      try {
-        const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
-        const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
-        return JSON.parse(atob(padded));
-      } catch (err) {
-        console.error("Failed to decode eSewa data:", err);
-        return null;
-      }
-    };
-
-    const verifyPayment = async () => {
+    const verify = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) throw new Error("User not authenticated");
 
-        const rawGateway = searchParams.get("gateway");
-        const gateway = rawGateway?.toLowerCase()?.trim();
+        const gateway = params.get("gateway");
+        const bookingId = params.get("bookingId");
+        const pidx = params.get("pidx");
+        const sessionId = params.get("session_id");
 
-        const pidx = searchParams.get("pidx");
-        const purchaseOrderId =
-          searchParams.get("purchase_order_id") || searchParams.get("bookingId");
-
-        const esewaData = searchParams.get("data");
-        const decodedEsewa = decodeEsewaData(esewaData);
-
-        console.log("Payment success URL:", window.location.href);
-        console.log("All params:", Object.fromEntries(searchParams.entries()));
-        console.log("Gateway from query:", gateway);
-        console.log("pidx:", pidx);
-        console.log("purchase_order_id / bookingId:", purchaseOrderId);
-        console.log("Decoded eSewa:", decodedEsewa);
-
-        let finalGateway = gateway;
-        let payload = {};
-
-        if (!finalGateway) {
-          if (esewaData || decodedEsewa) {
-            finalGateway = "esewa";
-          } else if (pidx || purchaseOrderId) {
-            finalGateway = "khalti";
-          }
-        }
-
-        if (finalGateway === "esewa") {
-          const transactionUuid = decodedEsewa?.transaction_uuid;
-
-          if (!transactionUuid) {
-            throw new Error("transaction_uuid missing in eSewa response");
-          }
-
-          payload = {
-            gateway: "esewa",
-            bookingId: transactionUuid,
-          };
-        } else if (finalGateway === "khalti") {
-          if (!pidx) {
-            throw new Error("pidx missing in Khalti response");
-          }
-
-          if (!purchaseOrderId) {
-            throw new Error("purchase_order_id missing in Khalti response");
-          }
-
-          payload = {
-            gateway: "khalti",
-            pidx,
-            bookingId: purchaseOrderId,
-          };
-        } else {
-          throw new Error("Unknown payment gateway");
-        }
-
-        console.log("Final gateway:", finalGateway);
-        console.log("Verify payload:", payload);
+        console.log("PaymentSuccess query params:", {
+          gateway,
+          bookingId,
+          pidx,
+          sessionId,
+        });
 
         const res = await axios.post(
-          "http://localhost:5001/api/payment/verify",
-          payload,
+          "http://localhost:5001/api/payments/verify",
+          {
+            gateway,
+            bookingId,
+            pidx,
+            sessionId,
+          },
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -99,45 +42,42 @@ function PaymentSuccess() {
           }
         );
 
-        console.log("Verify response:", res.data);
+        console.log("VERIFY RESPONSE:", res.data);
 
-        setStatusText("Payment Successful");
-        setLoading(false);
-
-        const ticketId = res.data.ticket?._id;
-        if (!ticketId) {
-          throw new Error("Ticket ID missing in response");
+        if (res.data.ticket) {
+          setTicket(res.data.ticket);
+          setMessage("Payment Successful");
+          toast.success("Payment successful!");
+        } else {
+          setMessage(res.data.message || "Payment processed, but ticket info was not found.");
         }
-
-        setTimeout(() => {
-          navigate(`/ticket/${ticketId}`, { replace: true });
-        }, 1500);
-      } catch (error) {
-        console.error("VERIFY ERROR:", {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-
-        setStatusText(
-          error.response?.data?.message ||
-            error.message ||
-            "Payment verification failed"
-        );
+      } catch (err) {
+        console.error("Payment verification failed:", err.response?.data || err.message);
+        setMessage(err.response?.data?.message || "Payment verification failed");
+        toast.error(err.response?.data?.message || "Payment verification failed");
+      } finally {
         setLoading(false);
       }
     };
 
-    verifyPayment();
-  }, [navigate, searchParams]);
+    verify();
+  }, [params]);
+
+  if (loading) {
+    return <div>Processing payment...</div>;
+  }
 
   return (
-    <div className="payment-container">
-      {loading && <div className="spinner"></div>}
-      <h2>{statusText}</h2>
-      {loading && <p>Please do not refresh the page</p>}
+    <div style={{ padding: "2rem" }}>
+      <h1>{message}</h1>
+
+      {ticket && (
+        <button onClick={() => navigate(`/ticket/${ticket._id}`)}>
+          View Ticket
+        </button>
+      )}
     </div>
   );
-}
+};
 
 export default PaymentSuccess;

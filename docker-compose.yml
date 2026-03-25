@@ -14,6 +14,8 @@ services:
     container_name: movie_backend
     ports:
       - "5001:5001"
+    env_file:
+      - ./server/.env
     environment:
       - MONGO_URI=mongodb://mongo:27017/cinemax
       - NODE_ENV=development

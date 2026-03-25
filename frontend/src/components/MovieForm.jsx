@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./MovieForm.css";
+import { toast } from "react-toastify";
 
 const emptyMovie = {
   title: "",
@@ -114,7 +115,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       setMovie((prev) => ({ ...prev, posterUrl: res.data.url }));
     } catch (err) {
       console.error("Upload failed:", err.response?.data || err.message);
-      alert("Poster upload failed");
+      toast.error("Poster upload failed");
     }
   };
 
@@ -168,25 +169,32 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
           continue;
         }
 
-        console.log("Submitting showtime:", s);
-        console.log("screenId:", s.screenId);
+        const payload = {
+          movieId: savedMovieId,
+          screenId: s.screenId,
+          startTime: new Date(s.startTime).toISOString(),
+          endTime: new Date(s.endTime).toISOString(),
+          basePrice: Number(s.basePrice),
+        };
 
-        await axios.post(
-          "http://localhost:5001/api/showtimes",
-          {
-            movieId: savedMovieId,
-            screenId: s.screenId,
-            startTime: new Date(s.startTime).toISOString(),
-            endTime: new Date(s.endTime).toISOString(),
-            basePrice: Number(s.basePrice),
-          },
-          {
+        console.log("Submitting showtime payload:", payload);
+
+        try {
+          await axios.post("http://localhost:5001/api/showtimes", payload, {
             headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+          });
+        } catch (err) {
+          console.error("Showtime POST failed:", {
+            status: err.response?.status,
+            data: err.response?.data,
+            message: err.message,
+            payload,
+          });
+          throw err;
+        }
       }
 
-      alert(mode === "add" ? "🎬 Movie Added!" : "Movie Updated!");
+      toast.success(mode === "add" ? "🎬 Movie Added!" : "Movie Updated!");
 
       if (addAnother) {
         setMovie(emptyMovie);
@@ -198,7 +206,8 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         status: err.response?.status,
         data: err.response?.data,
         message: err.message,
-      }); alert("Error saving movie.");
+      });
+      toast.error("Error saving movie.");
     }
   };
 

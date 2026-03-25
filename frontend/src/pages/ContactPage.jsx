@@ -61,7 +61,7 @@ const ContactPage = () => {
       <div className="contact-container">
         <div className="contact-info">
           <h2>Get in Touch</h2>
-          <p><strong>Address:</strong> New Road, Kathmandu, Nepal</p>
+          <p><strong>Address:</strong> New Road, Pokhara, Nepal</p>
           <p><strong>Phone:</strong> +977 9800000000</p>
           <p><strong>Email:</strong> support@cinemax.com</p>
           <p><strong>Hours:</strong> Sun - Sat, 9:00 AM - 10:00 PM</p>
@@ -69,7 +69,7 @@ const ContactPage = () => {
           <div className="map-container">
             <iframe
               title="Cinema Location"
-              src="https://www.google.com/maps?q=Kathmandu,Nepal&output=embed"
+              src="https://www.google.com/maps?q=New+Road+Pokhara+Nepal&output=embed"
               loading="lazy"
               allowFullScreen
             />

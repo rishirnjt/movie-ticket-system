@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   LineChart,
   Line,
@@ -11,6 +13,8 @@ import {
 import "./Dashboard.css";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     bookings: 0,
     revenue: 0,
@@ -21,15 +25,26 @@ const Dashboard = () => {
   const [recentMovies, setRecentMovies] = useState([]);
   const [recentBookings, setRecentBookings] = useState([]);
   const [salesData, setSalesData] = useState([]);
-
+  const [unreadContacts, setUnreadContacts] = useState(0);
   useEffect(() => {
     loadDashboard();
   }, []);
 
   const loadDashboard = async () => {
+
     try {
       const token = localStorage.getItem("token");
 
+      //notification
+      const contactRes = await fetch("http://localhost:5001/api/contact", {
+        headers: { Authorization:  `Bearer ${token}` },
+      });
+      const contactsData = await contactRes.json();
+
+      const newMessages = Array.isArray(contactsData)
+        ? contactsData.filter((msg) => (msg.status || "new") === "new").length
+        : 0;
+      setUnreadContacts(newMessages);
       // ===== RECENT MOVIES =====
       const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
       const movies = await moviesRes.json();
@@ -83,7 +98,7 @@ const Dashboard = () => {
               ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
               : "Unknown",
             movie: b.movie?.title || "Unknown",
-            seats: b.seatLabels || [], 
+            seats: b.seatLabels || [],
             status: b.status || "unknown",
           })) || [];
       setRecentBookings(latestBookings);
@@ -138,12 +153,35 @@ const Dashboard = () => {
     }
   };
 
+
   return (
     <div className="dashboard-wrapper">
       <main className="main-content">
-        <h1 className="dashboard-title">
-          Admin <span>Dashboard</span>
-        </h1>
+        <div className="admin-topbar">
+          <div className="admin-topbar-left">
+            <h1 className="dashboard-title">
+              Admin <span>Dashboard</span>
+            </h1>
+          </div>
+
+          <div className="admin-topbar-right">
+            <button className="topbar-icon-btn" aria-label="Search">
+              <i className="fa-solid fa-magnifying-glass" />
+            </button>
+
+            <button className="topbar-icon-btn" aria-label="Notifications" onClick={() => navigate("/admin/contacts")}>
+              <i className="fa-regular fa-bell" />
+              {unreadContacts > 0 && (
+                <span className="notification-badge">{unreadContacts}</span>
+              )}
+            </button>
+
+            <div className="admin-profile">
+              <div className="admin-avatar">R</div>
+              <span>Richie</span>
+            </div>
+          </div>
+        </div>
 
         {/* ===== STATS ===== */}
         <div className="stats-row">

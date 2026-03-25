@@ -1,233 +1,229 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
 import axios from "axios";
-import khaltiLogo from "../assets/khalti.png";
-import esewaLogo from "../assets/esewa.png";
+import { toast } from "react-toastify";
 import "./Checkout.css";
 
-const Checkout = () => {
-  const { bookingId } = useParams();
-  const navigate = useNavigate();
+const PAYMENT_METHODS = [
+  {
+    id: "khalti",
+    name: "Khalti",
+    description: "Fast payment with Khalti wallet or bank options",
+  },
+  {
+    id: "esewa",
+    name: "eSewa",
+    description: "Pay securely using your eSewa account",
+  },
+  {
+    id: "stripe",
+    name: "Card Payment",
+    description: "Pay with debit or credit card via Stripe",
+  },
+];
 
-  const [booking, setBooking] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState("");
+const Checkout = ({ booking, bookingId }) => {
+  const [selectedGateway, setSelectedGateway] = useState("khalti");
+  const [isPaying, setIsPaying] = useState(false);
 
-  useEffect(() => {
-    const fetchBooking = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("User not authenticated");
+  const token = localStorage.getItem("token");
+  const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
-        const res = await axios.get(
-          `http://localhost:5001/api/bookings/${bookingId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+  const movie = booking?.movie || {};
+  const showtime = booking?.showtime || {};
+  const seats = booking?.seats || [];
+  const foods = booking?.foods || [];
 
-        setBooking(res.data);
-      } catch (err) {
-        console.error("Failed to fetch booking:", err.response?.data || err.message);
-        setError(err.response?.data?.message || err.message);
-      }
-    };
+  const ticketSubtotal = useMemo(() => {
+    return Number(booking?.ticketTotal || 0);
+  }, [booking]);
 
-    fetchBooking();
-  }, [bookingId]);
+  const foodSubtotal = useMemo(() => {
+    return foods.reduce(
+      (sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0),
+      0
+    );
+  }, [foods]);
 
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
-  if (!booking) return <p>Loading checkout details...</p>;
+  const total = useMemo(() => {
+    return Number(booking?.totalPrice || ticketSubtotal + foodSubtotal);
+  }, [booking, ticketSubtotal, foodSubtotal]);
 
-  const showtimeDate = booking.showtime?.startTime
-    ? new Date(booking.showtime.startTime)
-    : null;
-
-  const day = showtimeDate ? showtimeDate.getDay() : null;
-
-  let ticketPricePerSeat = 300;
-  if (day !== null && day >= 2 && day <= 4) {
-    ticketPricePerSeat = ticketPricePerSeat / 2;
-  }
-
-  const seatLabels = (booking.seats || [])
-    .map((seat) => (typeof seat === "string" ? seat : seat.label))
-    .join(", ");
-
-  const ticketTotal = (booking.seats?.length || 0) * ticketPricePerSeat;
-  const foodTotal =
-    booking.foods?.reduce((sum, f) => sum + f.price * f.quantity, 0) || 0;
-  const total = ticketTotal + foodTotal;
-
-  const handlePayment = async (gateway) => {
-    setIsProcessing(true);
-    setError("");
-
+  const handlePayment = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        throw new Error("User not authenticated");
-      }
+      setIsPaying(true);
 
       const res = await axios.post(
-        "http://localhost:5001/api/payment/initiate",
-        { bookingId, gateway },
+        `${API_URL}/api/payments/initiate`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          bookingId,
+          gateway: selectedGateway,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      if (gateway === "khalti") {
-        const { payment_url } = res.data;
-
-        if (!payment_url) {
-          throw new Error("Khalti payment URL not received");
-        }
-
-        window.location.href = payment_url;
+      if (selectedGateway === "khalti" || selectedGateway === "stripe") {
+        window.location.href = res.data.payment_url;
         return;
       }
 
-      if (gateway === "esewa") {
-        const { url, formData } = res.data;
-
-        if (!url || !formData) {
-          throw new Error("eSewa form data not received");
-        }
-
+      if (selectedGateway === "esewa") {
         const form = document.createElement("form");
         form.method = "POST";
-        form.action = url;
+        form.action = res.data.url;
 
-        Object.keys(formData).forEach((key) => {
+        Object.entries(res.data.formData).forEach(([key, value]) => {
           const input = document.createElement("input");
           input.type = "hidden";
           input.name = key;
-          input.value = formData[key];
+          input.value = value;
           form.appendChild(input);
         });
 
         document.body.appendChild(form);
         form.submit();
-        return;
       }
-
-      throw new Error("Invalid payment gateway selected");
     } catch (err) {
-      console.error("Payment initiation failed:", {
-        message: err.message,
-        status: err.response?.status,
-        data: err.response?.data,
-        bookingId,
-        gateway,
-      });
-
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "Payment initiation failed."
-      );
-    } finally {
-      setIsProcessing(false);
+      console.error("Payment initiation failed:", err.response?.data || err.message);
+      toast.error(err.response?.data?.message || "Payment initiation failed");
+      setIsPaying(false);
     }
   };
 
   return (
-    <div>
-      {isProcessing && (
-        <div className="loading-overlay">
-          <div className="spinner">
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
+    <div className="checkout-page">
+      <div className="checkout-header">
+        <h1>Checkout</h1>
+        <p>Review your booking and complete payment securely.</p>
+      </div>
+
+      <div className="checkout-alert">
+        Your seats are reserved temporarily. Complete payment before the
+        reservation expires.
+      </div>
+
+      <div className="checkout-layout">
+        <div className="checkout-left">
+          <div className="checkout-card booking-card">
+            <div className="booking-top">
+              <img
+                className="movie-poster"
+                src={
+                  movie?.posterUrl
+                    ? `${API_URL}${movie.posterUrl}`
+                    : "https://via.placeholder.com/120x180?text=Poster"
+                }
+                alt={movie?.title || "Movie Poster"}
+              />
+
+              <div className="booking-info">
+                <h2>{movie?.title || "Movie Title"}</h2>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {showtime?.startTime
+                    ? new Date(showtime.startTime).toLocaleDateString()
+                    : "-"}
+                </p>
+                <p>
+                  <strong>Time:</strong>{" "}
+                  {showtime?.startTime
+                    ? new Date(showtime.startTime).toLocaleTimeString()
+                    : "-"}
+                </p>
+                <p>
+                  <strong>Screen:</strong>{" "}
+                  {showtime?.screenName || showtime?.screen || "-"}
+                </p>
+                <p>
+                  <strong>Seats:</strong>{" "}
+                  {seats.length ? seats.map((s) => s.label || s).join(", ") : "-"}
+                </p>
+              </div>
+            </div>
           </div>
-          <p>Redirecting to payment...</p>
+
+          <div className="checkout-card">
+            <h3>Food & Extras</h3>
+            {foods.length > 0 ? (
+              <div className="food-list">
+                {foods.map((item, index) => (
+                  <div className="food-row" key={index}>
+                    <span>
+                      {item.name} × {item.quantity}
+                    </span>
+                    <span>
+                      NPR {Number(item.price || 0) * Number(item.quantity || 0)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="muted-text">No food items added.</p>
+            )}
+          </div>
+
+          <div className="checkout-card">
+            <h3>Select Payment Method</h3>
+            <div className="payment-methods">
+              {PAYMENT_METHODS.map((method) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  className={`payment-method-card ${
+                    selectedGateway === method.id ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedGateway(method.id)}
+                >
+                  <div>
+                    <h4>{method.name}</h4>
+                    <p>{method.description}</p>
+                  </div>
+                  <div className="radio-indicator">
+                    {selectedGateway === method.id ? "●" : "○"}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      )}
 
-      <div className="checkout-cont">
-        <h2>Checkout Summary</h2>
+        <div className="checkout-right">
+          <div className="checkout-card sticky-card">
+            <h3>Price Summary</h3>
 
-        <div className="checkout-layout">
-          <div className="checkout-left">
-            <div className="checkout-card">
-              <h3>Booking Details</h3>
-              <p>
-                <strong>Movie:</strong> {booking.movie?.title}
-              </p>
-              <p>
-                <strong>Showtime:</strong>{" "}
-                {booking.showtime?.screenId?.name || "Screen"} -{" "}
-                {showtimeDate ? showtimeDate.toLocaleString() : "N/A"}
-              </p>
-              <p>
-                <strong>Seats:</strong> {seatLabels || "No seats selected"}
-              </p>
+            <div className="summary-row">
+              <span>Tickets</span>
+              <span>NPR {ticketSubtotal}</span>
             </div>
 
-            <div className="checkout-card">
-              <h3>Foods & Drinks</h3>
-              {booking.foods?.length > 0 ? (
-                <ul className="food-list">
-                  {booking.foods.map((f, i) => (
-                    <li key={i}>
-                      <span>
-                        {f.name} x {f.quantity}
-                      </span>
-                      <span>Rs. {f.price * f.quantity}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No food items selected.</p>
-              )}
+            <div className="summary-row">
+              <span>Food & Extras</span>
+              <span>NPR {foodSubtotal}</span>
             </div>
-          </div>
 
-          <div className="checkout-right">
-            <div className="summary-card">
-              <h3>Payment Summary</h3>
-              <div className="summary-row">
-                <span>Tickets</span>
-                <span>Rs. {ticketTotal}</span>
-              </div>
-              <div className="summary-row">
-                <span>Foods</span>
-                <span>Rs. {foodTotal}</span>
-              </div>
-              <div className="summary-total">
-                <span>Total</span>
-                <span>Rs. {total}</span>
-              </div>
+            <div className="summary-divider" />
 
-              <div className="payment-methods">
-                <h3>Select Payment Method</h3>
-
-                <div className="payment-options">
-                  <button
-                    className="payment-btn khalti"
-                    onClick={() => handlePayment("khalti")}
-                    disabled={isProcessing}
-                  >
-                    <img src={khaltiLogo} alt="Khalti" />
-                    {isProcessing ? "Redirecting..." : "Pay with Khalti"}
-                  </button>
-
-                  <button
-                    className="payment-btn esewa"
-                    onClick={() => handlePayment("esewa")}
-                    disabled={isProcessing}
-                  >
-                    <img src={esewaLogo} alt="eSewa" />
-                    {isProcessing ? "Redirecting..." : "Pay with eSewa"}
-                  </button>
-                </div>
-
-                <p className="secure-text">🔒 Secure payment gateway</p>
-              </div>
-
-              {error && <p style={{ color: "red" }}>{error}</p>}
+            <div className="summary-row total-row">
+              <span>Total</span>
+              <span>NPR {total}</span>
             </div>
+
+            <button
+              type="button"
+              className="pay-btn"
+              onClick={handlePayment}
+              disabled={isPaying}
+            >
+              {isPaying ? "Processing..." : `Pay NPR ${total}`}
+            </button>
+
+            <p className="secure-note">
+              Secure checkout. Your payment is processed through trusted payment
+              providers.
+            </p>
           </div>
         </div>
       </div>

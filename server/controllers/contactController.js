@@ -43,3 +43,38 @@ exports.getAllContactMessages = async (req, res) =>{
         });
     }
 };
+
+exports.updateContactStatus = async (req, res) => {
+    try{
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if(!["new", "read", "resolved"].includes(status)) {
+            return res.status(400).json({
+                message: "Invalid status",
+            });
+        }
+
+        const updatedMessage = await ContactMessage.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true, runValidators: true }
+        );
+
+        if(!updatedMessage) {
+            return res.status(404).json({
+                message: "Contact message not found",
+            });
+        }
+
+        res.json({
+            message: "Contact status updated",
+            data: updatedMessage,
+        });
+    } catch (err) {
+        console.error("Update contact status error:", err);
+        res.status(500).json({
+            message: "Failed to update contact status",
+        });
+    }
+};

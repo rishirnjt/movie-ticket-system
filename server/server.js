@@ -92,7 +92,7 @@ app.use('/api/foods', foodRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use("/api/showtimes", showtimeRoutes);
-app.use("/api/payment", paymentRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use("/api/screens", screenRoutes);
 app.use("/api", seatRoutes);
 app.use("/api/seat-locks", seatLockRoutes);

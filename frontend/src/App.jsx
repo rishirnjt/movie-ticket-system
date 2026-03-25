@@ -5,6 +5,8 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
@@ -34,6 +36,7 @@ import ResetPassword from "./components/ResetPassword";
 import CreateScreen from "./pages/CreateScreen";
 import GenerateSeats from "./components/GenerateSeats";
 import Reports from "./pages/Reports";
+import AdminContacts from "./pages/AdminContacts";
 
 import "./App.css";
 
@@ -56,24 +59,22 @@ function AppWrapper() {
       {!isAdmin && (
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
       )}
-      {/* MAIN ROUTES */}
+
       <Routes location={backgroundLocation || location}>
         <Route path="/" element={<HomePage />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
         <Route path="/auth" element={<AuthModal setIsLoggedIn={setIsLoggedIn} />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
-
         <Route path="/seats/:movieId" element={<SeatSelection />} />
         <Route path="/foods/:bookingId" element={<Foods />} />
         <Route path="/checkout/:bookingId" element={<Checkout />} />
         <Route path="/ticket-rates" element={<TicketRates />} />
-        <Route path="contact" element={<Contact />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/myaccount" element={<MyAccount />} />
         <Route path="/ticket/:ticketId" element={<TicketPage />} />
         <Route path="/payment-success/*" element={<PaymentSuccess />} />
 
-        {/* Admin */}
         <Route path="/admin/login" element={<AdminLogin />} />
 
         <Route
@@ -81,6 +82,14 @@ function AppWrapper() {
           element={
             <AdminRoutes>
               <Dashboard />
+            </AdminRoutes>
+          }
+        />
+        <Route
+          path="/admin/contacts"
+          element={
+            <AdminRoutes>
+              <AdminContacts />
             </AdminRoutes>
           }
         />
@@ -100,7 +109,6 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
-
         <Route
           path="/admin/archived-movies"
           element={
@@ -125,7 +133,6 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
-
         <Route
           path="/admin/bookings"
           element={
@@ -134,7 +141,6 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
-
         <Route
           path="/admin/foods"
           element={
@@ -143,7 +149,6 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
-
         <Route
           path="/admin/reports"
           element={
@@ -152,7 +157,6 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
-
         <Route
           path="/admin/create-screen"
           element={
@@ -171,7 +175,6 @@ function AppWrapper() {
         />
       </Routes>
 
-      {/* AUTH MODAL ROUTE (overlay) */}
       {backgroundLocation && (
         <Routes>
           <Route
@@ -186,7 +189,18 @@ function AppWrapper() {
         </Routes>
       )}
 
-      {!isAdmin && <Footer />}    </>
+      {!isAdmin && <Footer />}
+
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="dark"
+      />
+    </>
   );
 }
 
