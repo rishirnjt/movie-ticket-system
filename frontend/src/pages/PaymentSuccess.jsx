@@ -13,67 +13,83 @@ const PaymentSuccess = () => {
   const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
   useEffect(() => {
-    const verify = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  const verify = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        const gateway = params.get("gateway");
-        const bookingId = params.get("bookingId");
-        const pidx = params.get("pidx");
-        const sessionId = params.get("session_id");
+      const gateway = params.get("gateway");
+      const pidx = params.get("pidx");
+      const sessionId = params.get("session_id");
 
-        console.log("PaymentSuccess query params:", {
+      // 🔥 eSewa decode
+      const data = params.get("data");
+      let decoded = null;
+
+      if (data) {
+        try {
+          decoded = JSON.parse(atob(data));
+        } catch (err) {
+          console.error("eSewa decode failed:", err);
+        }
+      }
+
+      // 🔥 unified bookingId
+      const bookingId =
+        params.get("bookingId") || decoded?.transaction_uuid;
+
+      console.log("FINAL PARAMS:", {
+        gateway,
+        bookingId,
+        pidx,
+        sessionId,
+        decoded,
+      });
+
+      const res = await axios.post(
+        `${API_URL}/api/payments/verify`,
+        {
           gateway,
           bookingId,
           pidx,
           sessionId,
-        });
-
-        const res = await axios.post(
-          `${API_URL}/api/payments/verify`,
-          {
-            gateway,
-            bookingId,
-            pidx,
-            sessionId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        console.log("VERIFY RESPONSE:", res.data);
-
-        if (res.data.ticket) {
-          setTicket(res.data.ticket);
-          setMessage("Payment Successful");
-          toast.success("Payment successful!");
-        } else {
-          setMessage(
-            res.data.message || "Payment processed, but ticket info was not found."
-          );
         }
-      } catch (err) {
-        console.error(
-          "Payment verification failed:",
-          err.response?.data || err.message
-        );
+      );
+
+      console.log("VERIFY RESPONSE:", res.data);
+
+      if (res.data.ticket) {
+        setTicket(res.data.ticket);
+        setMessage("Payment Successful");
+        toast.success("Payment successful!");
+      } else {
         setMessage(
-          err.response?.data?.message || "Payment verification failed"
+          res.data.message ||
+            "Payment processed, but ticket info was not found."
         );
-        toast.error(
-          err.response?.data?.message || "Payment verification failed"
-        );
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error(
+        "Payment verification failed:",
+        err.response?.data || err.message
+      );
+      setMessage(
+        err.response?.data?.message || "Payment verification failed"
+      );
+      toast.error(
+        err.response?.data?.message || "Payment verification failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    verify();
-  }, [params, API_URL]);
-
+  verify();
+}, [params, API_URL]);
   if (loading) {
     return <div>Processing payment...</div>;
   }

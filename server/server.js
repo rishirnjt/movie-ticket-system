@@ -47,6 +47,13 @@ cron.schedule("*/1 * * * *", async () => {
   try {
     const now = new Date();
 
+    const expiredBookings = await Booking.find({
+      status: "holding",
+      reservationExpiresAt: { $lte: now }
+    }).select("_id status reservationExpiresAt movie showtime seats");
+
+    console.log("CRON expiring bookings:", expiredBookings);
+
     await Booking.updateMany(
       {
         status: "holding",
@@ -59,12 +66,10 @@ cron.schedule("*/1 * * * *", async () => {
         }
       }
     );
-
   } catch (err) {
     console.error("Auto cancel error:", err);
   }
 });
-
 //routes
 const movieRoutes = require('./routes/movieRoutes');
 const authRoutes = require('./routes/authRoutes');

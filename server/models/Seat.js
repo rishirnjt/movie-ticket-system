@@ -40,7 +40,7 @@ const seatSchema = new mongoose.Schema(
         }
     },
     {
-        timstamps: true
+        timestamps: true
     }
 );
 
