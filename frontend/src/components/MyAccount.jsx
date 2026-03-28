@@ -272,6 +272,9 @@ const MyAccount = () => {
         "Content-Type": "multipart/form-data",
       };
 
+      const [firstName = "", ...rest] = name.trim().split("");
+      const lastName = rest.join(" ");
+
       const formData = new FormData();
       formData.append("name", name);
       formData.append("phone", phone);
@@ -347,8 +350,8 @@ const MyAccount = () => {
                           <div
                             key={`${seat}-${idx}`}
                             className={`seat-box ${selectedSeats[r._id]?.includes(seat)
-                                ? "selected"
-                                : ""
+                              ? "selected"
+                              : ""
                               }`}
                             onClick={() => toggleSeatSelection(r._id, seat)}
                           >
@@ -495,52 +498,78 @@ const MyAccount = () => {
     </div>
   );
 
-  const renderSettings = () => (
-    <div className="section-block">
-      <div className="section-header">
-        <h2>Account Settings</h2>
-        <p>Update your personal details and profile image.</p>
+  const renderSettings = () => {
+    const profilePreview = profilePic
+      ? URL.createObjectURL(profilePic)
+      : user?.profilePic
+        ? getPosterUrl(user.profilePic)
+        : profileImg;
+
+    return (
+      <div className="section-block">
+        <div className="section-header">
+          <h2>Account Settings</h2>
+          <p>Update your personal details and profile picture.</p>
+        </div>
+
+        <form className="settings-form" onSubmit={handleProfileUpdate}>
+          <div className="profile-preview-wrap">
+            <img
+              src={profilePreview}
+              alt="Profile Preview"
+              className="settings-profile-preview"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter full name"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={user?.email || ""}
+              disabled
+              className="disabled-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Phone Number</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Enter phone number"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Profile Picture</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setProfilePic(e.target.files[0])}
+            />
+          </div>
+
+          {message && <p className="update-message">{message}</p>}
+
+          <button type="submit" className="update-btn" disabled={savingProfile}>
+            {savingProfile ? "Saving Changes..." : "Save Changes"}
+          </button>
+        </form>
       </div>
-
-      <form className="settings-form" onSubmit={handleProfileUpdate}>
-        <div className="form-group">
-          <label>Full Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter full name"
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Phone</label>
-          <input
-            type="text"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Enter phone number"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Profile Picture</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setProfilePic(e.target.files[0])}
-          />
-        </div>
-
-        {message && <p className="update-message">{message}</p>}
-
-        <button type="submit" className="update-btn" disabled={savingProfile}>
-          {savingProfile ? "Updating..." : "Update Profile"}
-        </button>
-      </form>
-    </div>
-  );
+    );
+  };
 
   const renderContent = () => {
     switch (activeTab) {

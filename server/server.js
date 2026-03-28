@@ -36,6 +36,7 @@ require('./models/Screen');
 require('./models/Seat');
 require('./models/SeatLock');
 require('./models/ContactMessage');
+require('./models/Banner');
 
 //Auto cancellation
 const cron = require("node-cron");
@@ -86,6 +87,7 @@ const screenRoutes = require('./routes/screenRoutes');
 const seatRoutes = require('./routes/seatRoutes');
 const seatLockRoutes = require('./routes/seatLockRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const bannerRoutes = require('./routes/bannerRoutes');
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
@@ -102,6 +104,7 @@ app.use("/api/screens", screenRoutes);
 app.use("/api", seatRoutes);
 app.use("/api/seat-locks", seatLockRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/banners", bannerRoutes);
 
 //route testing
 app.get('/test', (req, res) => {

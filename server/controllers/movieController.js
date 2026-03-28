@@ -1,7 +1,33 @@
 const Movie = require("../models/Movie");
 const Showtime = require("../models/Showtime");
 
-//Search Movie
+const getDayStart = (value = new Date()) => {
+  const d = new Date(value);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const getDayEnd = (value = new Date()) => {
+  const d = new Date(value);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
+
+const parseDateStart = (dateStr) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const parseDateEnd = (dateStr) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
+
+// Search Movie
 exports.searchMovies = async (req, res) => {
   try {
     const query = req.query.q;
@@ -13,22 +39,23 @@ exports.searchMovies = async (req, res) => {
         { title: { $regex: query, $options: "i" } },
         { genre: { $regex: query, $options: "i" } },
       ],
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
     }).limit(12);
 
     res.json(movies);
   } catch (error) {
+    console.error("Search movie error:", error);
     res.status(500).json({ message: "Search failed" });
   }
 };
 
-//Coming Soon
+// Coming Soon
 exports.getComingSoon = async (req, res) => {
   try {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayStart = getDayStart();
 
     const movies = await Movie.find({
-      movieStartDate: { $exists: true, $gt: today },
+      movieStartDate: { $exists: true, $gt: todayStart },
       $or: [{ isActive: true }, { isActive: { $exists: false } }],
     })
       .sort({ movieStartDate: 1 })
@@ -41,39 +68,48 @@ exports.getComingSoon = async (req, res) => {
   }
 };
 
-//Now Showing
+// Now Showing
 exports.getNowShowing = async (req, res) => {
   try {
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
     const movies = await Movie.find({
-      movieStartDate: { $lte: today },
-      movieEndDate: { $gte: today },
-    }).lean();
+      movieStartDate: { $lte: todayEnd },
+      movieEndDate: { $gte: todayStart },
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
+    })
+      .sort({ movieStartDate: 1, title: 1 })
+      .lean();
+
+    if (!movies.length) {
+      return res.json([]);
+    }
 
     const movieIds = movies.map((m) => m._id);
 
+    // get all showtimes from today onward
     const showtimes = await Showtime.find({
       movieId: { $in: movieIds },
-      startTime: { $gte: now },
+      startTime: { $gte: todayStart },
     })
       .populate("screenId", "name format")
       .sort({ startTime: 1 })
       .lean();
 
-    const moviesWithShowtimes = movies
-      .map((movie) => {
-        const movieShowtimes = showtimes.filter(
-          (st) => st.movieId.toString() === movie._id.toString()
-        );
+    const moviesWithShowtimes = movies.map((movie) => {
+      const movieShowtimes = showtimes.filter(
+        (st) => st.movieId.toString() === movie._id.toString()
+      );
 
-        return {
-          ...movie,
-          showtimes: movieShowtimes,
-        };
-      })
+      return {
+        ...movie,
+        showtimes: movieShowtimes,
+      };
+    });
 
     res.json(moviesWithShowtimes);
   } catch (err) {
@@ -81,38 +117,40 @@ exports.getNowShowing = async (req, res) => {
     res.status(500).json({ message: "Error fetching now showing movies" });
   }
 };
-
-//Archive Movies
+// Archived Movies
 exports.getArchivedMovies = async (req, res) => {
-  try{
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  try {
+    const todayStart = getDayStart();
 
     const movies = await Movie.find({
-      movieEndDate: { $lt: today },
+      movieEndDate: { $lt: todayStart },
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
     })
       .sort({ movieEndDate: -1 })
       .lean();
+
     res.json(movies);
   } catch (err) {
-    console.error("Archieve movie error:", err);
-    res.status(500).json({ message: "Error fetchning archived movies" });
+    console.error("Archive movie error:", err);
+    res.status(500).json({ message: "Error fetching archived movies" });
   }
 };
 
-//Get all movies
+// Get all public movies
 exports.getAllMovies = async (req, res) => {
   try {
     const movies = await Movie.find({
       $or: [{ isActive: true }, { isActive: { $exists: false } }],
     }).lean();
+
     res.json(movies);
   } catch (err) {
+    console.error("Get all movies error:", err);
     res.status(500).json({ message: "Error fetching movies" });
   }
 };
 
-//Get Single movies + showtimes
+// Get single movie + showtimes
 exports.getMovieById = async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id).lean();
@@ -136,21 +174,22 @@ exports.getMovieById = async (req, res) => {
   }
 };
 
-//Admin: Get all movies
+// Admin: Get all movies
 exports.getAllMoviesAdmin = async (req, res) => {
   try {
     const movies = await Movie.find().lean();
     res.json(movies);
   } catch (err) {
+    console.error("Get all movies admin error:", err);
     res.status(500).json({ message: "Error fetching movies for admin" });
   }
 };
 
-//Recent Movies
+// Recent Movies
 exports.getRecentMovies = async (req, res) => {
   try {
     const movies = await Movie.find({
-      $or: [{ isActive: true}, { isActive: { $exists: false } }],
+      $or: [{ isActive: true }, { isActive: { $exists: false } }],
     })
       .sort({ createdAt: -1 })
       .limit(8)
@@ -163,16 +202,16 @@ exports.getRecentMovies = async (req, res) => {
   }
 };
 
-//Create Movie
+// Create Movie
 exports.createMovie = async (req, res) => {
   try {
     const data = req.body;
 
     const movie = await Movie.create({
       ...data,
-      releaseDate: data.releaseDate ? new Date(`${data.releaseDate}T00:00:00`) : null,
-      movieStartDate: data.movieStartDate ? new Date(`${data.movieStartDate}T00:00:00`) : null,
-      movieEndDate: data.movieEndDate ? new Date(`${data.movieEndDate}T23:59:59`) : null,
+      releaseDate: parseDateStart(data.releaseDate),
+      movieStartDate: parseDateStart(data.movieStartDate),
+      movieEndDate: parseDateEnd(data.movieEndDate),
       isActive: typeof data.isActive === "boolean" ? data.isActive : true,
     });
 
@@ -183,22 +222,26 @@ exports.createMovie = async (req, res) => {
   }
 };
 
-//Update movie
+// Update Movie
 exports.updateMovie = async (req, res) => {
   try {
     const data = req.body;
 
     const updatePayload = {
       ...data,
-      releaseDate: data.releaseDate ? new Date(`${data.releaseDate}T00:00:00`) : null,
-      movieStartDate: data.movieStartDate ? new Date(`${data.movieStartDate}T00:00:00`) : null,
-      movieEndDate: data.movieEndDate ? new Date(`${data.movieEndDate}T23:59:59`) : null,
+      releaseDate: parseDateStart(data.releaseDate),
+      movieStartDate: parseDateStart(data.movieStartDate),
+      movieEndDate: parseDateEnd(data.movieEndDate),
     };
 
     const movie = await Movie.findByIdAndUpdate(req.params.id, updatePayload, {
       new: true,
       runValidators: true,
     });
+
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found" });
+    }
 
     res.json(movie);
   } catch (err) {
@@ -215,7 +258,7 @@ exports.updateMovie = async (req, res) => {
   }
 };
 
-//Delete movie and showtime
+// Delete movie and showtimes
 exports.deleteMovie = async (req, res) => {
   try {
     await Movie.findByIdAndDelete(req.params.id);

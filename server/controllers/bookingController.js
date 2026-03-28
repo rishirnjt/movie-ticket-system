@@ -247,9 +247,7 @@ exports.addFoodsToBooking = async (req, res) => {
   }
 };
 
-/* =========================
-   CHECKOUT
-========================= */
+//Checkout
 exports.checkoutBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id)
@@ -318,7 +316,14 @@ exports.getMyReservations = async (req, res) => {
       ],
     })
       .populate("movie")
-      .populate("showtime")
+      .populate({
+        path: "showtime",
+        populate: {
+          path: "screenId",
+          select: "name screenName",
+        },
+      })
+      .populate("seats", "label row number seatNumber name")
       .sort({ createdAt: -1 });
 
     res.json(bookings);

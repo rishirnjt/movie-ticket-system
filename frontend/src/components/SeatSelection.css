@@ -469,7 +469,10 @@
   }
 
   .row-seats {
-    gap: 10px;
+   display: flex;
+   flex-wrap: nowrap;
+   gap: 12px;
+   width: max-content;
   }
 }
 

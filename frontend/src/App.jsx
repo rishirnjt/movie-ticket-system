@@ -37,6 +37,9 @@ import CreateScreen from "./pages/CreateScreen";
 import GenerateSeats from "./components/GenerateSeats";
 import Reports from "./pages/Reports";
 import AdminContacts from "./pages/AdminContacts";
+import ManageBanner from "./components/ManageBanner";
+import EditBanner from "./components/EditBanner";
+import AddBanner from "./components/AddBanner";
 
 import "./App.css";
 
@@ -122,6 +125,32 @@ function AppWrapper() {
           element={
             <AdminRoutes>
               <EditMovie />
+            </AdminRoutes>
+          }
+        />
+        <Route
+          path="/admin/add-banner"
+          element={
+            <AdminRoutes>
+              <AddBanner />
+            </AdminRoutes>
+          }
+        />
+
+        <Route
+          path="/admin/banners"
+          element={
+            <AdminRoutes>
+              <ManageBanner />
+            </AdminRoutes>
+          }
+        />
+
+        <Route
+          path="/admin/edit-banner/:id"
+          element={
+            <AdminRoutes>
+              <EditBanner />
             </AdminRoutes>
           }
         />

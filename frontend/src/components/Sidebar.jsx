@@ -13,21 +13,18 @@ const Sidebar = () => {
   const linkClass = ({ isActive }) =>
     isActive ? "nav-link active" : "nav-link";
 
-  //logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/admin/login", { replace: true });
-  }
+  };
 
   return (
     <aside className="sidebar d-flex flex-column p-3">
-
       <div className="text-center mb-4">
         <div className="avatar">R</div>
         <h5>Richie</h5>
       </div>
 
-      {/* Dashboard */}
       <NavLink to="/admin/dashboard" className={linkClass}>
         <i className="fas fa-tachometer-alt me-2"></i> Dashboard
       </NavLink>
@@ -45,14 +42,31 @@ const Sidebar = () => {
             <NavLink to="/admin/manage-movies" className={linkClass}>
               <i className="fas fa-list me-2"></i> Manage Movies
             </NavLink>
-           <NavLink to="/admin/archived-movies" className={linkClass}>
+            <NavLink to="/admin/archived-movies" className={linkClass}>
               <i className="fas fa-box-archive me-2"></i> Archived Movies
             </NavLink>
           </div>
         )}
       </div>
 
-      {/*Screens */}
+      {/* Banners */}
+      <div className="menu-group">
+        <div className="menu-title" onClick={() => toggleMenu("banners")}>
+          <i className="fas fa-images me-2"></i> Banners
+        </div>
+        {openMenu === "banners" && (
+          <div className="submenu">
+            <NavLink to="/admin/add-banner" className={linkClass}>
+              <i className="fas fa-plus me-2"></i> Add Banner
+            </NavLink>
+            <NavLink to="/admin/banners" className={linkClass}>
+              <i className="fas fa-list me-2"></i> Manage Banners
+            </NavLink>
+          </div>
+        )}
+      </div>
+
+      {/* Screens */}
       <div className="menu-group">
         <div className="menu-title" onClick={() => toggleMenu("screens")}>
           <i className="fas fa-tv me-2"></i> Screens
@@ -72,12 +86,10 @@ const Sidebar = () => {
         )}
       </div>
 
-      {/* Users */}
       <NavLink to="/admin/users" className={linkClass}>
         <i className="fas fa-users me-2"></i> Users
       </NavLink>
 
-      {/* Bookings */}
       <NavLink to="/admin/bookings" className={linkClass}>
         <i className="fas fa-ticket-alt me-2"></i> Bookings
       </NavLink>
@@ -99,12 +111,10 @@ const Sidebar = () => {
         )}
       </div>
 
-      {/* Reports */}
       <NavLink to="/admin/reports" className={linkClass}>
         <i className="fas fa-chart-line me-2"></i> Reports
       </NavLink>
 
-      {/* Settings */}
       <NavLink to="/admin/settings" className={linkClass}>
         <i className="fas fa-cog me-2"></i> Settings
       </NavLink>
