@@ -310,10 +310,8 @@ exports.getMyReservations = async (req, res) => {
 
     const bookings = await Booking.find({
       user: req.user._id,
-      $or: [
-        { status: "holding", reservationExpiresAt: { $gt: now } },
-        { status: "confirmed" },
-      ],
+      status: "holding",
+      reservationExpiresAt: { $gt: now },
     })
       .populate("movie")
       .populate({
@@ -357,9 +355,7 @@ exports.getBookingById = async (req, res) => {
 };
 
 
-/* =========================
-   CANCEL
-========================= */
+//cancel
 exports.cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
