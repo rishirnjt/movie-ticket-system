@@ -12,6 +12,7 @@ const Carousel = () => {
   const navigate = useNavigate();
 
   const [banners, setBanners] = useState([]);
+  const [trailerUrl, setTrailerUrl] = useState("");
 
   const settings = {
     dots: true,
@@ -38,41 +39,154 @@ const Carousel = () => {
     fetchBanners();
   }, [API_URL]);
 
+  // 🎬 Convert YouTube URL to embed
+  const getEmbedUrl = (url) => {
+    if (!url) return "";
+
+    try {
+      if (url.includes("youtu.be/")) {
+        const id = url.split("youtu.be/")[1].split("?")[0];
+        return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+
+      if (url.includes("youtube.com/watch?v=")) {
+        const urlObj = new URL(url);
+        const id = urlObj.searchParams.get("v");
+        return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+
+      if (url.includes("/embed/")) {
+        return url;
+      }
+
+      return "";
+    } catch (error) {
+      console.error("Trailer URL parse error:", error);
+      return "";
+    }
+  };
+
+  const handlePlayTrailer = (e, trailer) => {
+    e.stopPropagation();
+    const embedUrl = getEmbedUrl(trailer);
+    setTrailerUrl(embedUrl);
+  };
+
+  // 🎯 Status label
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "coming":
+        return "Coming Soon";
+      case "showing":
+        return "Now Showing";
+      case "archived":
+        return "Ended";
+      default:
+        return "Now Showing";
+    }
+  };
+
+  // 🎯 Button text based on status
+  const getButtonText = (status, buttonText) => {
+    if (buttonText) return buttonText;
+
+    switch (status) {
+      case "coming":
+        return "View Details";
+      case "showing":
+        return "Book Now";
+      case "archived":
+        return "View Movie";
+      default:
+        return "Book Now";
+    }
+  };
+
   if (!banners.length) return null;
 
   return (
-    <div className="carousel-container">
-      <Slider {...settings}>
-        {banners.map((banner) => {
-          const imageUrl = banner.bannerUrl?.startsWith("http")
-            ? banner.bannerUrl
-            : `${API_URL}${banner.bannerUrl}`;
+    <>
+      <div className="carousel-container">
+        <Slider {...settings}>
+          {banners.map((banner) => {
+            const imageUrl = banner.bannerUrl?.startsWith("http")
+              ? banner.bannerUrl
+              : `${API_URL}${banner.bannerUrl}`;
 
-          return (
-            <div className="slide" key={banner._id}>
-              <img src={imageUrl} alt={banner.title} />
+            const trailer = banner.movieId?.trailerUrl || "";
+            const status = banner.movieId?.status || "showing";
 
-              <div className="slide-text">
-                <h2>Now Showing</h2>
-                <h1>{banner.title}</h1>
-                <p>{banner.subtitle}</p>
+            return (
+              <div className="slide" key={banner._id}>
+                <img src={imageUrl} alt={banner.title} />
 
-                {banner.movieId && (
-                  <button
-                    className="carousel-btn"
-                    onClick={() =>
-                      navigate(`/movie/${banner.movieId._id}`)
-                    }
-                  >
-                    {banner.buttonText || "Book Now"}
-                  </button>
-                )}
+                <div className="slide-text">
+                  {/* 🔥 Dynamic Status */}
+                  <h2 className={`carousel-status ${status}`}>
+                    {getStatusLabel(status)}
+                  </h2>
+
+                  <h1>{banner.title}</h1>
+                  <p>{banner.subtitle}</p>
+
+                  <div className="carousel-actions">
+                    {banner.movieId?._id && (
+                      <button
+                        className="carousel-btn primary"
+                        onClick={() =>
+                          navigate(`/movie/${banner.movieId._id}`)
+                        }
+                      >
+                        {getButtonText(status, banner.buttonText)}
+                      </button>
+                    )}
+
+                    {trailer && (
+                      <button
+                        type="button"
+                        className="carousel-btn secondary"
+                        onClick={(e) => handlePlayTrailer(e, trailer)}
+                      >
+                        <span className="play-icon">▶</span>
+                        Play Trailer
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </Slider>
-    </div>
+            );
+          })}
+        </Slider>
+      </div>
+
+      {/* 🎬 Trailer Modal */}
+      {trailerUrl && (
+        <div className="trailer-modal" onClick={() => setTrailerUrl("")}>
+          <div
+            className="trailer-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="close-trailer"
+              onClick={() => setTrailerUrl("")}
+            >
+              ×
+            </button>
+
+            <iframe
+              src={trailerUrl}
+              title="Trailer"
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

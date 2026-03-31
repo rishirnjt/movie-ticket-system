@@ -43,8 +43,24 @@ const bookingSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["holding", "confirmed", "cancelled", "expired"],
+      enum: ["holding", "confirmed", "cancelled", "expired", "completed"],
       default: "holding"
+    },
+
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "refunded"],
+      default: "pending",
+    },
+
+    reservedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    confirmedAt: {
+      type: Date,
+      default: null,
     },
 
     // Reservation expires 1 hour before showtime

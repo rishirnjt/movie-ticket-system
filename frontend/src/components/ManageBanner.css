@@ -1,0 +1,142 @@
+.manage-banners-page {
+  padding: 32px;
+  min-height: 100vh;
+  background: #111;
+  color: #fff;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.page-header a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e50914, #b00610);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.25s ease;
+}
+
+.page-header a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(229, 9, 20, 0.28);
+}
+
+.banner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 22px;
+}
+
+.banner-card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+  transition: 0.25s ease;
+}
+
+.banner-card:hover {
+  transform: translateY(-4px);
+  border-color: #3a3a3a;
+}
+
+.banner-card img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  display: block;
+}
+
+.banner-card h3 {
+  margin: 16px 16px 8px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.banner-card p {
+  margin: 0 16px 10px;
+  font-size: 14px;
+  color: #cfcfcf;
+  line-height: 1.5;
+}
+
+.banner-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  padding-top: 10px;
+}
+
+.banner-actions a,
+.banner-actions button {
+  flex: 1;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.25s ease;
+}
+
+.banner-actions a {
+  background: #252525;
+  color: #fff;
+  border: 1px solid #343434;
+}
+
+.banner-actions a:hover {
+  background: #2f2f2f;
+}
+
+.banner-actions button {
+  background: rgba(229, 9, 20, 0.14);
+  color: #ff6b72;
+  border: 1px solid rgba(229, 9, 20, 0.25);
+}
+
+.banner-actions button:hover {
+  background: rgba(229, 9, 20, 0.22);
+}
+
+@media (max-width: 768px) {
+  .manage-banners-page {
+    padding: 20px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header a {
+    width: 100%;
+  }
+
+  .banner-grid {
+    grid-template-columns: 1fr;
+  }
+}

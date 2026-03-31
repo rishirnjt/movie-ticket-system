@@ -4,9 +4,7 @@ const Showtime = require("../models/Showtime");
 const QRCode = require("qrcode");
 const PDFDocument = require("pdfkit");
 
-/* =========================
-   HELPERS
-========================= */
+
 const getSeatLabelArray = (ticket) => {
   return (ticket.seats || []).map((seat) => {
     if (typeof seat === "string") return seat; // fallback if not populated
@@ -70,22 +68,80 @@ const serializeTicket = async (ticket) => {
   };
 };
 
+//expire old tickets
 const expireOldTickets = async () => {
   const now = new Date();
 
-  const expiredShowtimes = await Showtime.find({
-    $or: [
-      { endTime: { $lt: now } },
-      { endTime: { $exists: false }, startTime: { $lt: now } },
-    ],
-  }).select("_id");
+  const tickets = await Ticket.find({
+    userId: { $exists: true },
+    status: "active",
+  })
+    .populate("movieId", "duration title")
+    .populate("showtimeId", "startTime endTime");
 
-  const showtimeIds = expiredShowtimes.map((st) => st._id);
+  const ticketIdsToExpire = [];
 
-  if (!showtimeIds.length) return;
+  console.log("NOW:", now);
+
+  for (const ticket of tickets) {
+    const showtime = ticket.showtimeId;
+    const movie = ticket.movieId;
+
+    // if referenced showtime is gone, expire the ticket
+    if (!showtime?.startTime && !showtime?.endTime) {
+      console.log("Expiring ticket with missing showtime:", ticket._id.toString());
+      ticketIdsToExpire.push(ticket._id);
+      continue;
+    }
+
+    let showEndTime = null;
+
+    if (showtime?.endTime) {
+      showEndTime = new Date(showtime.endTime);
+    } else if (
+      showtime?.startTime &&
+      movie?.duration &&
+      !isNaN(Number(movie.duration))
+    ) {
+      showEndTime = new Date(showtime.startTime);
+      showEndTime.setMinutes(
+        showEndTime.getMinutes() + Number(movie.duration)
+      );
+    } else if (showtime?.startTime) {
+      showEndTime = new Date(showtime.startTime);
+    }
+
+    if (!showEndTime || Number.isNaN(showEndTime.getTime())) {
+      console.log("Invalid end time, expiring ticket:", ticket._id.toString());
+      ticketIdsToExpire.push(ticket._id);
+      continue;
+    }
+
+    const isExpired = showEndTime < now;
+
+    console.log("CHECKING:", {
+      ticket: ticket._id.toString(),
+      startTime: showtime?.startTime,
+      endTime: showtime?.endTime,
+      parsedEndTime: showEndTime,
+      duration: movie?.duration,
+      isExpired,
+    });
+
+    if (isExpired) {
+      ticketIdsToExpire.push(ticket._id);
+    }
+  }
+
+  console.log(
+    "Expiring tickets:",
+    ticketIdsToExpire.map((id) => id.toString())
+  );
+
+  if (!ticketIdsToExpire.length) return;
 
   await Ticket.updateMany(
-    { showtimeId: { $in: showtimeIds }, status: "active" },
+    { _id: { $in: ticketIdsToExpire } },
     { $set: { status: "expired" } }
   );
 };
@@ -204,13 +260,12 @@ exports.downloadTicket = async (req, res) => {
     doc.text(`Screen: ${screenName}`);
     doc.text(`Date: ${showTimeDate ? showTimeDate.toLocaleDateString() : "N/A"}`);
     doc.text(
-      `Time: ${
-        showTimeDate
-          ? showTimeDate.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "N/A"
+      `Time: ${showTimeDate
+        ? showTimeDate.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+        : "N/A"
       }`
     );
 

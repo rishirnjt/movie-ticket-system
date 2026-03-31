@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import './ManageBanner.css';
 
 const ManageBanner = () => {
   const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";

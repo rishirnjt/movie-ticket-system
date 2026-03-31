@@ -393,24 +393,12 @@ const MyAccount = () => {
       {items.map((t) => {
         const showtimeObj = t.showtimeId || t.showtime;
         const seatLabels = getSeatLabels(t);
-
-        const parsedTime = new Date(
-          showtimeObj?.time ||
-          showtimeObj?.startTime ||
-          showtimeObj?.dateTime ||
-          showtimeObj?.startAt ||
-          ""
-        );
-
-        const isUpcoming =
-          !isHistory &&
-          !Number.isNaN(parsedTime.getTime()) &&
-          parsedTime > new Date();
+        const isCompleted = isHistory; 
 
         return (
           <div
             key={t._id}
-            className={`ticket-card ${isHistory || !isUpcoming ? "expired-ticket" : "upcoming-ticket"
+            className={`ticket-card ${isCompleted ? "expired-ticket" : "upcoming-ticket"
               }`}
           >
             <div className="ticket-poster">
@@ -432,19 +420,15 @@ const MyAccount = () => {
                 </span>
               </div>
 
-              <div
-                className={`ticket-status ${isHistory || !isUpcoming ? "completed" : "upcoming"
-                  }`}
-              >
-                {isHistory || !isUpcoming ? "Completed" : "Upcoming"}
+              <div className={`ticket-status ${isCompleted ? "completed" : "upcoming"}`}>
+                {isCompleted ? "Completed" : "Upcoming"}
               </div>
 
               <div className="ticket-details">
                 <p>{formatShowtime(showtimeObj)}</p>
                 <p>{getScreenName(showtimeObj)}</p>
                 <p>
-                  Seats:{" "}
-                  {seatLabels.length > 0 ? seatLabels.join(", ") : "N/A"}
+                  Seats: {seatLabels.length > 0 ? seatLabels.join(", ") : "N/A"}
                 </p>
                 <p>Rs. {t.totalPrice ?? 0}</p>
               </div>

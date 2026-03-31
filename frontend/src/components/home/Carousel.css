@@ -5,6 +5,70 @@
   position: relative;
 }
 
+.carousel-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 5;
+}
+
+.carousel-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 13px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.carousel-btn.primary {
+  background: #e50914;
+  color: white;
+}
+
+.carousel-btn.secondary {
+  background: rgba(255, 255, 255, 0.16);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.trailer-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.trailer-content {
+  position: relative;
+  width: min(1000px, 95vw);
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.close-trailer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+}
+
 .slide {
   position: relative;
   height: 85vh;
@@ -77,10 +141,22 @@
 }
 
 /* dots styling */
+.slick-dots {
+  bottom: 22px !important;
+  z-index: 20;
+}
+
+.slick-dots li {
+  margin: 0 4px;
+}
+
 .slick-dots li button:before {
-  color: #fff;
+  font-size: 12px !important;
+  color: white !important;
+  opacity: 0.6 !important;
 }
 
 .slick-dots li.slick-active button:before {
-  color: #e50914;
+  color: #e50914 !important;
+  opacity: 1 !important;
 }

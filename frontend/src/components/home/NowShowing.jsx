@@ -11,6 +11,16 @@ const NowShowing = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const formatDuration = (minutes) => {
+  if (!minutes) return "";
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+};
+
   useEffect(() => {
     axios
       .get("http://localhost:5001/api/movies/now-showing")
@@ -126,7 +136,8 @@ const NowShowing = () => {
 
               <div className="hover-info">
                 <h4>{movie.title}</h4>
-                <p className="genre">{movie.genre}</p>
+                <p className="genre">
+                  {movie.genre}  - {formatDuration(movie.duration)}</p>
 
                 <div className="showtimes">
                   {movie.showtimes.slice(0, 3).map((showtime) => {
@@ -146,8 +157,9 @@ const NowShowing = () => {
                         }}
                       >
                         {showDateTime.toLocaleTimeString([], {
-                          hour: "2-digit",
+                          hour: "numeric",
                           minute: "2-digit",
+                          hour12: true,
                         })}
                       </span>
                     );

@@ -13,7 +13,10 @@ const movieSchema = new mongoose.Schema({
   posterUrl: String,
   trailerUrl: String,
   releaseDate: Date,
-  duration: String, 
+  duration: {
+    type: Number,
+    required: true,
+  }, 
   rating: String,
   language: String,
 

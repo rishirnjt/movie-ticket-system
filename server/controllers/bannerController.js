@@ -3,7 +3,7 @@ const Banner = require("../models/Banner");
 exports.getActiveBanners = async (req, res) => {
   try {
     const banners = await Banner.find({ isActive: true })
-      .populate("movieId", "title")
+      .populate("movieId", "title trailerUrl status")
       .sort({ order: 1, createdAt: -1 });
 
     res.json(banners);
@@ -19,7 +19,7 @@ exports.getActiveBanners = async (req, res) => {
 exports.getAllBanners = async (req, res) => {
   try {
     const banners = await Banner.find()
-      .populate("movieId", "title")
+      .populate("movieId", "title trailerUrl status")
       .sort({ order: 1, createdAt: -1 });
 
     res.json(banners);
