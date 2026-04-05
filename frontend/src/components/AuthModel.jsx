@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./AuthModel.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const navigate = useNavigate();
@@ -9,13 +10,11 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
 
   const [activeTab, setActiveTab] = useState("signin");
 
-  // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPwd, setShowLoginPwd] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Register state
   const [reg, setReg] = useState({
     countryCode: "+977",
     phone: "",
@@ -29,7 +28,6 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
 
   const [showRegPwd, setShowRegPwd] = useState(false);
 
-  // ---------------- LOGIN ----------------
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -43,7 +41,7 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
       const role = res.data?.user?.role?.toLowerCase();
 
       if (role === "admin") {
-        alert("Please login from admin panel.");
+        toast.warning("Please login from admin panel.");
         setLoading(false);
         return;
       }
@@ -54,20 +52,18 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
       setIsLoggedIn(true);
       onClose();
       navigate("/");
-
     } catch (err) {
-      alert(err.response?.data?.message || "Invalid credentials");
+      toast.error(err.response?.data?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
-  // ---------------- REGISTER ----------------
   const handleRegister = async (e) => {
     e.preventDefault();
 
     if (!reg.termsAccepted) {
-      return alert("Please accept Terms & Conditions");
+      return toast.warning("Please accept Terms & Conditions");
     }
 
     try {
@@ -86,16 +82,14 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
         setIsLoggedIn(true);
       }
 
-      alert("Registration successful");
+      toast.success("Registration successful");
       navigate("/");
       onClose();
-
     } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
+      toast.error(err.response?.data?.message || "Registration failed");
     }
   };
 
-  // ---------------- FORGOT PASSWORD ----------------
   const handleForgotPassword = async () => {
     const email = prompt("Enter your email to reset password:");
     if (!email) return;
@@ -105,10 +99,9 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
         email,
       });
 
-      alert(res.data.message || "Password reset email sent");
-
+      toast.success(res.data.message || "Password reset email sent");
     } catch (err) {
-      alert(err.response?.data?.message || "Error sending reset email");
+      toast.error(err.response?.data?.message || "Error sending reset email");
     }
   };
 
@@ -123,168 +116,226 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   return (
     <div className="auth-overlay">
       <div className="auth-modal">
+        <button className="auth-close" onClick={onClose}>
+          <i className="fa-solid fa-xmark" />
+        </button>
 
-        <button className="auth-close" onClick={onClose}>×</button>
+        <div className="auth-header">
+          <h2>{activeTab === "signin" ? "Welcome Back" : "Create Account"}</h2>
+          <p>
+            {activeTab === "signin"
+              ? "Sign in to continue your Cinemax experience"
+              : "Join Cinemax and book your movie tickets easily"}
+          </p>
+        </div>
 
         <div className="auth-tabs">
           <button
             className={`auth-tab ${activeTab === "signin" ? "active" : ""}`}
             onClick={() => setActiveTab("signin")}
+            type="button"
           >
-            SIGN IN
+            Sign In
           </button>
 
           <button
             className={`auth-tab ${activeTab === "signup" ? "active" : ""}`}
             onClick={() => setActiveTab("signup")}
+            type="button"
           >
-            SIGN UP
+            Sign Up
           </button>
         </div>
 
         <div className="auth-body">
-
           {activeTab === "signin" && (
             <form onSubmit={handleLogin} className="auth-form">
-
-              <input
-                type="email"
-                placeholder="Email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                required
-              />
-
-              <div className="password-wrapper">
-                <input
-                  type={showLoginPwd ? "text" : "password"}
-                  placeholder="Password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                />
-
-                <button
-                  type="button"
-                  className="eye-btn"
-                  onClick={() => setShowLoginPwd(!showLoginPwd)}
-                >
-                  {showLoginPwd ? "Hide" : "Show"}
-                </button>
+              <div className="input-group">
+                <label>Email Address</label>
+                <div className="input-icon-wrap">
+                  <i className="fa-regular fa-envelope" />
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
 
-              <button className="primary-btn" type="submit" disabled={loading}>
-                {loading ? "Logging in..." : "GO"}
-              </button>
+              <div className="input-group">
+                <label>Password</label>
+                <div className="input-icon-wrap password-wrapper">
+                  <i className="fa-solid fa-lock" />
+                  <input
+                    type={showLoginPwd ? "text" : "password"}
+                    placeholder="Enter your password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowLoginPwd(!showLoginPwd)}
+                  >
+                    <i
+                      className={`fa-solid ${
+                        showLoginPwd ? "fa-eye-slash" : "fa-eye"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
 
               <p className="forgot-link" onClick={handleForgotPassword}>
-                Forgot Your Password?
+                Forgot your password?
               </p>
+
+              <button className="primary-btn" type="submit" disabled={loading}>
+                {loading ? "Signing In..." : "Sign In"}
+              </button>
 
               <p className="muted">
-                Don't have an account?{" "}
-                <span onClick={() => setActiveTab("signup")}>
-                  Register here
-                </span>
+                Don&apos;t have an account?{" "}
+                <span onClick={() => setActiveTab("signup")}>Register here</span>
               </p>
-
             </form>
           )}
 
           {activeTab === "signup" && (
             <form onSubmit={handleRegister} className="auth-form">
+              <div className="form-row two-cols">
+                <div className="input-group">
+                  <label>First Name</label>
+                  <div className="input-icon-wrap">
+                    <i className="fa-regular fa-user" />
+                    <input
+                      name="firstName"
+                      placeholder="First name"
+                      value={reg.firstName}
+                      onChange={onRegChange}
+                      required
+                    />
+                  </div>
+                </div>
 
-              <div className="phone-row">
-                <select
-                  name="countryCode"
-                  value={reg.countryCode}
-                  onChange={onRegChange}
-                >
-                  <option value="+977">+977</option>
-                  <option value="+91">+91</option>
-                  <option value="+1">+1</option>
-                </select>
-
-                <input
-                  name="phone"
-                  placeholder="Phone number"
-                  value={reg.phone}
-                  onChange={onRegChange}
-                  required
-                />
+                <div className="input-group">
+                  <label>Last Name</label>
+                  <div className="input-icon-wrap">
+                    <i className="fa-regular fa-user" />
+                    <input
+                      name="lastName"
+                      placeholder="Last name"
+                      value={reg.lastName}
+                      onChange={onRegChange}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={reg.email}
-                onChange={onRegChange}
-                required
-              />
+              <div className="input-group">
+                <label>Phone Number</label>
+                <div className="phone-row">
+                  <select
+                    name="countryCode"
+                    value={reg.countryCode}
+                    onChange={onRegChange}
+                  >
+                    <option value="+977">+977</option>
+                    <option value="+91">+91</option>
+                    <option value="+1">+1</option>
+                  </select>
 
-              <input
-                type="date"
-                name="dob"
-                value={reg.dob}
-                onChange={onRegChange}
-              />
-
-              <input
-                name="firstName"
-                placeholder="First Name"
-                value={reg.firstName}
-                onChange={onRegChange}
-              />
-
-              <input
-                name="lastName"
-                placeholder="Last Name"
-                value={reg.lastName}
-                onChange={onRegChange}
-              />
-
-              <div className="password-wrapper">
-                <input
-                  type={showRegPwd ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  value={reg.password}
-                  onChange={onRegChange}
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowRegPwd(!showRegPwd)}
-                >
-                  {showRegPwd ? "Hide" : "Show"}
-                </button>
+                  <div className="input-icon-wrap">
+                    <i className="fa-solid fa-phone" />
+                    <input
+                      name="phone"
+                      placeholder="Phone number"
+                      value={reg.phone}
+                      onChange={onRegChange}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
-              <label>
+              <div className="input-group">
+                <label>Email Address</label>
+                <div className="input-icon-wrap">
+                  <i className="fa-regular fa-envelope" />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    value={reg.email}
+                    onChange={onRegChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Date of Birth</label>
+                <div className="input-icon-wrap">
+                  <i className="fa-regular fa-calendar" />
+                  <input
+                    type="date"
+                    name="dob"
+                    value={reg.dob}
+                    onChange={onRegChange}
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label>Password</label>
+                <div className="input-icon-wrap password-wrapper">
+                  <i className="fa-solid fa-lock" />
+                  <input
+                    type={showRegPwd ? "text" : "password"}
+                    name="password"
+                    placeholder="Create a password"
+                    value={reg.password}
+                    onChange={onRegChange}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowRegPwd(!showRegPwd)}
+                  >
+                    <i
+                      className={`fa-solid ${
+                        showRegPwd ? "fa-eye-slash" : "fa-eye"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <label className="terms-check">
                 <input
                   type="checkbox"
                   name="termsAccepted"
                   checked={reg.termsAccepted}
                   onChange={onRegChange}
                 />
-                I agree to Terms & Conditions
+                <span>I agree to the Terms & Conditions</span>
               </label>
 
               <button className="primary-btn" type="submit">
-                Confirm
+                Create Account
               </button>
 
               <p className="muted">
                 Already have an account?{" "}
-                <span onClick={() => setActiveTab("signin")}>
-                  Login here
-                </span>
+                <span onClick={() => setActiveTab("signin")}>Login here</span>
               </p>
-
             </form>
           )}
-
         </div>
       </div>
     </div>
