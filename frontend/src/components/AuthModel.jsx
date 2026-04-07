@@ -28,6 +28,32 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
 
   const [showRegPwd, setShowRegPwd] = useState(false);
 
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const getPasswordErrors = (password) => {
+    const errors = [];
+
+    if (password.length < 8) {
+      errors.push("At least 8 characters");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("One uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("One lowercase letter");
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("One number");
+    }
+
+    return errors;
+  };
+
+  const isPasswordValid = (password) => {
+    return getPasswordErrors(password).length === 0;
+  };
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -61,6 +87,14 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    if (!isValidEmail(reg.email)) {
+      return toast.error("Please enter a valid email address");
+    }
+
+    if (!isPasswordValid(reg.password)) {
+      return toast.error("Please enter a stronger password");
+    }
 
     if (!reg.termsAccepted) {
       return toast.warning("Please accept Terms & Conditions");
@@ -181,9 +215,8 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     onClick={() => setShowLoginPwd(!showLoginPwd)}
                   >
                     <i
-                      className={`fa-solid ${
-                        showLoginPwd ? "fa-eye-slash" : "fa-eye"
-                      }`}
+                      className={`fa-solid ${showLoginPwd ? "fa-eye-slash" : "fa-eye"
+                        }`}
                     />
                   </button>
                 </div>
@@ -275,6 +308,11 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     required
                   />
                 </div>
+                {reg.email && (
+                  <p className={`field-message ${isValidEmail(reg.email) ? "success" : "error"}`}>
+                    {isValidEmail(reg.email) ? "Valid email address" : "Enter a valid email address"}
+                  </p>
+                )}
               </div>
 
               <div className="input-group">
@@ -308,9 +346,8 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     onClick={() => setShowRegPwd(!showRegPwd)}
                   >
                     <i
-                      className={`fa-solid ${
-                        showRegPwd ? "fa-eye-slash" : "fa-eye"
-                      }`}
+                      className={`fa-solid ${showRegPwd ? "fa-eye-slash" : "fa-eye"
+                        }`}
                     />
                   </button>
                 </div>
