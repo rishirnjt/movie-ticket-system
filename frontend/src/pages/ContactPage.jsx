@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./ContactPage.css";
+import { toast } from "react-toastify";
+import contactBg from "../assets/contactBg.png";
 
 const ContactPage = () => {
   const [form, setForm] = useState({
@@ -11,8 +13,6 @@ const ContactPage = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -24,16 +24,13 @@ const ContactPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setSuccessMessage("");
-    setErrorMessage("");
-
     try {
       setLoading(true);
 
       const res = await axios.post("http://localhost:5001/api/contact", form);
 
       if (res.status === 201) {
-        setSuccessMessage("Message sent successfully!");
+        toast.success("Message sent successfully!");
         setForm({
           name: "",
           email: "",
@@ -43,9 +40,7 @@ const ContactPage = () => {
       }
     } catch (err) {
       console.error("Contact form error:", err.response?.data || err.message);
-      setErrorMessage(
-        err.response?.data?.message || "Failed to send message"
-      );
+      toast.error(err.response?.data?.message || "Failed to send message");
     } finally {
       setLoading(false);
     }
@@ -53,81 +48,128 @@ const ContactPage = () => {
 
   return (
     <div className="contact-page">
-      <div className="contact-header">
-        <h1>Contact Us</h1>
-        <p>Have questions about bookings, tickets, or showtimes? Reach out to us.</p>
-      </div>
+      <section
+        className="contact-hero"
+        style={{ backgroundImage: `url(${contactBg})` }}
+      >
+        <div className="contact-hero-overlay"></div>
+        <div className="contact-hero-content">
+          <p className="hero-mini">CINEMAX</p>
+          <h1>CONTACT US</h1>
+        </div>
+      </section>
 
-      <div className="contact-container">
-        <div className="contact-info">
-          <h2>Get in Touch</h2>
-          <p><strong>Address:</strong> New Road, Pokhara, Nepal</p>
-          <p><strong>Phone:</strong> +977 9800000000</p>
-          <p><strong>Email:</strong> support@cinemax.com</p>
-          <p><strong>Hours:</strong> Sun - Sat, 9:00 AM - 10:00 PM</p>
+      <section className="contact-section">
+        <div className="contact-heading">
+          <h2>Get in touch with us</h2>
+          <p>
+            For booking support, payment issues, refund requests, showtime
+            details, or general inquiries, our team is here to help.
+          </p>
+        </div>
 
-          <div className="map-container">
-            <iframe
-              title="Cinema Location"
-              src="https://www.google.com/maps?q=New+Road+Pokhara+Nepal&output=embed"
-              loading="lazy"
-              allowFullScreen
-            />
+        <div className="contact-info-row">
+          <div className="info-box">
+            <i className="fa-solid fa-phone"></i>
+            <h3>Phone</h3>
+            <p>+977 9800000000</p>
+            <p>+977 9800000001</p>
+          </div>
+
+          <div className="info-divider"></div>
+
+          <div className="info-box">
+            <i className="fa-solid fa-location-dot"></i>
+            <h3>Address</h3>
+            <p>New Road, Pokhara</p>
+            <p>Nepal</p>
+          </div>
+
+          <div className="info-divider"></div>
+
+          <div className="info-box">
+            <i className="fa-regular fa-envelope"></i>
+            <h3>Email</h3>
+            <p>support@cinemax.com</p>
+            <p>help@cinemax.com</p>
           </div>
         </div>
 
-        <form className="contact-form" onSubmit={handleSubmit}>
-          <h2>Send a Message</h2>
+        <div className="contact-form-wrapper">
+          <h3>If you got any questions</h3>
+          <p>Please do not hesitate to send us a message.</p>
 
-          <input
-            type="text"
-            name="name"
-            placeholder="Your name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
+          <form className="contact-form" onSubmit={handleSubmit}>
+            <input
+              type="text"
+              name="name"
+              placeholder="Your Name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Your email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
+            <input
+              type="email"
+              name="email"
+              placeholder="Your Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
 
-          <input
-            type="text"
-            name="subject"
-            placeholder="Subject"
-            value={form.subject}
-            onChange={handleChange}
-            required
-          />
+            <input
+              type="text"
+              name="subject"
+              placeholder="Subject"
+              value={form.subject}
+              onChange={handleChange}
+              required
+            />
 
-          <textarea
-            name="message"
-            placeholder="Your message"
-            rows="6"
-            value={form.message}
-            onChange={handleChange}
-            required
-          />
+            <textarea
+              name="message"
+              placeholder="Message"
+              rows="7"
+              value={form.message}
+              onChange={handleChange}
+              required
+            ></textarea>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Sending..." : "Send Message"}
-          </button>
+            <button type="submit" disabled={loading}>
+              {loading ? "SENDING..." : "SEND MESSAGE"}
+            </button>
+          </form>
+        </div>
 
-          {successMessage && (
-            <p className="success-message">{successMessage}</p>
-          )}
+        <div className="contact-social">
+          <h2>Connect with us</h2>
+          <div className="social-icons">
+            <a href="#"><i className="fa-brands fa-facebook-f"></i></a>
+            <a href="#"><i className="fa-brands fa-x-twitter"></i></a>
+            <a href="#"><i className="fa-brands fa-instagram"></i></a>
+            <a href="#"><i className="fa-brands fa-youtube"></i></a>
+            <a href="#"><i className="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
+      </section>
 
-          {errorMessage && (
-            <p className="error-message">{errorMessage}</p>
-          )}
-        </form>
-      </div>
+      <section className="map-section">
+        <iframe
+          title="CinemaX Location"
+          src="https://www.google.com/maps?q=New+Road+Pokhara+Nepal&output=embed"
+          loading="lazy"
+          allowFullScreen
+        ></iframe>
+      </section>
+
+      <section className="contact-footer-banner">
+        <div className="footer-banner-overlay"></div>
+        <div className="footer-banner-content">
+          <h2>CinemaX</h2>
+          <p>Experience movies the premium way.</p>
+        </div>
+      </section>
     </div>
   );
 };

@@ -1,72 +1,163 @@
-.coming-carousel-container {
-  padding: 40px 30px;
-  background: #111;
+.coming-soon-section {
+  background: #050505;
+  padding: 70px 24px 90px;
   color: #fff;
+  overflow: hidden;
 }
 
-.section-header {
-  margin-bottom: 20px;
+.coming-soon-header {
+  text-align: center;
+  margin-bottom: 40px;
 }
 
-.section-header h2 {
-  font-size: 26px;
-  margin-bottom: 6px;
+.coming-soon-header h2 {
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  color: #f5f5f5;
 }
 
-.section-header p {
-  color: #aaa;
-  font-size: 14px;
+.coming-soon-header p {
+  font-size: 18px;
+  color: #8f8f8f;
+  margin: 0;
 }
 
-/* slide wrapper */
-.coming-slide {
-  padding: 8px;
-}
-
-.coming-card {
+.coming-soon-stage {
   position: relative;
-  border-radius: 14px;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.coming-glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 720px;
+  height: 250px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(185, 0, 0, 0.55) 0%, rgba(120, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0) 75%);
+  filter: blur(35px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.coming-slider {
+  position: relative;
+  z-index: 1;
+}
+
+.coming-slide {
+  padding: 20px 16px;
+}
+
+.coming-poster-card {
+  position: relative;
+  width: 100%;
+  max-width: 260px;
+  margin: 0 auto;
+  border-radius: 24px;
   overflow: hidden;
   cursor: pointer;
-  transition: 0.3s;
+  transform: scale(0.88);
+  opacity: 0.55;
+  transition: transform 0.45s ease, opacity 0.45s ease, box-shadow 0.45s ease;
 }
 
-.coming-card img {
+.coming-poster-card img {
   width: 100%;
-  height: 300px;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
   display: block;
-  border-radius: 14px;
-  transition: 0.3s;
+  border-radius: 24px;
 }
 
-.coming-card:hover img {
-  transform: scale(1.08);
-}
-
-/* overlay */
-.coming-overlay {
+.coming-card-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+  inset: auto 0 0 0;
+  padding: 18px 16px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.45), transparent);
+}
+.coming-soon-stage {
+  max-width: 900px; 
+  margin: 0 auto;
 }
 
-.coming-overlay h4 {
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-.coming-overlay p {
-  font-size: 13px;
-  color: #ccc;
-}
-
-/* arrows */
-.slick-prev:before,
-.slick-next:before {
+.coming-card-overlay h4 {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 600;
   color: #fff;
-  font-size: 24px;
+}
+
+.coming-card-overlay p {
+  margin: 0;
+  font-size: 14px;
+  color: #cfcfcf;
+}
+
+/* center active card */
+.slick-center .coming-poster-card {
+  transform: scale(1.08);
+  opacity: 1;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+}
+
+/* side cards slightly visible */
+.slick-slide:not(.slick-center) .coming-poster-card {
+  filter: saturate(0.85);
+}
+
+@media (max-width: 992px) {
+  .coming-soon-header h2 {
+    font-size: 44px;
+  }
+
+  .coming-glow {
+    width: 520px;
+    height: 220px;
+  }
+
+  .coming-poster-card {
+    max-width: 220px;
+  }
+
+  .coming-card-overlay h4 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 600px) {
+  .coming-soon-section {
+    padding: 55px 16px 70px;
+  }
+
+  .coming-soon-header h2 {
+    font-size: 34px;
+  }
+
+  .coming-soon-header p {
+    font-size: 15px;
+  }
+
+  .coming-glow {
+    width: 320px;
+    height: 180px;
+  }
+
+  .coming-poster-card {
+    max-width: 240px;
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+
+  .slick-center .coming-poster-card {
+    transform: scale(1);
+  }
+
+  .coming-card-overlay h4 {
+    font-size: 20px;
+  }
 }

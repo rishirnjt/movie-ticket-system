@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import Footer from "./components/Footer";
+import LoadingSpinner from "./components/common/LoadingSpinner";
 import SeatSelection from "./components/SeatSelection";
 import Dashboard from "./components/Dashboard";
 import TicketRates from "./components/TicketRates";
@@ -40,6 +41,7 @@ import AdminContacts from "./pages/AdminContacts";
 import ManageBanner from "./components/ManageBanner";
 import EditBanner from "./components/EditBanner";
 import AddBanner from "./components/AddBanner";
+import AdminPricing from "./pages/Admin/AdminPricing";
 
 import "./App.css";
 
@@ -68,7 +70,7 @@ function AppWrapper() {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/movie/:id" element={<MovieDetails />} />
         <Route path="/auth" element={<AuthModal setIsLoggedIn={setIsLoggedIn} />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/forgot-password" element={<ResetPassword />} />
         <Route path="/seats/:movieId" element={<SeatSelection />} />
         <Route path="/foods/:bookingId" element={<Foods />} />
         <Route path="/checkout/:bookingId" element={<Checkout />} />
@@ -202,7 +204,16 @@ function AppWrapper() {
             </AdminRoutes>
           }
         />
+        <Route
+          path="/admin/pricing"
+          element={
+            <AdminRoutes>
+              <AdminPricing />
+            </AdminRoutes>
+          }
+        />
       </Routes>
+          
 
       {backgroundLocation && (
         <Routes>

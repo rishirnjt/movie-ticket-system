@@ -24,7 +24,7 @@ exports.getAdminReport = async (req, res) => {
       .lean();
 
     let totalRevenue = 0;
-    let totalBookings = bookings.length;
+    const totalBookings = bookings.length;
     let confirmed = 0;
     let cancelled = 0;
 
@@ -32,7 +32,7 @@ exports.getAdminReport = async (req, res) => {
     const movieMap = {};
 
     bookings.forEach((booking) => {
-      const status = (booking.status || "").toLowerCase();
+      const status = String(booking.status || "").toLowerCase();
       const amount = Number(booking.totalPrice || 0);
 
       if (status === "confirmed") {
@@ -63,21 +63,27 @@ exports.getAdminReport = async (req, res) => {
         movieMap[movieId].revenue += amount;
       }
 
-      if (status === "cancelled") {
+      if (
+        status === "cancelled" ||
+        status === "canceled" ||
+        status === "expired"
+      ) {
         cancelled += 1;
       }
     });
 
-    const dailySales = Object.entries(dailySalesMap).map(([date, sales]) => ({
-      date,
-      sales,
-    }));
+    const dailySales = Object.entries(dailySalesMap)
+      .map(([date, sales]) => ({
+        date,
+        sales,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const topMovies = Object.values(movieMap)
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
 
-    res.json({
+    return res.status(200).json({
       totalRevenue,
       totalBookings,
       confirmed,
@@ -87,6 +93,6 @@ exports.getAdminReport = async (req, res) => {
     });
   } catch (err) {
     console.error("Report error:", err);
-    res.status(500).json({ message: "Failed to generate report" });
+    return res.status(500).json({ message: "Failed to generate report" });
   }
 };

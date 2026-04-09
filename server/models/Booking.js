@@ -1,23 +1,63 @@
 const mongoose = require("mongoose");
 
+const bookingFoodSchema = new mongoose.Schema(
+  {
+    foodId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Food",
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: String,
+      enum: ["food", "drink"],
+      default: "food",
+    },
+    image: {
+      type: String,
+      default: "",
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
+    },
+    lineTotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+  },
+  { _id: false }
+);
+
 const bookingSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
 
     movie: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Movie",
-      required: true
+      required: true,
     },
 
     showtime: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Showtime",
-      required: true
+      required: true,
     },
 
     seats: [
@@ -25,26 +65,64 @@ const bookingSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Seat",
         required: true,
-      }
+      },
     ],
-    
-    totalPrice: {
+
+    pricePerSeat: {
       type: Number,
-      required: true
+      required: true,
+      default: 0,
+      min: 0,
     },
 
-    foods: [
-      {
-        name: String,
-        price: Number,
-        quantity: { type: Number, default: 1 }
-      }
-    ],
+    seatTotal: {
+      type: Number,
+      required: true,
+      default: 0,
+      min: 0,
+    },
+
+    foodTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    totalPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    foods: [bookingFoodSchema],
+
+    pointsToRedeem: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    redeemedPoints: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    loyaltyProcessed: {
+      type: Boolean,
+      default: false,
+    },
+
+    discountAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
     status: {
       type: String,
       enum: ["holding", "confirmed", "cancelled", "expired", "completed"],
-      default: "holding"
+      default: "holding",
     },
 
     paymentStatus: {
@@ -63,11 +141,10 @@ const bookingSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Reservation expires 1 hour before showtime
     reservationExpiresAt: {
-      type: Date
-    }
-
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

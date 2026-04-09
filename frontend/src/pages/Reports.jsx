@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import {
   ResponsiveContainer,
   LineChart,
@@ -26,17 +27,13 @@ const Reports = () => {
   const COLORS = ["#0d7d26ff", "#b91c1c"];
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    fetchReport();
-  }, []);
-
-  const fetchReport = async () => {
+  const fetchReport = async (customStart = start, customEnd = end) => {
     try {
       setLoading(true);
 
       const params = {};
-      if (start) params.start = start;
-      if (end) params.end = end;
+      if (customStart) params.start = customStart;
+      if (customEnd) params.end = customEnd;
 
       const res = await axios.get("http://localhost:5001/api/reports", {
         headers: {
@@ -48,15 +45,36 @@ const Reports = () => {
       setReport(res.data);
     } catch (err) {
       console.error("Report fetch failed:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to load reports");
+      toast.error(err.response?.data?.message || "Failed to load reports");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+
+    const defaultStart = lastWeek.toISOString().split("T")[0];
+    const defaultEnd = today.toISOString().split("T")[0];
+
+    setStart(defaultStart);
+    setEnd(defaultEnd);
+
+    fetchReport(defaultStart, defaultEnd);
+  }, []);
+
   const handleReset = async () => {
-    setStart("");
-    setEnd("");
+    const today = new Date();
+    const lastWeek = new Date();
+    lastWeek.setDate(today.getDate() - 7);
+
+    const defaultStart = lastWeek.toISOString().split("T")[0];
+    const defaultEnd = today.toISOString().split("T")[0];
+
+    setStart(defaultStart);
+    setEnd(defaultEnd);
 
     try {
       setLoading(true);
@@ -64,14 +82,65 @@ const Reports = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        params: {
+          start: defaultStart,
+          end: defaultEnd,
+        },
       });
       setReport(res.data);
+      toast.success("Report reset successfully");
     } catch (err) {
       console.error("Report reset failed:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Failed to reset reports");
+      toast.error(err.response?.data?.message || "Failed to reset reports");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExport = () => {
+    if (!report) {
+      toast.warning("No report data to export");
+      return;
+    }
+
+    const rows = [
+      ["Metric", "Value"],
+      ["Total Revenue", report.totalRevenue || 0],
+      ["Total Bookings", report.totalBookings || 0],
+      ["Confirmed", report.confirmed || 0],
+      ["Cancelled", report.cancelled || 0],
+      [
+        "Revenue Per Booking",
+        report.totalBookings
+          ? Math.round((report.totalRevenue || 0) / report.totalBookings)
+          : 0,
+      ],
+      [],
+      ["Daily Sales"],
+      ["Date", "Sales"],
+      ...((report.dailySales || []).map((item) => [item.date, item.sales])),
+      [],
+      ["Top Movies"],
+      ["Title", "Bookings", "Revenue"],
+      ...((report.topMovies || []).map((movie) => [
+        movie.title,
+        movie.bookings,
+        movie.revenue,
+      ])),
+    ];
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      rows.map((row) => row.join(",")).join("\n");
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI(csvContent));
+    link.setAttribute("download", "cinemax-report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success("CSV exported successfully");
   };
 
   const bookingStatusData = report
@@ -102,7 +171,9 @@ const Reports = () => {
           <div className="hero-mini-stats">
             <div className="hero-stat">
               <span>Total Revenue</span>
-              <strong>Rs. {(report?.totalRevenue || 0).toLocaleString()}</strong>
+              <strong>
+                Rs. {(report?.totalRevenue || 0).toLocaleString()}
+              </strong>
             </div>
             <div className="hero-stat">
               <span>Bookings</span>
@@ -131,19 +202,29 @@ const Reports = () => {
           </div>
 
           <div className="filter-actions">
-            <button className="apply-btn" onClick={fetchReport}>
+            <button className="apply-btn" onClick={() => fetchReport()}>
               Apply Filter
             </button>
             <button className="reset-btn" onClick={handleReset}>
               Reset
             </button>
+            <button className="export-btn" onClick={handleExport}>
+              <i className="fa-solid fa-download"></i> Export CSV
+            </button>
           </div>
         </div>
 
         {loading ? (
-          <div className="report-loading">Loading reports...</div>
+          <div className="report-loading">
+            <i className="fa-solid fa-spinner fa-spin"></i>
+            <p>Generating report...</p>
+          </div>
         ) : !report ? (
-          <div className="report-empty">No report data found.</div>
+          <div className="report-empty">
+            <i className="fa-solid fa-chart-line"></i>
+            <h4>No Data Available</h4>
+            <p>Try adjusting your filters or date range.</p>
+          </div>
         ) : (
           <>
             <div className="report-cards">
@@ -232,6 +313,17 @@ const Reports = () => {
                           ((report.cancelled || 0) / report.totalBookings) * 100
                         )}% cancelled`
                       : "0% cancelled"}
+                  </strong>
+                </div>
+
+                <div className="mini-summary-item">
+                  <span>Revenue / Booking</span>
+                  <strong>
+                    {report.totalBookings
+                      ? `Rs. ${Math.round(
+                          (report.totalRevenue || 0) / report.totalBookings
+                        ).toLocaleString()}`
+                      : "Rs. 0"}
                   </strong>
                 </div>
               </div>
@@ -334,7 +426,9 @@ const Reports = () => {
 
               {!report.topMovies || report.topMovies.length === 0 ? (
                 <div className="report-empty">
-                  No movie performance data found.
+                  <i className="fa-solid fa-film"></i>
+                  <h4>No Movie Data Found</h4>
+                  <p>No movie performance data found for this range.</p>
                 </div>
               ) : (
                 <div className="table-wrap">

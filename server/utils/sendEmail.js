@@ -114,35 +114,77 @@ const sendPurchaseEmail = async (
   console.log("Purchase email sent with QR e-ticket");
 };
 
-// Password Reset Email
-const sendResetPasswordEmail = async (userEmail, resetUrl) => {
+//Password Reset OTP Email
+const sendResetOtpEmail = async (userEmail, firstName, otp) => {
   await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+    from : process.env.EMAIL_USER,
     to: userEmail,
-    subject: "Password Reset Request - Cinemax",
-    html: `
-      <h2>Password Reset</h2>
-      <p>You requested to reset your password.</p>
-      <p>Click the link below to set a new password:</p>
+    subject: "Password Reset OTP - Cinemax",
+     html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #222;">
+        <h2 style="color: #e50914; margin-bottom: 10px;">Password Reset Request</h2>
+        
+        <p>Hello ${firstName || "User"},</p>
+        
+        <p>We received a request to reset your Cinemax account password.</p>
+        
+        <p>Please use the OTP below to continue:</p>
 
-      <a href="${resetUrl}" 
-         style="display:inline-block;
-                padding:10px 20px;
-                background:#e50914;
-                color:white;
-                text-decoration:none;
-                border-radius:5px;">
-        Reset Password
-      </a>
+        <div style="
+          margin: 20px 0;
+          padding: 15px;
+          background: #f5f5f5;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          text-align: center;
+          font-size: 28px;
+          font-weight: bold;
+          letter-spacing: 6px;
+          color: #e50914;
+        ">
+          ${otp}
+        </div>
 
-      <p>This link will expire in 10 minutes.</p>
-      <p>If you did not request this, please ignore this email.</p>
+        <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
 
-      <p>- Cinemax Team</p>
-    `
+        <p style="margin-top: 30px;">- Cinemax Team</p>
+      </div>
+    `,
   });
 
-  console.log("Password reset email sent");
+  console.log("Password reset OTP email sent");
 };
 
-module.exports = { sendReservationEmail, sendPurchaseEmail, sendResetPasswordEmail };
+// Password Reset Email
+// const sendResetPasswordEmail = async (userEmail, resetUrl) => {
+//   await transporter.sendMail({
+//     from: process.env.EMAIL_USER,
+//     to: userEmail,
+//     subject: "Password Reset Request - Cinemax",
+//     html: `
+//       <h2>Password Reset</h2>
+//       <p>You requested to reset your password.</p>
+//       <p>Click the link below to set a new password:</p>
+
+//       <a href="${resetUrl}" 
+//          style="display:inline-block;
+//                 padding:10px 20px;
+//                 background:#e50914;
+//                 color:white;
+//                 text-decoration:none;
+//                 border-radius:5px;">
+//         Reset Password
+//       </a>
+
+//       <p>This link will expire in 10 minutes.</p>
+//       <p>If you did not request this, please ignore this email.</p>
+
+//       <p>- Cinemax Team</p>
+//     `
+//   });
+
+//   console.log("Password reset email sent");
+// };
+
+module.exports = { sendReservationEmail, sendPurchaseEmail, sendResetOtpEmail };

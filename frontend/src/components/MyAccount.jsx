@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./MyAccount.css";
 import profileImg from "../assets/profileIcon.png";
 import axios from "axios";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:5001";
 
@@ -17,7 +19,16 @@ const MyAccount = () => {
   const [history, setHistory] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [expandedRow, setExpandedRow] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [message, setMessage] = useState("");
+
+  const [loyalty, setLoyalty] = useState({
+    points: 0,
+    tier: "Bronze",
+    freePopcornCount: 0,
+    ticketPurchasedCount: 0,
+  });
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -44,39 +55,42 @@ const MyAccount = () => {
   };
 
   const fetchData = async () => {
+    const startTime = Date.now(); // ⏱ start timer
+
     try {
       setLoading(true);
+
       const headers = getAuthHeaders();
 
-      const [userRes, reservationsRes, ticketsRes, historyRes] =
+      const [userRes, reservationsRes, ticketsRes, historyRes, loyaltyRes] =
         await Promise.all([
           axios.get(`${API_URL}/api/users/me`, { headers }),
           axios.get(`${API_URL}/api/bookings/my-reservations`, { headers }),
           axios.get(`${API_URL}/api/tickets/mytickets`, { headers }),
           axios.get(`${API_URL}/api/tickets/myhistory`, { headers }),
+          axios.get(`${API_URL}/api/users/loyalty`, { headers }),
         ]);
 
       const userData = userRes.data;
       setUser(userData);
-      setName(
-        `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
-      );
+      setName(`${userData.firstName || ""} ${userData.lastName || ""}`.trim());
       setPhone(userData.phone || "");
 
-      setReservations(
-        Array.isArray(reservationsRes.data) ? reservationsRes.data : []
-      );
-      setTickets(
-        Array.isArray(ticketsRes.data?.tickets) ? ticketsRes.data.tickets : []
-      );
-      setHistory(
-        Array.isArray(historyRes.data?.tickets) ? historyRes.data.tickets : []
-      );
+      setReservations(Array.isArray(reservationsRes.data) ? reservationsRes.data : []);
+      setTickets(Array.isArray(ticketsRes.data?.tickets) ? ticketsRes.data.tickets : []);
+      setHistory(Array.isArray(historyRes.data?.tickets) ? historyRes.data.tickets : []);
+      setLoyalty(loyaltyRes.data);
+
     } catch (err) {
       console.error("Failed to fetch account data:", err);
-      setMessage("Failed to load account data.");
+      toast.error("Failed to load account data");
     } finally {
-      setLoading(false);
+      const elapsed = Date.now() - startTime;
+      const minTime = 700; 
+
+      setTimeout(() => {
+        setLoading(false);
+      }, Math.max(minTime - elapsed, 0));
     }
   };
 
@@ -202,7 +216,7 @@ const MyAccount = () => {
       const cancelSeats = selectedSeats[reservationId] || [];
 
       if (cancelSeats.length === 0) {
-        alert("Please select at least one seat to cancel.");
+        toast.warning("Please select at least one seat to cancel.");
         return;
       }
 
@@ -224,10 +238,12 @@ const MyAccount = () => {
         return updated;
       });
 
-      alert("Booking cancelled successfully!");
+      toast.success("Booking cancelled successfully!");
     } catch (err) {
       console.error("Failed to cancel reservation:", err);
-      alert("Failed to cancel booking. Try again!");
+      toast.error(
+        err.response?.data?.message || "Failed to cancel booking. Try again!"
+      );
     }
   };
 
@@ -241,7 +257,7 @@ const MyAccount = () => {
         { headers }
       );
 
-      alert("Ticket purchased successfully!");
+      toast.success("Ticket purchased successfully!");
 
       setReservations((prev) =>
         prev.filter((reservation) => reservation._id !== reservationId)
@@ -256,7 +272,7 @@ const MyAccount = () => {
       );
     } catch (err) {
       console.error("Failed to purchase ticket:", err);
-      alert("Failed to purchase ticket");
+      toast.error(err.response?.data?.message || "Failed to purchase ticket");
     }
   };
 
@@ -267,30 +283,46 @@ const MyAccount = () => {
       setSavingProfile(true);
       setMessage("");
 
-      const headers = {
-        ...getAuthHeaders(),
-        "Content-Type": "multipart/form-data",
-      };
-
-      const [firstName = "", ...rest] = name.trim().split("");
-      const lastName = rest.join(" ");
+      const fullName = name.trim().replace(/\s+/g, " ");
+      const parts = fullName.split(" ");
+      const firstName = parts[0] || "";
+      const lastName = parts.slice(1).join(" ");
 
       const formData = new FormData();
-      formData.append("name", name);
+      formData.append("firstName", firstName);
+      formData.append("lastName", lastName);
       formData.append("phone", phone);
-      if (profilePic) formData.append("profilePic", profilePic);
 
-      const res = await axios.put(
-        `${API_URL}/api/users/update`,
-        formData,
-        { headers }
+      if (profilePic) {
+        formData.append("profilePic", profilePic);
+      }
+
+      const res = await axios.put(`${API_URL}/api/users/update`, formData, {
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      const updatedUser = res.data.user || res.data;
+
+      setUser(updatedUser);
+      setName(
+        `${updatedUser.firstName || ""} ${updatedUser.lastName || ""}`.trim()
       );
+      setPhone(updatedUser.phone || "");
 
-      setUser(res.data.user);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      setProfilePic(null);
       setMessage("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     } catch (err) {
       console.error("Failed to update profile:", err);
-      setMessage("Failed to update profile.");
+      const errorMessage =
+        err.response?.data?.message || "Failed to update profile.";
+      setMessage(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setSavingProfile(false);
     }
@@ -393,7 +425,7 @@ const MyAccount = () => {
       {items.map((t) => {
         const showtimeObj = t.showtimeId || t.showtime;
         const seatLabels = getSeatLabels(t);
-        const isCompleted = isHistory; 
+        const isCompleted = isHistory;
 
         return (
           <div
@@ -420,7 +452,10 @@ const MyAccount = () => {
                 </span>
               </div>
 
-              <div className={`ticket-status ${isCompleted ? "completed" : "upcoming"}`}>
+              <div
+                className={`ticket-status ${isCompleted ? "completed" : "upcoming"
+                  }`}
+              >
                 {isCompleted ? "Completed" : "Upcoming"}
               </div>
 
@@ -465,22 +500,87 @@ const MyAccount = () => {
     </div>
   );
 
-  const renderHistory = () => (
-    <div className="section-block">
-      <div className="section-header">
-        <h2>My History</h2>
-        <p>Your past bookings and completed shows.</p>
-      </div>
+  const renderHistory = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedHistory = history.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
 
-      {history.length === 0 ? (
-        <div className="empty-state">
-          <p>No past tickets.</p>
+    const totalPages = Math.ceil(history.length / itemsPerPage);
+
+    return (
+      <div className="section-block">
+        <div className="section-header">
+          <h2>My History</h2>
+          <p>Your past bookings and completed shows.</p>
         </div>
-      ) : (
-        renderTicketCards(history, true)
-      )}
-    </div>
-  );
+
+        {history.length === 0 ? (
+          <div className="empty-state">
+            <p>No past tickets.</p>
+          </div>
+        ) : (
+          <>
+            <table className="table table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Movie</th>
+                  <th>Showtime</th>
+                  <th>Screen</th>
+                  <th>Seats</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {paginatedHistory.map((t) => {
+                  const showtimeObj = t.showtimeId || t.showtime;
+                  const seatLabels = getSeatLabels(t);
+
+                  return (
+                    <tr key={t._id}>
+                      <td>{t.movieId?.title || t.movie?.title}</td>
+                      <td>{formatShowtime(showtimeObj)}</td>
+                      <td>{getScreenName(showtimeObj)}</td>
+                      <td>{seatLabels.join(", ")}</td>
+                      <td>Rs. {t.totalPrice ?? 0}</td>
+                      <td>
+                        <span className="badge bg-secondary">Completed</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            <div className="pagination-container mt-3 d-flex justify-content-center align-items-center gap-2">
+              <button
+                className="btn btn-sm btn-secondary"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+              >
+                Prev
+              </button>
+
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                className="btn btn-sm btn-secondary"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   const renderSettings = () => {
     const profilePreview = profilePic
@@ -547,7 +647,11 @@ const MyAccount = () => {
 
           {message && <p className="update-message">{message}</p>}
 
-          <button type="submit" className="update-btn" disabled={savingProfile}>
+          <button
+            type="submit"
+            className="update-btn"
+            disabled={savingProfile}
+          >
             {savingProfile ? "Saving Changes..." : "Save Changes"}
           </button>
         </form>
@@ -571,11 +675,7 @@ const MyAccount = () => {
   };
 
   if (loading) {
-    return (
-      <div className="account-container">
-        <div className="account-loading">Loading your account...</div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading your account..." fullScreen />;
   }
 
   return (
@@ -619,6 +719,46 @@ const MyAccount = () => {
           >
             Account Settings
           </button>
+
+          <div className="loyalty-sidebar">
+            <h4>
+              <i className="fa-solid fa-gift"></i> Rewards
+            </h4>
+
+            <div className="loyalty-points">
+              <span>
+                <i className="fa-solid fa-coins"></i> Points
+              </span>
+              <strong>{loyalty.points}</strong>
+            </div>
+
+            <div className={`tier-badge tier-${loyalty.tier?.toLowerCase()}`}>
+              <i className="fa-solid fa-crown"></i> {loyalty.tier}
+            </div>
+
+            <div className="loyalty-mini-stats">
+              <p>
+                <i className="fa-solid fa-ticket"></i> Popcorn:{" "}
+                {loyalty.freePopcornCount}
+              </p>
+              <p>
+                <i className="fa-solid fa-ticket"></i>{" "}
+                {loyalty.ticketPurchasedCount}/5 tickets
+              </p>
+            </div>
+
+            <div className="loyalty-progress">
+              <div
+                className="loyalty-progress-fill"
+                style={{
+                  width: `${Math.min(
+                    ((loyalty.ticketPurchasedCount || 0) / 5) * 100,
+                    100
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
         </nav>
       </aside>
 

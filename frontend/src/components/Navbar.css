@@ -144,36 +144,50 @@
   box-shadow: 0 6px 15px rgba(255,255,255,0.35);
 }
 
-/* ================= PROFILE ================= */
 .profile-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  min-width: 220px; /* keeps the area steady */
+  flex-shrink: 0;
 }
 
 .profile-section {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.profile-section:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .profile-icon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 2px solid #fff;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .profile-name {
   color: #fff;
   font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-/* ✅ FIXED DROPDOWN */
+/* dropdown */
 .dropdown {
   position: absolute;
-  top: 55px;
+  top: calc(100% + 12px);
   right: 0;
   width: 180px;
   background: #111;
@@ -181,15 +195,14 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   animation: fadeSlide 0.2s ease-in-out;
-  z-index: 1000;
+  z-index: 2000;
 }
 
-/* Arrow */
 .dropdown::before {
   content: "";
   position: absolute;
-  top: -8px;
-  right: 20px;
+  top: -7px;
+  right: 18px;
   width: 14px;
   height: 14px;
   background: #111;

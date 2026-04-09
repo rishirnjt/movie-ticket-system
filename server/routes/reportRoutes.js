@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
-const reportController = require("../controllers/reportController");
+const { getAdminReport } = require("../controllers/reportController");
 
-router.get("/", protect(["Admin"]), reportController.getAdminReport);
+router.get("/", protect(["Admin"]), getAdminReport);
 
 module.exports = router;

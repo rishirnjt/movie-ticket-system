@@ -1,14 +1,4 @@
-/* * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  background-color: #101010;
-  color: white;
-} */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap");
 
 /* ===== GLOBAL RESET ===== */
 *,
@@ -21,20 +11,30 @@ body {
 
 /* ===== ROOT ===== */
 html,
-body {
-  height: 100%;
+body,
+#root {
+  min-height: 100%;
 }
 
 /* ===== BODY ===== */
 body {
   font-family: "Inter", "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  background:
-    radial-gradient(circle at top left, #2b0000, #0a0a0a 65%);
+  background: radial-gradient(circle at top left, #2b0000, #0a0a0a 65%);
   color: #f5f5f5;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* ===== HEADINGS ===== */
+h1,
+h2,
+h3,
+.section-title,
+.hero-title {
+  font-family: "Playfair Display", serif;
+  letter-spacing: 0.4px;
 }
 
 /* ===== LINKS ===== */
@@ -55,6 +55,12 @@ input,
 textarea,
 select {
   font-family: inherit;
+}
+
+/* ===== IMAGES ===== */
+img {
+  max-width: 100%;
+  display: block;
 }
 
 /* ===== SCROLLBAR (DARK RED) ===== */

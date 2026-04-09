@@ -10,7 +10,6 @@ import axios from "axios";
 import "./SeatSelection.css";
 
 const API_URL = "http://localhost:5001";
-const SEAT_PRICE = 300;
 
 const TimerDisplay = memo(function TimerDisplay({
   expiresAt,
@@ -50,12 +49,12 @@ const TimerDisplay = memo(function TimerDisplay({
   if (timeLeft === null) return null;
 
   if (timeLeft === 0) {
-    return <div className="timer-expired">❌ Time expired. Seats released.</div>;
+    return <div className="timer-expired">Time expired. Seats released.</div>;
   }
 
   return (
     <div className="timer-box">
-      <span>⏳ Time Remaining</span>
+      <span>Time Remaining</span>
       <strong>
         {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
       </strong>
@@ -72,16 +71,17 @@ const SeatItem = memo(function SeatItem({
 }) {
   const seatClass = isSold
     ? "sold"
-    : isHeld
-    ? "held"
     : isSelected
     ? "selected"
+    : isHeld
+    ? "held"
     : "available";
 
   const handleClick = useCallback(() => {
-    if (isSold || isHeld) return;
-    onSeatClick(seat._id);
-  }, [isSold, isHeld, onSeatClick, seat._id]);
+    if (isSold) return;
+    if (isHeld && !isSelected) return;
+    onSeatClick(String(seat._id));
+  }, [isSold, isHeld, isSelected, onSeatClick, seat._id]);
 
   return (
     <div className={`seat ${seatClass}`} onClick={handleClick}>
@@ -104,7 +104,7 @@ const SeatRow = memo(function SeatRow({
 
       <div className="row-seats">
         {rowSeats.map((seat) => {
-          const seatId = seat._id;
+          const seatId = String(seat._id);
 
           return (
             <SeatItem
@@ -175,9 +175,20 @@ const SeatSelection = () => {
   const [buyPopup, setBuyPopup] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const selectedSeatSet = useMemo(() => new Set(selectedSeats), [selectedSeats]);
-  const soldSeatSet = useMemo(() => new Set(soldSeats), [soldSeats]);
-  const lockedSeatSet = useMemo(() => new Set(lockedSeats), [lockedSeats]);
+  const [seatPrice, setSeatPrice] = useState(0);
+
+  const selectedSeatSet = useMemo(
+    () => new Set(selectedSeats.map(String)),
+    [selectedSeats]
+  );
+  const soldSeatSet = useMemo(
+    () => new Set(soldSeats.map(String)),
+    [soldSeats]
+  );
+  const lockedSeatSet = useMemo(
+    () => new Set(lockedSeats.map(String)),
+    [lockedSeats]
+  );
 
   const groupedSeats = useMemo(() => {
     const grouped = {};
@@ -219,7 +230,7 @@ const SeatSelection = () => {
 
   const selectedSeatLabels = useMemo(() => {
     return seats
-      .filter((seat) => selectedSeatSet.has(seat._id))
+      .filter((seat) => selectedSeatSet.has(String(seat._id)))
       .map((seat) => seat.label || `${seat.row}${seat.number}`);
   }, [seats, selectedSeatSet]);
 
@@ -230,17 +241,17 @@ const SeatSelection = () => {
   const popupSeatLabelsText = useMemo(() => {
     if (purchaseSeats.length === 0) return "";
 
-    const purchaseSeatSet = new Set(purchaseSeats);
+    const purchaseSeatSet = new Set(purchaseSeats.map(String));
 
     return seats
-      .filter((seat) => purchaseSeatSet.has(seat._id))
+      .filter((seat) => purchaseSeatSet.has(String(seat._id)))
       .map((seat) => seat.label || `${seat.row}${seat.number}`)
       .join(", ");
   }, [seats, purchaseSeats]);
 
   const totalPrice = useMemo(
-    () => selectedSeats.length * SEAT_PRICE,
-    [selectedSeats.length]
+    () => selectedSeats.length * seatPrice,
+    [selectedSeats.length, seatPrice]
   );
 
   const fetchScreenSeats = useCallback(async () => {
@@ -260,6 +271,31 @@ const SeatSelection = () => {
     }
   }, [selectedShowtime]);
 
+  const fetchSeatPrice = useCallback(async () => {
+    if (!selectedShowtime?.startTime) return;
+
+    try {
+      const res = await axios.get(`${API_URL}/api/pricing`);
+      const pricing = res.data;
+
+      const day = new Date(selectedShowtime.startTime).getDay();
+
+      let price = pricing.normalPrice;
+
+      if (
+        pricing.midWeekDiscountEnabled &&
+        pricing.midWeekDays.includes(day)
+      ) {
+        price = pricing.normalPrice * (1 - pricing.discountPercentage / 100);
+      }
+
+      setSeatPrice(Math.round(price));
+    } catch (err) {
+      console.error("Failed to fetch pricing:", err);
+      setSeatPrice(300);
+    }
+  }, [selectedShowtime]);
+
   const refreshSeatStatus = useCallback(async () => {
     if (!selectedShowtime?._id || !movieId) return;
 
@@ -271,8 +307,8 @@ const SeatSelection = () => {
         }
       );
 
-      setSoldSeats(res.data.soldSeats || []);
-      setLockedSeats(res.data.heldSeats || []);
+      setSoldSeats((res.data.soldSeats || []).map(String));
+      setLockedSeats((res.data.heldSeats || []).map(String));
     } catch (err) {
       console.error(
         "Failed to refresh seat status:",
@@ -288,6 +324,7 @@ const SeatSelection = () => {
         setMovie(movieRes.data);
 
         await fetchScreenSeats();
+        await fetchSeatPrice();
         await refreshSeatStatus();
       } catch (err) {
         console.error("Fetch error:", err.response?.data || err.message);
@@ -295,10 +332,12 @@ const SeatSelection = () => {
     };
 
     fetchData();
-  }, [movieId, fetchScreenSeats, refreshSeatStatus]);
+  }, [movieId, fetchScreenSeats, fetchSeatPrice, refreshSeatStatus]);
 
   const handleSeatClick = useCallback(
     async (seatId) => {
+      const normalizedSeatId = String(seatId);
+
       if (!token) {
         alert("You must be logged in");
         return;
@@ -309,27 +348,29 @@ const SeatSelection = () => {
         return;
       }
 
-      if (soldSeatSet.has(seatId) || lockedSeatSet.has(seatId)) {
+      if (soldSeatSet.has(normalizedSeatId)) {
+        return;
+      }
+
+      if (lockedSeatSet.has(normalizedSeatId) && !selectedSeatSet.has(normalizedSeatId)) {
         return;
       }
 
       try {
-        if (selectedSeatSet.has(seatId)) {
+        if (selectedSeatSet.has(normalizedSeatId)) {
           await axios.delete(`${API_URL}/api/seat-locks/unlock`, {
             headers: { Authorization: `Bearer ${token}` },
             data: {
               showtimeId: selectedShowtime._id,
-              seatId,
+              seatId: normalizedSeatId,
             },
           });
 
           setSelectedSeats((prev) => {
-            const updated = prev.filter((id) => id !== seatId);
-
+            const updated = prev.filter((id) => String(id) !== normalizedSeatId);
             if (updated.length === 0) {
               setExpiresAt(null);
             }
-
             return updated;
           });
         } else {
@@ -337,24 +378,26 @@ const SeatSelection = () => {
             `${API_URL}/api/seat-locks/lock`,
             {
               showtimeId: selectedShowtime._id,
-              seatId,
+              seatId: normalizedSeatId,
             },
             {
               headers: { Authorization: `Bearer ${token}` },
             }
           );
 
-          setSelectedSeats((prev) => [...prev, seatId]);
+          setSelectedSeats((prev) => [...prev, normalizedSeatId]);
 
           if (res.data?.expiresAt) {
             setExpiresAt(new Date(res.data.expiresAt).getTime());
           }
         }
+
+        await refreshSeatStatus();
       } catch (err) {
         alert(err.response?.data?.message || "Seat action failed");
       }
     },
-    [token, soldSeatSet, lockedSeatSet, selectedSeatSet, selectedShowtime]
+    [token, soldSeatSet, lockedSeatSet, selectedSeatSet, selectedShowtime, refreshSeatStatus]
   );
 
   const handleBook = useCallback(async () => {
@@ -474,7 +517,7 @@ const SeatSelection = () => {
 
       setBookingId(booking._id);
       setPurchaseSummary({
-        totalPrice: booking.totalPrice ?? purchaseSeats.length * SEAT_PRICE,
+        totalPrice: booking.totalPrice ?? purchaseSeats.length * seatPrice,
         seats: booking.seats ?? purchaseSeats,
       });
 
@@ -497,6 +540,7 @@ const SeatSelection = () => {
     selectedShowtime,
     refreshSeatStatus,
     navigate,
+    seatPrice,
   ]);
 
   return (
@@ -556,7 +600,14 @@ const SeatSelection = () => {
 
               <div className="summary-line total-line">
                 <span>Total</span>
-                <strong>NPR {totalPrice}</strong>
+                <strong>
+                  NPR {totalPrice}
+                  {seatPrice > 0 && (
+                    <span style={{ fontSize: "12px", color: "#aaa" }}>
+                      {" "}({seatPrice}/seat)
+                    </span>
+                  )}
+                </strong>
               </div>
             </div>
 
@@ -570,12 +621,12 @@ const SeatSelection = () => {
                 <span>Selected</span>
               </div>
               <div className="legend-item">
-                <div className="legend-box legend-booked" />
+                <div className="legend-box legend-held" />
                 <span>Booked</span>
               </div>
               <div className="legend-item">
-                <div className="legend-box legend-bought" />
-                <span>Sold</span>
+                <div className="legend-box legend-sold" />
+                <span>Bought</span>
               </div>
             </div>
 
@@ -613,7 +664,7 @@ const SeatSelection = () => {
             <p>Seats: {popupSeatLabelsText}</p>
             <p>
               Total: NPR{" "}
-              {purchaseSummary?.totalPrice || purchaseSeats.length * SEAT_PRICE}
+              {purchaseSummary?.totalPrice || purchaseSeats.length * seatPrice}
             </p>
 
             <div className="terms">

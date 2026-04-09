@@ -30,6 +30,9 @@ const Checkout = () => {
   const [isPaying, setIsPaying] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [loyalty, setLoyalty] = useState(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+
   const token = localStorage.getItem("token");
   const API_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
@@ -59,6 +62,26 @@ const Checkout = () => {
     }
   }, [API_URL, bookingId, token]);
 
+  useEffect(() => {
+    const fetchLoyalty = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/users/loyalty`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setLoyalty(res.data);
+      } catch (err) {
+        console.error("Failed to fetch loyalty:", err.response?.data || err.message);
+      }
+    };
+
+    if (token) {
+      fetchLoyalty();
+    }
+  }, [API_URL, token]);
+
   const movie = booking?.movie || {};
   const showtime = booking?.showtime || {};
   const seats = booking?.seats || [];
@@ -69,6 +92,8 @@ const Checkout = () => {
 
     if (booking.ticketTotal != null) return Number(booking.ticketTotal);
     if (booking.seatTotal != null) return Number(booking.seatTotal);
+
+    if (booking.seats?.length) return booking.seats.length * 300;
 
     return 0;
   }, [booking]);
@@ -87,6 +112,37 @@ const Checkout = () => {
     return ticketSubtotal + foodSubtotal;
   }, [booking, ticketSubtotal, foodSubtotal]);
 
+  const availablePoints = loyalty?.points || 0;
+  const maxRedeemableByPoints = Math.floor(availablePoints / 50) * 50;
+  const maxRedeemableByPrice = Math.floor((total * 0.5) / 50) * 50;
+  const maxRedeemablePoints = Math.min(maxRedeemableByPoints, maxRedeemableByPrice);
+
+  const redeemOptions = useMemo(() => {
+    const options = [0];
+    for (let value = 50; value <= maxRedeemablePoints; value += 50) {
+      options.push(value);
+    }
+    return options;
+  }, [maxRedeemablePoints]);
+
+  useEffect(() => {
+    if (pointsToRedeem > maxRedeemablePoints) {
+      setPointsToRedeem(0);
+    }
+  }, [pointsToRedeem, maxRedeemablePoints]);
+
+  const finalTotal = useMemo(() => {
+    return Math.max(0, total - pointsToRedeem);
+  }, [total, pointsToRedeem]);
+
+  const pointsUserWillEarn = useMemo(() => {
+    let points = 10;
+    if (foods.length > 0) {
+      points += 5;
+    }
+    return points;
+  }, [foods]);
+
   const handlePayment = async () => {
     try {
       setIsPaying(true);
@@ -96,6 +152,7 @@ const Checkout = () => {
         {
           bookingId,
           gateway: selectedGateway,
+          pointsToRedeem,
         },
         {
           headers: {
@@ -268,18 +325,60 @@ const Checkout = () => {
 
             <div className="summary-divider" />
 
+            <div className="loyalty-section">
+              <h4>🎁 Loyalty Points</h4>
+              <p>You have: {availablePoints} points</p>
+
+              <select
+                value={pointsToRedeem}
+                onChange={(e) => setPointsToRedeem(Number(e.target.value))}
+                className="loyalty-select"
+              >
+                <option value={0}>Do not use points</option>
+                {redeemOptions
+                  .filter((value) => value !== 0)
+                  .map((value) => (
+                    <option key={value} value={value}>
+                      Use {value} points (Rs. {value})
+                    </option>
+                  ))}
+              </select>
+
+              <p className="muted-text">
+                50 points = Rs. 50 discount
+              </p>
+
+              <p className="muted-text">
+                You will earn {pointsUserWillEarn} points from this booking
+              </p>
+            </div>
+
+            <div className="summary-divider" />
+
+            <div className="summary-row">
+              <span>Subtotal</span>
+              <span>NPR {total}</span>
+            </div>
+
+            <div className="summary-row">
+              <span>Discount</span>
+              <span>- NPR {pointsToRedeem}</span>
+            </div>
+
+            <div className="summary-divider" />
+
             <div className="summary-row total-row">
               <span>Total</span>
-              <span>NPR {total}</span>
+              <span>NPR {finalTotal}</span>
             </div>
 
             <button
               type="button"
               className="pay-btn"
               onClick={handlePayment}
-              disabled={isPaying || total <= 0}
+              disabled={isPaying || finalTotal <= 0}
             >
-              {isPaying ? "Processing..." : `Pay NPR ${total}`}
+              {isPaying ? "Processing..." : `Pay NPR ${finalTotal}`}
             </button>
 
             <p className="secure-note">

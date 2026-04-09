@@ -1,9 +1,12 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto");
 const User = require("../models/User");
 const UserType = require("../models/UserType");
-const { sendResetPasswordEmail } = require("../utils/sendEmail");
+const { sendResetOtpEmail } = require("../utils/sendEmail");
+
+const generateOtp = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 const isValidEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -117,40 +120,67 @@ exports.login = async (req, res) => {
     }
 };
 
-// Forgot Password
 exports.forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
+
         const normalizedEmail = email?.trim().toLowerCase();
 
         const user = await User.findOne({ email: normalizedEmail });
 
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.json({
+                message: "If account exists, OTP sent",
+            });
         }
 
-        const resetToken = crypto.randomBytes(32).toString("hex");
+        const otp = generateOtp();
 
-        user.resetPasswordToken = crypto
-            .createHash("sha256")
-            .update(resetToken)
-            .digest("hex");
-
-        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+        user.resetPasswordOtp = otp;
+        user.resetPasswordOtpExpires = Date.now() + 10 * 60 * 1000;
+        user.resetPasswordOtpVerified = false;
 
         await user.save();
 
-        const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
-        await sendResetPasswordEmail(user.email, resetUrl);
+        await sendResetOtpEmail(user.email, user.firstName, otp);
 
-        console.log("Reset URL:", resetUrl);
-
-        return res.json({
-            message: "Password reset link generated",
-            resetUrl,
-        });
+        return res.json({ message: "OTP sent" });
     } catch (error) {
         console.error("Forgot password error:", error);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
+//verify OTP
+exports.verifyOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        const user = await User.findOne({ email: normalizedEmail });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid request" });
+        }
+
+        if (!user.resetPasswordOtp || !user.resetPasswordOtpExpires) {
+            return res.status(400).json({ message: "No OTP request found" });
+        }
+
+        if (user.resetPasswordOtp !== otp) {
+            return res.status(400).json({ message: "Invalid OTP" });
+        }
+
+        if (user.resetPasswordOtpExpires < Date.now()) {
+            return res.status(400).json({ message: "OTP expired" });
+        }
+
+        user.resetPasswordOtpVerified = true;
+        await user.save();
+
+        return res.json({ message: "OTP verified" });
+    } catch (error) {
+        console.error("Verify OTP error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };
@@ -158,23 +188,26 @@ exports.forgotPassword = async (req, res) => {
 // Reset Password
 exports.resetPassword = async (req, res) => {
     try {
-        const hashedToken = crypto
-            .createHash("sha256")
-            .update(req.params.token)
-            .digest("hex");
+        const { email, password } = req.body;
 
-        const user = await User.findOne({
-            resetPasswordToken: hashedToken,
-            resetPasswordExpire: { $gt: Date.now() },
-        });
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        const user = await User.findOne({ email: normalizedEmail });
 
         if (!user) {
-            return res.status(400).json({ message: "Invalid or expired token" });
+            return res.status(400).json({ message: "Invalid request" });
         }
 
-        user.password = req.body.password;
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpire = undefined;
+        if (!user.resetPasswordOtpVerified) {
+            return res.status(403).json({ message: "OTP verification required" });
+        }
+
+        user.password = password;
+
+        //clear otp
+        user.resetPasswordOtp = null;
+        user.resetPasswordOtpExpires = null;
+        user.resetPasswordOtpVerified = false;
 
         await user.save();
 

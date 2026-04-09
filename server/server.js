@@ -88,6 +88,7 @@ const seatRoutes = require('./routes/seatRoutes');
 const seatLockRoutes = require('./routes/seatLockRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const bannerRoutes = require('./routes/bannerRoutes');
+const pricingRoutes = require('./routes/pricingRoutes');
 
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes);
@@ -105,6 +106,7 @@ app.use("/api", seatRoutes);
 app.use("/api/seat-locks", seatLockRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/banners", bannerRoutes);
+app.use("/api/pricing", pricingRoutes);
 
 //route testing
 app.get('/test', (req, res) => {

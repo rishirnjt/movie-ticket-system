@@ -1,17 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./NowShowing.css";
 
-const NowShowing = () => {
-  const [movies, setMovies] = useState([]);
-  const [allDates, setAllDates] = useState([]);
-  const [selectedDate, setSelectedDate] = useState("");
+const API_URL = "http://localhost:5001";
+const NEPAL_TIMEZONE = "Asia/Kathmandu";
 
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const formatDuration = (minutes) => {
+const formatDuration = (minutes) => {
   if (!minutes) return "";
 
   const hours = Math.floor(minutes / 60);
@@ -21,61 +16,129 @@ const NowShowing = () => {
   return `${hours}h ${mins}m`;
 };
 
+const getDateKeyInNepal = (value) => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: NEPAL_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(value));
+};
+
+const getTodayKeyInNepal = () => {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: NEPAL_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+};
+
+const formatTabDate = (dateKey) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: NEPAL_TIMEZONE,
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+};
+
+const formatShowtimeInNepal = (value) => {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: NEPAL_TIMEZONE,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(value));
+};
+
+const NowShowing = () => {
+  const [movies, setMovies] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
-    axios
-      .get("http://localhost:5001/api/movies/now-showing")
-      .then((res) => {
-
-          console.log("NOW SHOWING API RESPONSE:", res.data);
-
-        const fetchedMovies = res.data || [];
-
-        const uniqueDates = new Set();
-
-        fetchedMovies.forEach((movie) => {
-          (movie.showtimes || []).forEach((showtime) => {
-            if (!showtime.startTime) return;
-
-            const showDate = new Date(showtime.startTime);
-            showDate.setHours(0, 0, 0, 0);
-
-            const dateKey = showDate.toLocaleDateString("en-CA");
-            uniqueDates.add(dateKey);
-          });
-        });
-
-        const dates = Array.from(uniqueDates).sort();
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayKey = today.toLocaleDateString("en-CA");
-
+    const fetchMovies = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/movies/now-showing`);
+        const fetchedMovies = Array.isArray(res.data) ? res.data : [];
         setMovies(fetchedMovies);
-        setAllDates(dates);
-        setSelectedDate(dates.includes(todayKey) ? todayKey : dates[0] || "");
-      })
-      .catch((err) => console.error("Failed to fetch movies", err));
+      } catch (err) {
+        console.error("Failed to fetch movies", err);
+        setMovies([]);
+      }
+    };
+
+    fetchMovies();
   }, []);
 
-  const moviesForSelectedDate = movies
-    .map((movie) => {
-      const filteredShowtimes = (movie.showtimes || [])
-        .filter((showtime) => {
-          if (!showtime.startTime || !selectedDate) return false;
+  const allDates = useMemo(() => {
+    const uniqueDates = new Set();
+    const now = new Date();
 
-          const showDate = new Date(showtime.startTime);
-          showDate.setHours(0, 0, 0, 0);
+    movies.forEach((movie) => {
+      (movie.showtimes || []).forEach((showtime) => {
+        if (!showtime.startTime) return;
 
-          return showDate.toLocaleDateString("en-CA") === selectedDate;
-        })
-        .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        const showStart = new Date(showtime.startTime);
 
-      return {
-        ...movie,
-        showtimes: filteredShowtimes,
-      };
-    })
-    .filter((movie) => movie.showtimes.length > 0);
+        // only future/upcoming showtimes create tabs
+        if (showStart >= now) {
+          uniqueDates.add(getDateKeyInNepal(showtime.startTime));
+        }
+      });
+    });
+
+    return Array.from(uniqueDates).sort();
+  }, [movies]);
+
+  useEffect(() => {
+    if (allDates.length === 0) {
+      setSelectedDate("");
+      return;
+    }
+
+    const todayKey = getTodayKeyInNepal();
+
+    if (allDates.includes(todayKey)) {
+      setSelectedDate((prev) => (prev && allDates.includes(prev) ? prev : todayKey));
+      return;
+    }
+
+    setSelectedDate((prev) => (prev && allDates.includes(prev) ? prev : allDates[0]));
+  }, [allDates]);
+
+  const moviesForSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+
+    const now = new Date();
+
+    return movies
+      .map((movie) => {
+        const filteredShowtimes = (movie.showtimes || [])
+          .filter((showtime) => {
+            if (!showtime.startTime) return false;
+
+            const sameSelectedDate =
+              getDateKeyInNepal(showtime.startTime) === selectedDate;
+
+            const isUpcoming = new Date(showtime.startTime) >= now;
+
+            return sameSelectedDate && isUpcoming;
+          })
+          .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+        return {
+          ...movie,
+          showtimes: filteredShowtimes,
+        };
+      })
+      .filter((movie) => movie.showtimes.length > 0);
+  }, [movies, selectedDate]);
 
   const handleShowtime = (movieId, showtime) => {
     const token = localStorage.getItem("token");
@@ -104,19 +167,19 @@ const NowShowing = () => {
       </div>
 
       <div className="date-tabs">
-        {allDates.map((date) => (
-          <button
-            key={date}
-            className={`date-tab ${date === selectedDate ? "active" : ""}`}
-            onClick={() => setSelectedDate(date)}
-          >
-            {new Date(date).toLocaleDateString("en-GB", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-            })}
-          </button>
-        ))}
+        {allDates.length > 0 ? (
+          allDates.map((date) => (
+            <button
+              key={date}
+              className={`date-tab ${date === selectedDate ? "active" : ""}`}
+              onClick={() => setSelectedDate(date)}
+            >
+              {formatTabDate(date)}
+            </button>
+          ))
+        ) : (
+          <p className="no-movies">No upcoming show dates available.</p>
+        )}
       </div>
 
       <div className="movies-grid">
@@ -129,7 +192,7 @@ const NowShowing = () => {
             >
               <div className="poster-wrapper">
                 <img
-                  src={`http://localhost:5001${movie.posterUrl}`}
+                  src={`${API_URL}${movie.posterUrl}`}
                   alt={movie.title}
                 />
               </div>
@@ -137,39 +200,28 @@ const NowShowing = () => {
               <div className="hover-info">
                 <h4>{movie.title}</h4>
                 <p className="genre">
-                  {movie.genre}  - {formatDuration(movie.duration)}</p>
+                  {movie.genre} - {formatDuration(movie.duration)}
+                </p>
 
                 <div className="showtimes">
-                  {movie.showtimes.slice(0, 3).map((showtime) => {
-                    const showDateTime = new Date(showtime.startTime);
-                    const now = new Date();
-                    const isPast = showDateTime < now;
-
-                    return (
-                      <span
-                        key={showtime._id}
-                        className={`time-pill ${isPast ? "disabled" : ""}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!isPast) {
-                            handleShowtime(movie._id, showtime);
-                          }
-                        }}
-                      >
-                        {showDateTime.toLocaleTimeString([], {
-                          hour: "numeric",
-                          minute: "2-digit",
-                          hour12: true,
-                        })}
-                      </span>
-                    );
-                  })}
+                  {movie.showtimes.slice(0, 3).map((showtime) => (
+                    <span
+                      key={showtime._id}
+                      className="time-pill"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShowtime(movie._id, showtime);
+                      }}
+                    >
+                      {formatShowtimeInNepal(showtime.startTime)}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <p className="no-movies">No movies available for this date.</p>
+          <p className="no-movies">No upcoming movies available for this date.</p>
         )}
       </div>
     </div>

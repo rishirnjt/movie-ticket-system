@@ -12,29 +12,67 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-// Update logged-in user profile
-exports.updateMyProfile = async (req, res) => {
+// Get logged-in user loyalty
+exports.getMyLoyalty = async (req, res) => {
   try {
-    const { firstName, lastName } = req.body;
+    const user = await User.findById(req.user._id).select(
+      "loyaltyPoints loyaltyTier freePopcornCount ticketsPurchasedCount"
+    );
 
-    const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    user.firstName = firstName || user.firstName;
-    user.lastName = lastName || user.lastName;
-
-    await user.save();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.json({
-      message: "Profile updated successfully",
-      user,
+      points: user.loyaltyPoints || 0,
+      tier: user.loyaltyTier || "Bronze",
+      freePopcornCount: user.freePopcornCount || 0,
+      ticketsPurchasedCount: user.ticketsPurchasedCount || 0,
     });
   } catch (err) {
-    console.error("Error updating profile:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Get loyalty error:", err);
+    res.status(500).json({ message: "Failed to fetch loyalty data" });
   }
 };
 
+// Update logged-in user profile
+
+exports.updateProfile = async (req, res) => {
+  try {
+    console.log("req.user =>", req.user);
+    console.log("req.body =>", req.body);
+    console.log("req.file =>", req.file);
+
+    const userId = req.user._id || req.user.id;
+    const { firstName, lastName, phone } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (typeof firstName !== "undefined") user.firstName = firstName.trim();
+    if (typeof lastName !== "undefined") user.lastName = lastName.trim();
+    if (typeof phone !== "undefined") user.phone = phone.trim();
+
+    if (req.file) {
+      user.profilePic = `/uploads/${req.file.filename}`;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Update profile error full =>", error);
+    return res.status(500).json({
+      message: "Server error while updating profile",
+      error: error.message,
+    });
+  }
+};
 // Count users
 exports.getUsersCount = async (req, res) => {
   try {

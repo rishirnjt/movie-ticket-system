@@ -29,14 +29,25 @@ function generateSignature(total_amount, transaction_uuid) {
     .digest("base64");
 }
 
+const updateUserTier = (user) => {
+  if (user.loyaltyPoints >= 250) {
+    user.loyaltyTier = "Gold";
+  } else if (user.loyaltyPoints >= 100) {
+    user.loyaltyTier = "Silver";
+  } else {
+    user.loyaltyTier = "Bronze";
+  }
+};
+
 const initiatePayment = async (req, res) => {
   try {
-    const { bookingId, gateway } = req.body;
+    const { bookingId, gateway, pointsToRedeem = 0 } = req.body;
 
     console.log("\n========== INITIATE PAYMENT ==========");
     console.log("Request body:", req.body);
     console.log("Gateway:", gateway);
     console.log("Booking ID:", bookingId);
+    console.log("Points to redeem:", pointsToRedeem);
     console.log("User from token:", req.user ? req.user._id : "NO USER");
 
     console.log("KHALTI_SECRET_KEY exists:", !!KHALTI_SECRET_KEY);
@@ -88,10 +99,48 @@ const initiatePayment = async (req, res) => {
       return res.status(400).json({ message: "Showtime data not found" });
     }
 
-    const amount = Number(booking.totalPrice);
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    let normalizedPointsToRedeem = Number(pointsToRedeem) || 0;
+
+    if (!Number.isInteger(normalizedPointsToRedeem) || normalizedPointsToRedeem < 0) {
+      return res.status(400).json({ message: "Invalid points value" });
+    }
+
+    if (normalizedPointsToRedeem > 0) {
+      if (normalizedPointsToRedeem % 50 !== 0) {
+        return res.status(400).json({
+          message: "Points must be redeemed in multiples of 50",
+        });
+      }
+
+      if ((user.loyaltyPoints || 0) < normalizedPointsToRedeem) {
+        return res.status(400).json({
+          message: "Not enough loyalty points",
+        });
+      }
+
+      const maxDiscount = Math.floor(Number(booking.totalPrice) * 0.5);
+      if (normalizedPointsToRedeem > maxDiscount) {
+        return res.status(400).json({
+          message: `You can redeem up to Rs. ${maxDiscount} for this booking`,
+        });
+      }
+    }
+
+    // Save selected points so they survive redirect/payment gateway flow
+    booking.pointsToRedeem = normalizedPointsToRedeem;
+    await booking.save();
+
+    const amount = Number(booking.totalPrice) - normalizedPointsToRedeem;
 
     console.log("Booking totalPrice:", booking.totalPrice);
-    console.log("Parsed amount:", amount);
+    console.log("Redeem points:", normalizedPointsToRedeem);
+    console.log("Final payable amount:", amount);
 
     if (!amount || Number.isNaN(amount) || amount <= 0) {
       console.log("Invalid booking amount");
@@ -121,7 +170,10 @@ const initiatePayment = async (req, res) => {
       console.log("\n----- KHALTI INITIATE -----");
       console.log("Khalti URL:", "https://dev.khalti.com/api/v2/epayment/initiate/");
       console.log("Khalti payload:", payload);
-      console.log("Khalti Authorization header:", `Key ${KHALTI_SECRET_KEY?.slice(0, 12)}...`);
+      console.log(
+        "Khalti Authorization header:",
+        `Key ${KHALTI_SECRET_KEY?.slice(0, 12)}...`
+      );
 
       const response = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/initiate/",
@@ -205,6 +257,7 @@ const initiatePayment = async (req, res) => {
           bookingId: booking._id.toString(),
           userId: req.user._id.toString(),
           gateway: "stripe",
+          pointsToRedeem: String(normalizedPointsToRedeem),
         },
         success_url: `${CLIENT_URL}/payment-success?gateway=stripe&bookingId=${booking._id}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${CLIENT_URL}/checkout/${booking._id}`,
@@ -271,31 +324,28 @@ const verifyPayment = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
+    let ticket = await Ticket.findOne({
+      userId: booking.user,
+      movieId: booking.movie._id,
+      showtimeId: booking.showtime._id,
+      status: "active",
+    });
+
     if (booking.status === "confirmed") {
-      const existingTicket = await Ticket.findOne({
-        userId: booking.user,
-        movieId: booking.movie._id,
-        showtimeId: booking.showtime._id,
-        status: "active",
-      });
-
-      console.log("Booking already processed:", booking.status);
-
-      return res.json({
-        message: "Payment already processed",
-        booking,
-        ticket: existingTicket || null,
-      });
-    }
-
-    if (booking.status !== "holding") {
+      console.log("Booking already confirmed → continuing");
+    } else if (booking.status === "holding") {
+      console.log("Booking is still holding → proceeding with verification");
+    } else {
       return res.status(400).json({ message: "Invalid booking status" });
     }
 
     if (gateway === "khalti") {
       console.log("\n----- KHALTI VERIFY -----");
       console.log("Lookup payload:", { pidx });
-      console.log("Khalti Authorization header:", `Key ${KHALTI_SECRET_KEY?.slice(0, 12)}...`);
+      console.log(
+        "Khalti Authorization header:",
+        `Key ${KHALTI_SECRET_KEY?.slice(0, 12)}...`
+      );
 
       const response = await axios.post(
         "https://dev.khalti.com/api/v2/epayment/lookup/",
@@ -315,7 +365,8 @@ const verifyPayment = async (req, res) => {
       }
     } else if (gateway === "esewa") {
       const transaction_uuid = booking._id.toString();
-      const total_amount = booking.totalPrice;
+      const total_amount =
+        Number(booking.totalPrice) - Number(booking.pointsToRedeem || 0);
 
       const url = `https://rc-epay.esewa.com.np/api/epay/transaction/status/?product_code=${PRODUCT_CODE}&total_amount=${total_amount}&transaction_uuid=${transaction_uuid}`;
 
@@ -359,16 +410,41 @@ const verifyPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid payment gateway" });
     }
 
-    booking.status = "confirmed";
-    booking.reservationExpiresAt = null;
-    await booking.save();
+    const user = await User.findById(booking.user);
 
-    let ticket = await Ticket.findOne({
-      userId: booking.user,
-      movieId: booking.movie._id,
-      showtimeId: booking.showtime._id,
-      status: "active",
-    });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    //Redeem Logic
+    const redeemedPoints = Number(booking.pointsToRedeem || 0);
+
+    if (redeemedPoints > 0 && !booking.loyaltyProcessed) {
+      if (redeemedPoints % 50 !== 0) {
+        return res.status(400).json({ message: "Invalid redeem amount" });
+      }
+
+      if ((user.loyaltyPoints || 0) < redeemedPoints) {
+        return res.status(400).json({ message: "Not enough points" });
+      }
+
+      const maxDiscount = Math.floor(Number(booking.totalPrice) * 0.5);
+      if (redeemedPoints > maxDiscount) {
+        return res.status(400).json({ message: "Exceeds max discount" });
+      }
+
+      user.loyaltyPoints -= redeemedPoints;
+    }
+
+    const finalTotal = Math.max(0, Number(booking.totalPrice) - redeemedPoints);
+
+    if (booking.status !== "confirmed") {
+      booking.status = "confirmed";
+      booking.reservationExpiresAt = null;
+      booking.totalPrice = finalTotal;
+      booking.paymentStatus = "paid";
+      await booking.save();
+    }
 
     if (!ticket) {
       ticket = await Ticket.create({
@@ -376,13 +452,38 @@ const verifyPayment = async (req, res) => {
         movieId: booking.movie._id,
         showtimeId: booking.showtime._id,
         seats: booking.seats,
-        totalPrice: booking.totalPrice,
+        totalPrice: finalTotal,
         foods: booking.foods || [],
         status: "active",
       });
     }
 
-    const user = await User.findById(booking.user);
+    //Earn Loyalty
+    let earnedPoints = 0;
+
+    if (!booking.loyaltyProcessed) {
+      earnedPoints = 10;
+
+      if (booking.foods && booking.foods.length > 0) {
+        earnedPoints += 5;
+      }
+
+      user.loyaltyPoints += earnedPoints;
+      user.ticketsPurchasedCount += booking.seats.length;
+
+      while (user.ticketsPurchasedCount >= 5) {
+        user.freePopcornCount += 1;
+        user.ticketsPurchasedCount -= 5;
+      }
+
+      updateUserTier(user);
+
+      booking.loyaltyProcessed = true;
+      booking.pointsToRedeem = 0;
+
+      await user.save();
+      await booking.save();
+    }
 
     const seatDocs = await Seat.find({ _id: { $in: booking.seats } })
       .sort({ row: 1, number: 1 })
@@ -397,7 +498,7 @@ const verifyPayment = async (req, res) => {
         time: new Date(booking.showtime.startTime).toLocaleTimeString(),
         seats: seatLabels,
         foods: booking.foods || [],
-        totalPaid: booking.totalPrice,
+        totalPaid: ticket.totalPrice,
         ticketId: ticket._id,
       });
     }
@@ -406,6 +507,15 @@ const verifyPayment = async (req, res) => {
       message: "Payment successful",
       booking,
       ticket,
+      loyalty: {
+        redeemedPoints,
+        discountAmount: redeemedPoints,
+        earnedPoints,
+        totalPoints: user.loyaltyPoints,
+        tier: user.loyaltyTier,
+        freePopcornCount: user.freePopcornCount,
+        ticketsRemainingForPopcorn: 5 - user.ticketsPurchasedCount,
+      },
     });
   } catch (err) {
     console.log("\n========== VERIFY ERROR ==========");

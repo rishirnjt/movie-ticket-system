@@ -23,6 +23,7 @@ const bannerSchema = new mongoose.Schema(
         },
         buttonText: {
             type: String,
+            enum: ["Book Now", "View Details"],
             default: "Book Now",
             trim: true,
         },

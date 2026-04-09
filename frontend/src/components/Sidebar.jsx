@@ -115,9 +115,22 @@ const Sidebar = () => {
         <i className="fas fa-chart-line me-2"></i> Reports
       </NavLink>
 
-      <NavLink to="/admin/settings" className={linkClass}>
-        <i className="fas fa-cog me-2"></i> Settings
-      </NavLink>
+      {/* Settings */}
+      <div className="menu-group">
+        <div className="menu-title" onClick={() => toggleMenu("settings")}>
+          <i className="fas fa-cog me-2"></i> Settings
+        </div>
+        {openMenu === "settings" && (
+          <div className="submenu">
+            <NavLink to="/admin/pricing" className={linkClass}>
+              <i className="fas fa-tags me-2"></i> Pricing
+            </NavLink>
+            <NavLink to="/admin/settings" className={linkClass}>
+              <i className="fas fa-sliders-h me-2"></i> General Settings
+            </NavLink>
+          </div>
+        )}
+      </div>
 
       <div className="logout mt-auto" onClick={handleLogout}>
         <i className="fas fa-sign-out-alt me-2"></i> Logout

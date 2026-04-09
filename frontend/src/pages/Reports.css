@@ -417,6 +417,49 @@
   color: #fff !important;
 }
 
+.export-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+.report-loading,
+.report-empty {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.report-loading i,
+.report-empty i {
+  font-size: 28px;
+}
+
+.report-empty h4 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.report-empty p,
+.report-loading p {
+  margin: 0;
+  color: #b8b8b8;
+}
+
 @media (max-width: 1200px) {
   .report-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));

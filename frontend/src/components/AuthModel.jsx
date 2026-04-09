@@ -15,6 +15,15 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const [showLoginPwd, setShowLoginPwd] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState(1);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+
   const [reg, setReg] = useState({
     countryCode: "+977",
     phone: "",
@@ -35,18 +44,10 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const getPasswordErrors = (password) => {
     const errors = [];
 
-    if (password.length < 8) {
-      errors.push("At least 8 characters");
-    }
-    if (!/[A-Z]/.test(password)) {
-      errors.push("One uppercase letter");
-    }
-    if (!/[a-z]/.test(password)) {
-      errors.push("One lowercase letter");
-    }
-    if (!/[0-9]/.test(password)) {
-      errors.push("One number");
-    }
+    if (password.length < 8) errors.push("At least 8 characters");
+    if (!/[A-Z]/.test(password)) errors.push("One uppercase letter");
+    if (!/[a-z]/.test(password)) errors.push("One lowercase letter");
+    if (!/[0-9]/.test(password)) errors.push("One number");
 
     return errors;
   };
@@ -54,6 +55,18 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
   const isPasswordValid = (password) => {
     return getPasswordErrors(password).length === 0;
   };
+
+  const resetForgotState = () => {
+    setShowForgot(false);
+    setForgotEmail("");
+    setOtp("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setStep(1);
+    setShowNewPwd(false);
+    setShowConfirmPwd(false);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -124,18 +137,92 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    const email = prompt("Enter your email to reset password:");
-    if (!email) return;
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+
+    if (!forgotEmail.trim()) {
+      toast.error("Enter your email");
+      return;
+    }
+
+    if (!isValidEmail(forgotEmail)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
 
     try {
+      setLoading(true);
+
       const res = await axios.post(`${BASE_URL}/api/auth/forgot-password`, {
-        email,
+        email: forgotEmail,
       });
 
-      toast.success(res.data.message || "Password reset email sent");
+      toast.success(res.data.message || "OTP sent to your email");
+      setStep(2);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Error sending reset email");
+      toast.error(err.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+
+    if (!otp.trim()) {
+      toast.error("Enter OTP");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(`${BASE_URL}/api/auth/verify-otp`, {
+        email: forgotEmail,
+        otp,
+      });
+
+      toast.success(res.data.message || "OTP verified");
+      setStep(3);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+
+    if (!newPassword || !confirmPassword) {
+      toast.error("Please fill all fields");
+      return;
+    }
+
+    if (!isPasswordValid(newPassword)) {
+      toast.error("Password must be at least 8 characters and include uppercase, lowercase, and a number");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(`${BASE_URL}/api/auth/reset-password`, {
+        email: forgotEmail,
+        password: newPassword,
+      });
+
+      toast.success(res.data.message || "Password reset successful");
+      resetForgotState();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to reset password");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,6 +249,158 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
               : "Join Cinemax and book your movie tickets easily"}
           </p>
         </div>
+
+        {showForgot && (
+          <div className="forgot-overlay">
+            <div className="forgot-modal">
+              <button className="forgot-close" onClick={resetForgotState}>
+                <i className="fa-solid fa-xmark" />
+              </button>
+
+              <h3>Reset Password</h3>
+
+              {step === 1 && (
+                <>
+                  <p>Enter your email to receive OTP</p>
+
+                  <div className="input-group">
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                    />
+                  </div>
+
+                  {forgotEmail && (
+                    <p
+                      className={`field-message ${
+                        isValidEmail(forgotEmail) ? "success" : "error"
+                      }`}
+                    >
+                      {isValidEmail(forgotEmail)
+                        ? "Valid email address"
+                        : "Enter a valid email address"}
+                    </p>
+                  )}
+
+                  <button
+                    className="primary-btn"
+                    onClick={handleSendOtp}
+                    disabled={loading}
+                  >
+                    {loading ? "Sending..." : "Send OTP"}
+                  </button>
+                </>
+              )}
+
+              {step === 2 && (
+                <>
+                  <p>Enter the OTP sent to your email</p>
+
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      placeholder="Enter 6-digit OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      maxLength={6}
+                    />
+                  </div>
+
+                  <button
+                    className="primary-btn"
+                    onClick={handleVerifyOtp}
+                    disabled={loading}
+                  >
+                    {loading ? "Verifying..." : "Verify OTP"}
+                  </button>
+
+                  <button
+                    className="secondary-btn"
+                    type="button"
+                    onClick={() => setStep(1)}
+                    disabled={loading}
+                  >
+                    Change Email
+                  </button>
+                </>
+              )}
+
+              {step === 3 && (
+                <>
+                  <p>Enter your new password</p>
+
+                  <div className="input-group">
+                    <div className="input-icon-wrap password-wrapper">
+                      <i className="fa-solid fa-lock" />
+                      <input
+                        type={showNewPwd ? "text" : "password"}
+                        placeholder="New password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="eye-btn"
+                        onClick={() => setShowNewPwd(!showNewPwd)}
+                      >
+                        <i
+                          className={`fa-solid ${
+                            showNewPwd ? "fa-eye-slash" : "fa-eye"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <div className="input-icon-wrap password-wrapper">
+                      <i className="fa-solid fa-lock" />
+                      <input
+                        type={showConfirmPwd ? "text" : "password"}
+                        placeholder="Confirm new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="eye-btn"
+                        onClick={() => setShowConfirmPwd(!showConfirmPwd)}
+                      >
+                        <i
+                          className={`fa-solid ${
+                            showConfirmPwd ? "fa-eye-slash" : "fa-eye"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  {newPassword && (
+                    <p
+                      className={`field-message ${
+                        isPasswordValid(newPassword) ? "success" : "error"
+                      }`}
+                    >
+                      {isPasswordValid(newPassword)
+                        ? "Strong password"
+                        : "Use 8+ chars, uppercase, lowercase, and number"}
+                    </p>
+                  )}
+
+                  <button
+                    className="primary-btn"
+                    onClick={handleResetPassword}
+                    disabled={loading}
+                  >
+                    {loading ? "Resetting..." : "Reset Password"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="auth-tabs">
           <button
@@ -215,14 +454,15 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     onClick={() => setShowLoginPwd(!showLoginPwd)}
                   >
                     <i
-                      className={`fa-solid ${showLoginPwd ? "fa-eye-slash" : "fa-eye"
-                        }`}
+                      className={`fa-solid ${
+                        showLoginPwd ? "fa-eye-slash" : "fa-eye"
+                      }`}
                     />
                   </button>
                 </div>
               </div>
 
-              <p className="forgot-link" onClick={handleForgotPassword}>
+              <p className="forgot-link" onClick={() => setShowForgot(true)}>
                 Forgot your password?
               </p>
 
@@ -309,8 +549,14 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                   />
                 </div>
                 {reg.email && (
-                  <p className={`field-message ${isValidEmail(reg.email) ? "success" : "error"}`}>
-                    {isValidEmail(reg.email) ? "Valid email address" : "Enter a valid email address"}
+                  <p
+                    className={`field-message ${
+                      isValidEmail(reg.email) ? "success" : "error"
+                    }`}
+                  >
+                    {isValidEmail(reg.email)
+                      ? "Valid email address"
+                      : "Enter a valid email address"}
                   </p>
                 )}
               </div>
@@ -346,8 +592,9 @@ const AuthModal = ({ onClose, setIsLoggedIn }) => {
                     onClick={() => setShowRegPwd(!showRegPwd)}
                   >
                     <i
-                      className={`fa-solid ${showRegPwd ? "fa-eye-slash" : "fa-eye"
-                        }`}
+                      className={`fa-solid ${
+                        showRegPwd ? "fa-eye-slash" : "fa-eye"
+                      }`}
                     />
                   </button>
                 </div>

@@ -1,35 +1,68 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
-    firstName: { type: String, required: true},
-    lastName: { type: String, required: true},
-    email:{ type: String, required:true, unique: true},
-    password: { type: String, required: true},
-    userType: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "UserType",
-        required: true
-    },
-    status:{
-        type: String,
-        enum: ["active", "blocked"],
-        default: "active",
-    },
-    
-    resetPasswordToken: String,
-    resetPasswordExpire: Date
+  firstName: { type: String, required: true },
+  lastName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  userType: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "UserType",
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["active", "blocked"],
+    default: "active",
+  },
+
+  loyaltyPoints: {
+    type: Number,
+    default: 0,
+  },
+  loyaltyTier: {
+    type: String,
+    enum: ["Bronze", "Silver", "Gold"],
+    default: "Bronze",
+  },
+  ticketsPurchasedCount: {
+    type: Number,
+    default: 0,
+  },
+  freePopcornCount: {
+    type: Number,
+    default: 0,
+  },
+
+  resetPasswordOtp: {
+    type: String,
+    default: null,
+  },
+
+  resetPasswordOtpExpires:{
+    type: Date,
+    default: null,
+  },
+
+  resetPasswordOtpVerified:{
+    type: Boolean,
+    default: false,
+  },
+
+//   resetPasswordToken: String,
+//   resetPasswordExpire: Date,
 });
 
-userSchema.pre('save',async function (next) {
-    if(!this.isModified('password')) return next();
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.models.User || mongoose.model("User", userSchema); 
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);
