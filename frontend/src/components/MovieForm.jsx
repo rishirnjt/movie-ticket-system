@@ -4,7 +4,6 @@ import "./MovieForm.css";
 import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:5001";
-const NEPAL_TIMEZONE = "Asia/Kathmandu";
 
 const emptyMovie = {
   title: "",
@@ -18,50 +17,53 @@ const emptyMovie = {
   duration: "",
   rating: "",
   language: "",
-  showtimes: [{ screenId: "", startTime: "", endTime: "" }],
+  showtimes: [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
 };
 
-// Safe for <input type="date"> in Nepal timezone
 const formatDateForInput = (dateValue) => {
   if (!dateValue) return "";
 
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return "";
 
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: NEPAL_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(d);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
-// Safe for <input type="datetime-local"> in Nepal timezone
 const formatDateTimeForInput = (dateValue) => {
   if (!dateValue) return "";
 
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return "";
 
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: NEPAL_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(d);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
 
-  const get = (type) => parts.find((part) => part.type === type)?.value || "";
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
 
-  const year = get("year");
-  const month = get("month");
-  const day = get("day");
-  const hour = get("hour");
-  const minute = get("minute");
+const toStartOfDayISOString = (dateStr) => {
+  if (!dateStr) return undefined;
 
-  return `${year}-${month}-${day}T${hour}:${minute}`;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day, 0, 0, 0, 0);
+
+  return date.toISOString();
+};
+
+const toEndOfDayISOString = (dateStr) => {
+  if (!dateStr) return undefined;
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day, 23, 59, 59, 999);
+
+  return date.toISOString();
 };
 
 const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
@@ -98,8 +100,9 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
                 screenId: s.screenId?._id || s.screenId || "",
                 startTime: formatDateTimeForInput(s.startTime),
                 endTime: formatDateTimeForInput(s.endTime),
+                basePrice: s.basePrice ?? "",
               }))
-            : [{ screenId: "", startTime: "", endTime: ""}],
+            : [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
       });
     } catch (err) {
       console.error("Error loading movie:", err);
@@ -150,7 +153,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       ...prev,
       showtimes: [
         ...prev.showtimes,
-        { screenId: "", startTime: "", endTime: "" },
+        { screenId: "", startTime: "", endTime: "", basePrice: "" },
       ],
     }));
   };
@@ -213,12 +216,17 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       const s = movie.showtimes[i];
 
       const hasAnyValue =
-        s.screenId || s.startTime || s.endTime ;
+        s.screenId || s.startTime || s.endTime || s.basePrice !== "";
 
       if (!hasAnyValue) continue;
 
-      if (!s.screenId || !s.startTime || !s.endTime) {
+      if (!s.screenId || !s.startTime || !s.endTime || s.basePrice === "") {
         toast.error(`Please complete all fields for showtime ${i + 1}`);
+        return false;
+      }
+
+      if (Number(s.basePrice) < 0) {
+        toast.error(`Base price cannot be negative for showtime ${i + 1}`);
         return false;
       }
 
@@ -243,9 +251,15 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         genre: movie.genre.trim(),
         posterUrl: movie.posterUrl || undefined,
         trailerUrl: movie.trailerUrl.trim() || undefined,
-        releaseDate: movie.releaseDate || undefined,
-        movieStartDate: movie.movieStartDate || undefined,
-        movieEndDate: movie.movieEndDate || undefined,
+        releaseDate: movie.releaseDate
+          ? toStartOfDayISOString(movie.releaseDate)
+          : undefined,
+        movieStartDate: movie.movieStartDate
+          ? toStartOfDayISOString(movie.movieStartDate)
+          : undefined,
+        movieEndDate: movie.movieEndDate
+          ? toEndOfDayISOString(movie.movieEndDate)
+          : undefined,
         duration: movie.duration ? Number(movie.duration) : undefined,
         rating: movie.rating?.toString().trim() || "",
         language: movie.language.trim(),
@@ -268,7 +282,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
 
       for (const s of movie.showtimes) {
         const hasAnyValue =
-          s.screenId || s.startTime || s.endTime;
+          s.screenId || s.startTime || s.endTime || s.basePrice !== "";
 
         if (!hasAnyValue) continue;
 
@@ -277,6 +291,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
           screenId: s.screenId,
           startTime: new Date(s.startTime).toISOString(),
           endTime: new Date(s.endTime).toISOString(),
+          basePrice: Number(s.basePrice),
         };
 
         await axios.post(`${API_URL}/api/showtimes`, payload, {
@@ -481,6 +496,16 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
                   value={s.endTime}
                   onChange={(e) =>
                     handleShowtimeChange(i, "endTime", e.target.value)
+                  }
+                />
+
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Base Price"
+                  value={s.basePrice}
+                  onChange={(e) =>
+                    handleShowtimeChange(i, "basePrice", e.target.value)
                   }
                 />
 
