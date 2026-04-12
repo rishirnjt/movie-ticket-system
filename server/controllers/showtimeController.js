@@ -2,9 +2,9 @@ const Showtime = require("../models/Showtime");
 
 const createShowtime = async (req, res) => {
   try {
-    const { movieId, screenId, startTime, endTime, basePrice } = req.body;
+    const { movieId, screenId, startTime, endTime } = req.body;
 
-    if (!movieId || !screenId || !startTime || !endTime || basePrice === undefined) {
+    if (!movieId || !screenId || !startTime || !endTime === undefined) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -17,7 +17,7 @@ const createShowtime = async (req, res) => {
       screenId,
       startTime,
       endTime,
-      basePrice,
+      
     });
 
     res.status(201).json(showtime);
@@ -71,7 +71,7 @@ const getShowtimesByMovie = async (req, res) => {
 
 const updateShowtime = async (req, res) => {
   try {
-    const { movieId, screenId, startTime, endTime, basePrice, status } = req.body;
+    const { movieId, screenId, startTime, endTime, status } = req.body;
 
     const updated = await Showtime.findByIdAndUpdate(
       req.params.id,
@@ -80,7 +80,6 @@ const updateShowtime = async (req, res) => {
         screenId,
         startTime,
         endTime,
-        basePrice,
         status,
       },
       { new: true, runValidators: true }

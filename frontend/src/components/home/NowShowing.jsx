@@ -54,6 +54,12 @@ const formatShowtimeInNepal = (value) => {
   }).format(new Date(value));
 };
 
+const getPosterUrl = (posterUrl) => {
+  if (!posterUrl) return "";
+  if (posterUrl.startsWith("http")) return posterUrl;
+  return `${API_URL}${posterUrl}`;
+};
+
 const NowShowing = () => {
   const [movies, setMovies] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
@@ -78,17 +84,17 @@ const NowShowing = () => {
 
   const allDates = useMemo(() => {
     const uniqueDates = new Set();
-    const now = new Date();
+    const todayKey = getTodayKeyInNepal();
 
     movies.forEach((movie) => {
       (movie.showtimes || []).forEach((showtime) => {
         if (!showtime.startTime) return;
 
-        const showStart = new Date(showtime.startTime);
+        const showDateKey = getDateKeyInNepal(showtime.startTime);
 
-        // only future/upcoming showtimes create tabs
-        if (showStart >= now) {
-          uniqueDates.add(getDateKeyInNepal(showtime.startTime));
+        // only today/future Nepal dates create tabs
+        if (showDateKey >= todayKey) {
+          uniqueDates.add(showDateKey);
         }
       });
     });
@@ -105,17 +111,21 @@ const NowShowing = () => {
     const todayKey = getTodayKeyInNepal();
 
     if (allDates.includes(todayKey)) {
-      setSelectedDate((prev) => (prev && allDates.includes(prev) ? prev : todayKey));
+      setSelectedDate((prev) =>
+        prev && allDates.includes(prev) ? prev : todayKey
+      );
       return;
     }
 
-    setSelectedDate((prev) => (prev && allDates.includes(prev) ? prev : allDates[0]));
+    setSelectedDate((prev) =>
+      prev && allDates.includes(prev) ? prev : allDates[0]
+    );
   }, [allDates]);
 
   const moviesForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
 
-    const now = new Date();
+    const todayKey = getTodayKeyInNepal();
 
     return movies
       .map((movie) => {
@@ -123,12 +133,12 @@ const NowShowing = () => {
           .filter((showtime) => {
             if (!showtime.startTime) return false;
 
-            const sameSelectedDate =
-              getDateKeyInNepal(showtime.startTime) === selectedDate;
+            const showDateKey = getDateKeyInNepal(showtime.startTime);
 
-            const isUpcoming = new Date(showtime.startTime) >= now;
+            const sameSelectedDate = showDateKey === selectedDate;
+            const isUpcomingDate = showDateKey >= todayKey;
 
-            return sameSelectedDate && isUpcoming;
+            return sameSelectedDate && isUpcomingDate;
           })
           .sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
@@ -192,7 +202,7 @@ const NowShowing = () => {
             >
               <div className="poster-wrapper">
                 <img
-                  src={`${API_URL}${movie.posterUrl}`}
+                  src={getPosterUrl(movie.posterUrl)}
                   alt={movie.title}
                 />
               </div>
@@ -204,18 +214,25 @@ const NowShowing = () => {
                 </p>
 
                 <div className="showtimes">
-                  {movie.showtimes.slice(0, 3).map((showtime) => (
-                    <span
-                      key={showtime._id}
-                      className="time-pill"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShowtime(movie._id, showtime);
-                      }}
-                    >
-                      {formatShowtimeInNepal(showtime.startTime)}
-                    </span>
-                  ))}
+                  {movie.showtimes.slice(0, 3).map((showtime) => {
+                    const now = new Date();
+                    const isPast = new Date(showtime.startTime) < now;
+
+                    return (
+                      <span
+                        key={showtime._id}
+                        className={`time-pill ${isPast ? "disabled" : ""}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isPast) {
+                            handleShowtime(movie._id, showtime);
+                          }
+                        }}
+                      >
+                        {formatShowtimeInNepal(showtime.startTime)}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>

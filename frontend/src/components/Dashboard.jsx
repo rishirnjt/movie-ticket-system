@@ -165,10 +165,7 @@ const Dashboard = () => {
           </div>
 
           <div className="admin-topbar-right">
-            <button className="topbar-icon-btn" aria-label="Search">
-              <i className="fa-solid fa-magnifying-glass" />
-            </button>
-
+           
             <button className="topbar-icon-btn" aria-label="Notifications" onClick={() => navigate("/admin/contacts")}>
               <i className="fa-regular fa-bell" />
               {unreadContacts > 0 && (

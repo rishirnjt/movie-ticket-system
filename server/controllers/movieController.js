@@ -305,6 +305,27 @@ const parseNepalDateEnd = (dateStr) => {
   );
 };
 
+// Current Nepal date helpers
+const getNepalNow = () => {
+  return new Date(Date.now() + NEPAL_OFFSET_MS);
+};
+
+const getTodayNepalDateString = () => {
+  const nepalNow = getNepalNow();
+  const year = nepalNow.getUTCFullYear();
+  const month = String(nepalNow.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(nepalNow.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getTodayNepalStart = () => {
+  return parseNepalDateStart(getTodayNepalDateString());
+};
+
+const getTodayNepalEnd = () => {
+  return parseNepalDateEnd(getTodayNepalDateString());
+};
+
 const validateMovieDates = ({ movieStartDate, movieEndDate, releaseDate }) => {
   const parsedReleaseDate = releaseDate ? parseNepalDateStart(releaseDate) : null;
   const parsedStartDate = movieStartDate ? parseNepalDateStart(movieStartDate) : null;
@@ -363,13 +384,14 @@ exports.searchMovies = async (req, res) => {
   }
 };
 
+// Coming soon = starts after today ends in Nepal
 exports.getComingSoon = async (req, res) => {
   try {
-    const now = new Date();
+    const todayEnd = getTodayNepalEnd();
 
     const movies = await Movie.find({
       $and: [
-        { movieStartDate: { $exists: true, $gt: now } },
+        { movieStartDate: { $gt: todayEnd } },
         { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
       ],
     })
@@ -383,14 +405,16 @@ exports.getComingSoon = async (req, res) => {
   }
 };
 
+// Now showing = started on/before today ends and ends on/after today starts in Nepal
 exports.getNowShowing = async (req, res) => {
   try {
-    const now = new Date();
+    const todayStart = getTodayNepalStart();
+    const todayEnd = getTodayNepalEnd();
 
     const movies = await Movie.find({
       $and: [
-        { movieStartDate: { $lte: now } },
-        { movieEndDate: { $gte: now } },
+        { movieStartDate: { $lte: todayEnd } },
+        { movieEndDate: { $gte: todayStart } },
         { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
       ],
     })
@@ -428,13 +452,14 @@ exports.getNowShowing = async (req, res) => {
   }
 };
 
+// Archived = ended before today starts in Nepal
 exports.getArchivedMovies = async (req, res) => {
   try {
-    const now = new Date();
+    const todayStart = getTodayNepalStart();
 
     const movies = await Movie.find({
       $and: [
-        { movieEndDate: { $lt: now } },
+        { movieEndDate: { $lt: todayStart } },
         { $or: [{ isActive: true }, { isActive: { $exists: false } }] },
       ],
     })

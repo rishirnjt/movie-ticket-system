@@ -4,6 +4,7 @@ import "./MovieForm.css";
 import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:5001";
+const NEPAL_TIMEZONE = "Asia/Kathmandu";
 
 const emptyMovie = {
   title: "",
@@ -17,37 +18,50 @@ const emptyMovie = {
   duration: "",
   rating: "",
   language: "",
-  showtimes: [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
+  showtimes: [{ screenId: "", startTime: "", endTime: "" }],
 };
 
-// Safe for <input type="date">
+// Safe for <input type="date"> in Nepal timezone
 const formatDateForInput = (dateValue) => {
   if (!dateValue) return "";
 
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return "";
 
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: NEPAL_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
 };
 
-// Safe for <input type="datetime-local">
+// Safe for <input type="datetime-local"> in Nepal timezone
 const formatDateTimeForInput = (dateValue) => {
   if (!dateValue) return "";
 
   const d = new Date(dateValue);
   if (isNaN(d.getTime())) return "";
 
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const hours = String(d.getHours()).padStart(2, "0");
-  const minutes = String(d.getMinutes()).padStart(2, "0");
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: NEPAL_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d);
 
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  const get = (type) => parts.find((part) => part.type === type)?.value || "";
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+  const hour = get("hour");
+  const minute = get("minute");
+
+  return `${year}-${month}-${day}T${hour}:${minute}`;
 };
 
 const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
@@ -84,9 +98,8 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
                 screenId: s.screenId?._id || s.screenId || "",
                 startTime: formatDateTimeForInput(s.startTime),
                 endTime: formatDateTimeForInput(s.endTime),
-                basePrice: s.basePrice ?? "",
               }))
-            : [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
+            : [{ screenId: "", startTime: "", endTime: ""}],
       });
     } catch (err) {
       console.error("Error loading movie:", err);
@@ -124,7 +137,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         if (!isNaN(start.getTime())) {
           const end = new Date(start);
           end.setMinutes(end.getMinutes() + Number(prev.duration));
-
           updatedShowtimes[index].endTime = formatDateTimeForInput(end);
         }
       }
@@ -138,7 +150,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       ...prev,
       showtimes: [
         ...prev.showtimes,
-        { screenId: "", startTime: "", endTime: "", basePrice: "" },
+        { screenId: "", startTime: "", endTime: "" },
       ],
     }));
   };
@@ -177,28 +189,36 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       return false;
     }
 
-    if (movie.movieStartDate && movie.movieEndDate) {
-      if (movie.movieStartDate > movie.movieEndDate) {
-        toast.error("Movie start date cannot be after end date");
-        return false;
-      }
+    if (!movie.description.trim()) {
+      toast.error("Description is required");
+      return false;
+    }
+
+    if (!movie.duration || Number(movie.duration) < 1) {
+      toast.error("Duration must be at least 1 minute");
+      return false;
+    }
+
+    if (!movie.movieStartDate || !movie.movieEndDate) {
+      toast.error("Movie start date and end date are required");
+      return false;
+    }
+
+    if (movie.movieStartDate > movie.movieEndDate) {
+      toast.error("Movie start date cannot be after end date");
+      return false;
     }
 
     for (let i = 0; i < movie.showtimes.length; i++) {
       const s = movie.showtimes[i];
 
       const hasAnyValue =
-        s.screenId || s.startTime || s.endTime || s.basePrice !== "";
+        s.screenId || s.startTime || s.endTime ;
 
       if (!hasAnyValue) continue;
 
-      if (!s.screenId || !s.startTime || !s.endTime || s.basePrice === "") {
+      if (!s.screenId || !s.startTime || !s.endTime) {
         toast.error(`Please complete all fields for showtime ${i + 1}`);
-        return false;
-      }
-
-      if (Number(s.basePrice) < 0) {
-        toast.error(`Base price cannot be negative for showtime ${i + 1}`);
         return false;
       }
 
@@ -227,9 +247,8 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         movieStartDate: movie.movieStartDate || undefined,
         movieEndDate: movie.movieEndDate || undefined,
         duration: movie.duration ? Number(movie.duration) : undefined,
-        rating: movie.rating ? Number(movie.rating) : undefined,
+        rating: movie.rating?.toString().trim() || "",
         language: movie.language.trim(),
-        showtimes: undefined,
       };
 
       if (mode === "add") {
@@ -249,7 +268,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
 
       for (const s of movie.showtimes) {
         const hasAnyValue =
-          s.screenId || s.startTime || s.endTime || s.basePrice !== "";
+          s.screenId || s.startTime || s.endTime;
 
         if (!hasAnyValue) continue;
 
@@ -258,7 +277,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
           screenId: s.screenId,
           startTime: new Date(s.startTime).toISOString(),
           endTime: new Date(s.endTime).toISOString(),
-          basePrice: Number(s.basePrice),
         };
 
         await axios.post(`${API_URL}/api/showtimes`, payload, {
@@ -266,7 +284,11 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         });
       }
 
-      toast.success(mode === "add" ? "Movie added successfully" : "Movie updated successfully");
+      toast.success(
+        mode === "add"
+          ? "Movie added successfully"
+          : "Movie updated successfully"
+      );
 
       if (addAnother) {
         setMovie(emptyMovie);
@@ -287,7 +309,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
   return (
     <div className="movie-form-container">
       <h1 id="movie-form-title">
-        {mode === "add" ? "Add New Movie " : "Edit Movie "}
+        {mode === "add" ? "Add New Movie" : "Edit Movie"}
       </h1>
 
       <form
@@ -459,16 +481,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
                   value={s.endTime}
                   onChange={(e) =>
                     handleShowtimeChange(i, "endTime", e.target.value)
-                  }
-                />
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Base Price"
-                  value={s.basePrice}
-                  onChange={(e) =>
-                    handleShowtimeChange(i, "basePrice", e.target.value)
                   }
                 />
 

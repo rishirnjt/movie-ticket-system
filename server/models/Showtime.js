@@ -26,13 +26,7 @@ const showtimeSchema = new mongoose.Schema(
       type: Date,
       required: true
     },
-
-    basePrice: {
-      type: Number,
-      required: true,
-      min: 0
-    },
-
+    
     status: {
       type: String,
       enum: ["open", "closed", "cancelled"],

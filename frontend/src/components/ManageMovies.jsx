@@ -9,7 +9,6 @@ const ManageMovies = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Fetch movies
   const fetchMovies = async () => {
     try {
       const res = await axios.get("http://localhost:5001/api/movies/admin/movies", {
@@ -28,7 +27,6 @@ const ManageMovies = () => {
     fetchMovies();
   }, []);
 
-  // Delete movie
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this movie?")) return;
 
@@ -54,7 +52,7 @@ const ManageMovies = () => {
       ) : movies.length === 0 ? (
         <p id="no-movies-msg">No movies found. Add some!</p>
       ) : (
-        <table id="manage-movies-table" className="table movie-table">
+        <table id="manage-movies-table" className="movie-table">
           <thead>
             <tr>
               <th>Poster</th>
@@ -91,22 +89,24 @@ const ManageMovies = () => {
                 <td id={`movie-language-${index}`}>{movie.language}</td>
                 <td id={`movie-duration-${index}`}>{movie.duration}</td>
 
-                <td className="actions">
-                  <button
-                    id={`edit-movie-${movie._id}`}
-                    className="btn edit"
-                    onClick={() => navigate(`/admin/edit-movie/${movie._id}`)}
-                  >
-                    Edit
-                  </button>
+                <td className="movie-actions">
+                  <div className="movie-actions-inner">
+                    <button
+                      type="button"
+                      className="movie-btn movie-btn-edit"
+                      onClick={() => navigate(`/admin/edit-movie/${movie._id}`)}
+                    >
+                      Edit
+                    </button>
 
-                  <button
-                    id={`delete-movie-${movie._id}`}
-                    className="btn delete"
-                    onClick={() => handleDelete(movie._id)}
-                  >
-                    Delete
-                  </button>
+                    <button
+                      type="button"
+                      className="movie-btn movie-btn-delete"
+                      onClick={() => handleDelete(movie._id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
