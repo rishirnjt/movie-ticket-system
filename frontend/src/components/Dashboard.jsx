@@ -26,8 +26,16 @@ const Dashboard = () => {
   const [recentBookings, setRecentBookings] = useState([]);
   const [salesData, setSalesData] = useState([]);
   const [unreadContacts, setUnreadContacts] = useState(0);
+  const [adminName, setAdminName] = useState("Admin");
   useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      const u = JSON.parse(user);
+      const fullName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+      setAdminName(fullName || "Admin");
+    }
     loadDashboard();
+
   }, []);
 
   const loadDashboard = async () => {
@@ -37,7 +45,7 @@ const Dashboard = () => {
 
       //notification
       const contactRes = await fetch("http://localhost:5001/api/contact", {
-        headers: { Authorization:  `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const contactsData = await contactRes.json();
 
@@ -165,7 +173,7 @@ const Dashboard = () => {
           </div>
 
           <div className="admin-topbar-right">
-           
+
             <button className="topbar-icon-btn" aria-label="Notifications" onClick={() => navigate("/admin/contacts")}>
               <i className="fa-regular fa-bell" />
               {unreadContacts > 0 && (
@@ -174,8 +182,10 @@ const Dashboard = () => {
             </button>
 
             <div className="admin-profile">
-              <div className="admin-avatar">R</div>
-              <span>Richie</span>
+              <div className="admin-avatar">
+                {adminName.charAt(0).toUpperCase()}
+              </div>
+              <span>{adminName}</span>
             </div>
           </div>
         </div>

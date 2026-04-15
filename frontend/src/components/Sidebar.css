@@ -1,46 +1,298 @@
-/* Sidebar container only */
 .sidebar {
-  width: 240px;
+  width: 260px;
   min-height: 100vh;
-  background: #120808;
-  padding-top: 1rem;
-  border-right: 1px solid #2b0000;
+  background: rgba(18, 10, 18, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: width 0.28s ease;
+  backdrop-filter: blur(18px);
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.25);
+  position: relative;
 }
 
-/* Links */
-.sidebar .nav-link {
+.sidebar.collapsed {
+  width: 88px;
+}
+
+.sidebar-top {
+  display: flex;
+  position: relative;
+  padding: 22px 16px 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.profile-block {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #bfbfbf;
-  padding: 10px 20px;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: 0.3s;
+  gap: 12px;
+  overflow: hidden;
+  min-width: 0;
 }
 
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-  background: #670101;
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #c51632, #7e0c1d);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(197, 22, 50, 0.3);
+}
+
+.profile-info h5 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.profile-info span {
+  color: #b3aab2;
+  font-size: 0.78rem;
+}
+
+.collapse-btn {
+  position: absolute;
+  top: 48px;
+  right: -18px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff2d55, #c40024);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  box-shadow: 0 10px 24px rgba(255, 0, 60, 0.28);
+  transition: all 0.3s ease;
+}
+
+.collapse-btn:hover {
+  transform: scale(1.06);
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.nav-link,
+.menu-title {
+  width: 100%;
+  border: none;
+  color: #ddd;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.logout-btn {
+   width: 100%;
+  border: none;
+  background-color: #8b0303;
+  color: #fefbfb;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+.logout-btn i {
+  width: 20px;
+  min-width: 20px;
+  text-align: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.nav-link i,
+.menu-title i {
+  width: 20px;
+  min-width: 20px;
+  text-align: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.nav-link:hover,
+.menu-title:hover{
+  background: rgba(255, 255, 255, 0.06);
   color: #fff;
 }
 
-/* Menu titles */
-.sidebar .menu-title {
-  padding: 10px 20px;
-  cursor: pointer;
-  color: #ccc;
+.nav-link.active {
+  background: linear-gradient(135deg, #b3122a, #7b0d1c);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(179, 18, 42, 0.28);
 }
 
-/* Submenus */
-.sidebar .submenu {
-  margin-left: 28px;
+.menu-group {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Logout */
-.sidebar .logout {
-  margin-top: auto;
-  padding: 10px 20px;
-  color: #f87171;
-  cursor: pointer;
+.menu-title {
+  background: linear-gradient(
+    145deg,
+    rgba(40, 20, 30, 0.72),
+    rgba(15, 10, 15, 0.92)
+  );
+  border-radius: 18px;
+  padding: 16px 18px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nav-link.menu-card {
+  justify-content: flex-start;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-left span {
+  white-space: nowrap;
+}
+
+.menu-arrow {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.menu-title.open .menu-arrow {
+  transform: rotate(180deg);
+}
+
+.menu-card {
+  width: 100%;
+  background: linear-gradient(
+    145deg,
+    rgba(40, 20, 30, 0.72),
+    rgba(15, 10, 15, 0.92)
+  );
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 14px;
+  transition: all 0.25s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-link.active.menu-card,
+.menu-title.menu-card.active-like {
+  background: linear-gradient(135deg, #c51632, #7e0c1d);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(197, 22, 50, 0.3);
+}
+
+.submenu {
+  margin-left: 12px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.submenu .nav-link {
+  padding: 11px 12px;
+  font-size: 0.88rem;
+  color: #c8c0c8;
+}
+
+.logout-btn {
+  margin-top: 16px;
+  color: #ffffff;
+}
+
+.logout-btn:hover {
+  background: rgba(236, 4, 46, 0.08);
+  color: #750314;
+}
+
+.sidebar.collapsed .nav-link,
+.sidebar.collapsed .menu-title,
+.sidebar.collapsed .logout-btn {
+  padding: 14px 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .menu-card {
+  padding: 14px 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .menu-left {
+  flex: unset;
+  width: auto;
+  justify-content: center;
+}
+
+.sidebar.collapsed .submenu {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-top {
+  justify-content: flex-start;
+  padding: 22px 8px 18px 8px;
+}
+
+.sidebar.collapsed .profile-block {
+  justify-content: flex-start;
+  padding-left: 8px;
+  padding-right: 0;
+  width: 100%;
+}
+
+.sidebar.collapsed .avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.sidebar.collapsed .collapse-btn {
+  top: 52px;
+  right: -20px;
+  width: 40px;
+  height: 40px;
+}
+
+.sidebar.collapsed .profile-info,
+.sidebar.collapsed .nav-link span,
+.sidebar.collapsed .menu-title span,
+.sidebar.collapsed .logout-btn span,
+.sidebar.collapsed .menu-arrow {
+  display: none;
 }
