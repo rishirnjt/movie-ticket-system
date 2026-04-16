@@ -359,7 +359,7 @@ const MyAccount = () => {
                     </p>
 
                     <p className="reservation-screen">
-                      🎬 {getScreenName(r.showtime)}
+                      {getScreenName(r.showtime)}
                     </p>
 
                     <p className="reservation-seats">

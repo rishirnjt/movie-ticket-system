@@ -1,14 +1,11 @@
-/* ===== MAIN LAYOUT ===== */
 .foods-container {
   display: flex;
   gap: 30px;
   padding: 40px 60px;
-  background: #0f0f0f;
   color: #fff;
   min-height: 100vh;
 }
 
-/* ===== LEFT SIDE ===== */
 .foods-left {
   flex: 2;
 }

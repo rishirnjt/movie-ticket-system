@@ -278,58 +278,43 @@
 const Movie = require("../models/Movie");
 const Showtime = require("../models/Showtime");
 
-const NEPAL_OFFSET_MINUTES = 5 * 60 + 45;
-const NEPAL_OFFSET_MS = NEPAL_OFFSET_MINUTES * 60 * 1000;
-
-// Converts Nepal date string "YYYY-MM-DD"
-// to UTC instant for Nepal 00:00:00.000
-const parseNepalDateStart = (dateStr) => {
+// Parse YYYY-MM-DD as LOCAL date, not UTC
+const parseLocalDate = (dateStr, endOfDay = false) => {
   if (!dateStr) return null;
 
   const [year, month, day] = dateStr.split("-").map(Number);
 
+  if (!year || !month || !day) return null;
+
+  if (endOfDay) {
+    return new Date(year, month - 1, day, 23, 59, 59, 999);
+  }
+
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
+};
+
+const getTodayStart = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+};
+
+const getTodayEnd = () => {
+  const now = new Date();
   return new Date(
-    Date.UTC(year, month - 1, day, 0, 0, 0, 0) - NEPAL_OFFSET_MS
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59,
+    999
   );
-};
-
-// Converts Nepal date string "YYYY-MM-DD"
-// to UTC instant for Nepal 23:59:59.999
-const parseNepalDateEnd = (dateStr) => {
-  if (!dateStr) return null;
-
-  const [year, month, day] = dateStr.split("-").map(Number);
-
-  return new Date(
-    Date.UTC(year, month - 1, day, 23, 59, 59, 999) - NEPAL_OFFSET_MS
-  );
-};
-
-// Current Nepal date helpers
-const getNepalNow = () => {
-  return new Date(Date.now() + NEPAL_OFFSET_MS);
-};
-
-const getTodayNepalDateString = () => {
-  const nepalNow = getNepalNow();
-  const year = nepalNow.getUTCFullYear();
-  const month = String(nepalNow.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(nepalNow.getUTCDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
-const getTodayNepalStart = () => {
-  return parseNepalDateStart(getTodayNepalDateString());
-};
-
-const getTodayNepalEnd = () => {
-  return parseNepalDateEnd(getTodayNepalDateString());
 };
 
 const validateMovieDates = ({ movieStartDate, movieEndDate, releaseDate }) => {
-  const parsedReleaseDate = releaseDate ? parseNepalDateStart(releaseDate) : null;
-  const parsedStartDate = movieStartDate ? parseNepalDateStart(movieStartDate) : null;
-  const parsedEndDate = movieEndDate ? parseNepalDateEnd(movieEndDate) : null;
+  const parsedReleaseDate = releaseDate ? parseLocalDate(releaseDate) : null;
+  const parsedStartDate = parseLocalDate(movieStartDate);
+  const parsedEndDate = parseLocalDate(movieEndDate, true);
 
   if (!parsedStartDate || !parsedEndDate) {
     return {
@@ -384,10 +369,10 @@ exports.searchMovies = async (req, res) => {
   }
 };
 
-// Coming soon = starts after today ends in Nepal
+// Coming Soon
 exports.getComingSoon = async (req, res) => {
   try {
-    const todayEnd = getTodayNepalEnd();
+    const todayEnd = getTodayEnd();
 
     const movies = await Movie.find({
       $and: [
@@ -405,11 +390,11 @@ exports.getComingSoon = async (req, res) => {
   }
 };
 
-// Now showing = started on/before today ends and ends on/after today starts in Nepal
+// Now Showing
 exports.getNowShowing = async (req, res) => {
   try {
-    const todayStart = getTodayNepalStart();
-    const todayEnd = getTodayNepalEnd();
+    const todayStart = getTodayStart();
+    const todayEnd = getTodayEnd();
 
     const movies = await Movie.find({
       $and: [
@@ -452,10 +437,10 @@ exports.getNowShowing = async (req, res) => {
   }
 };
 
-// Archived = ended before today starts in Nepal
+// Archived
 exports.getArchivedMovies = async (req, res) => {
   try {
-    const todayStart = getTodayNepalStart();
+    const todayStart = getTodayStart();
 
     const movies = await Movie.find({
       $and: [
@@ -573,6 +558,7 @@ exports.createMovie = async (req, res) => {
   }
 };
 
+// Update Movie
 exports.updateMovie = async (req, res) => {
   try {
     const data = req.body;
