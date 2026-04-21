@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import './AdminFood.css'; 
+import "./AdminFood.css";
 
 const AdminFoods = () => {
   const [foods, setFoods] = useState([]);
@@ -11,22 +11,53 @@ const AdminFoods = () => {
     image: "",
   });
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   // Fetch foods
   const fetchFoods = async () => {
-    const res = await axios.get("http://localhost:5001/api/foods");
-    setFoods(res.data);
+    try {
+      const res = await axios.get("http://localhost:5001/api/foods");
+      setFoods(res.data);
+    } catch (err) {
+      console.error("Error fetching foods:", err);
+    }
   };
 
   useEffect(() => {
     fetchFoods();
   }, []);
 
+  // Cleanup preview URL
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
+  // Handle file change with preview
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
+    if (selectedFile) {
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setPreview(previewUrl);
+    } else {
+      setPreview(null);
+    }
+  };
 
   // Add food
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try{
+
+    try {
       const data = new FormData();
       data.append("name", form.name);
       data.append("price", form.price);
@@ -36,28 +67,43 @@ const AdminFoods = () => {
         data.append("image", file);
       }
 
-      await axios.post("http://localhost:5001/api/foods/add",data, {
-        headers: { "Content-Type": "multipart/form-data" }
+      await axios.post("http://localhost:5001/api/foods/add", data, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      setForm({ name:"", price: "", category: "food" });
+      setForm({
+        name: "",
+        price: "",
+        category: "food",
+        image: "",
+      });
       setFile(null);
+
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+      setPreview(null);
+
       fetchFoods();
-    } catch(err) {
-      console.error(err);
+    } catch (err) {
+      console.error("Error adding food:", err);
     }
   };
 
-
   // Delete food
   const handleDelete = async (id) => {
-    await axios.delete(`http://localhost:5001/api/foods/${id}`);
-    fetchFoods();
+    try {
+      await axios.delete(`http://localhost:5001/api/foods/${id}`);
+      fetchFoods();
+    } catch (err) {
+      console.error("Error deleting food:", err);
+    }
   };
 
   return (
     <div className="admin-foods">
       <h2>Manage Foods & Drinks</h2>
+
       <form onSubmit={handleSubmit} className="food-form">
         <input
           type="text"
@@ -66,6 +112,7 @@ const AdminFoods = () => {
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
         />
+
         <input
           type="number"
           placeholder="Price"
@@ -73,6 +120,7 @@ const AdminFoods = () => {
           onChange={(e) => setForm({ ...form, price: e.target.value })}
           required
         />
+
         <select
           value={form.category}
           onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -80,13 +128,21 @@ const AdminFoods = () => {
           <option value="food">Food</option>
           <option value="drink">Drink</option>
         </select>
+
         <input
           type="file"
           name="image"
-          onChange={(e) => setFile(e.target.files[0])}
+          accept="image/*"
+          onChange={handleFileChange}
           required
         />
-        
+
+        {preview && (
+          <div className="image-preview">
+            <img src={preview} alt="Preview" />
+          </div>
+        )}
+
         <button type="submit">Add Item</button>
       </form>
 
@@ -94,7 +150,12 @@ const AdminFoods = () => {
       <div className="foods-list">
         {foods.map((item) => (
           <div key={item._id} className="food-card">
-            {item.image && <img src={`http://localhost:5001${item.image}`} alt={item.name} />}
+            {item.image && (
+              <img
+                src={`http://localhost:5001${item.image}`}
+                alt={item.name}
+              />
+            )}
             <h4>{item.name}</h4>
             <p>Rs. {item.price}</p>
             <p>Category: {item.category}</p>

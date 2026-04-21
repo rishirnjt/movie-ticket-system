@@ -1,0 +1,138 @@
+.edit-banner-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #fff;
+}
+
+.edit-banner-wrapper {
+  width: 100%;
+  max-width: 900px;
+}
+
+.edit-banner-wrapper h2 {
+  text-align: center;
+  font-size: 52px;
+  font-weight: 700;
+  margin-bottom: 28px;
+  color: #f6dede;
+}
+
+.edit-banner-form {
+  width: 100%;
+  border: 1px solid rgba(255, 80, 80, 0.18);
+  border-radius: 24px;
+  padding: 34px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.edit-banner-form input,
+.edit-banner-form textarea,
+.edit-banner-form select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(25, 8, 12, 0.75);
+  color: #fff;
+  font-size: 16px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.edit-banner-form input:focus,
+.edit-banner-form textarea:focus,
+.edit-banner-form select:focus {
+  border-color: #ff4d5e;
+  box-shadow: 0 0 0 3px rgba(255, 77, 94, 0.12);
+}
+
+.edit-banner-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.banner-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+
+.banner-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #e50914;
+}
+
+.banner-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.banner-preview {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.banner-upload-box {
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed rgba(255, 120, 120, 0.35);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 10, 16, 0.6);
+  color: #ddd;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.2s ease;
+}
+
+.banner-upload-box:hover {
+  border-color: #ff5c6c;
+  background: rgba(48, 14, 22, 0.75);
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.edit-banner-form button {
+  margin-top: 8px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff2436, #c60c1b);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.edit-banner-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(198, 12, 27, 0.28);
+}
+
+@media (max-width: 768px) {
+  .edit-banner-wrapper h2 {
+    font-size: 38px;
+  }
+
+  .edit-banner-form {
+    padding: 22px;
+    border-radius: 18px;
+  }
+}

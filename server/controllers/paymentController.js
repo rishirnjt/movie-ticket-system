@@ -43,7 +43,7 @@ const initiatePayment = async (req, res) => {
   try {
     const { bookingId, gateway, pointsToRedeem = 0 } = req.body;
 
-    console.log("\n========== INITIATE PAYMENT ==========");
+    console.log("\nINITIATE PAYMENT ");
     console.log("Request body:", req.body);
     console.log("Gateway:", gateway);
     console.log("Booking ID:", bookingId);

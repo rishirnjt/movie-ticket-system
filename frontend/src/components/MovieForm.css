@@ -37,6 +37,34 @@
   gap: 20px;
 }
 
+.hidden-file-input {
+  display: none;
+}
+
+.upload-box {
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed #666;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #1a1a1a;
+  color: #ccc;
+  transition: 0.2s ease;
+}
+
+.upload-box:hover {
+  border-color: #999;
+  background: #222;
+}
+
+.upload-box p {
+  margin: 0;
+  pointer-events: none;
+}
+
 /* SECTION GROUP (NEW - IMPORTANT) */
 .form-section {
   display: flex;

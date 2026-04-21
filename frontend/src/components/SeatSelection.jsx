@@ -8,6 +8,7 @@ import React, {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import "./SeatSelection.css";
+import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:5001";
 
@@ -339,12 +340,12 @@ const SeatSelection = () => {
       const normalizedSeatId = String(seatId);
 
       if (!token) {
-        alert("You must be logged in");
+        toast.error("You must be logged in");
         return;
       }
 
       if (!selectedShowtime?._id) {
-        alert("Showtime not selected");
+        toast.error("Showtime not selected");
         return;
       }
 
@@ -394,21 +395,32 @@ const SeatSelection = () => {
 
         await refreshSeatStatus();
       } catch (err) {
-        alert(err.response?.data?.message || "Seat action failed");
+        toast.error(err.response?.data?.message || "Seat action failed");
       }
     },
     [token, soldSeatSet, lockedSeatSet, selectedSeatSet, selectedShowtime, refreshSeatStatus]
   );
 
   const handleBook = useCallback(async () => {
-    if (!movieId) return alert("Movie not found");
+    if (!movieId) {
+      toast.error("Movie not found");
+      return;
+    }
+
     if (!selectedShowtime || !selectedShowtime._id) {
-      return alert("Showtime not selected");
+      toast.error("Showtime not selected");
+      return;
     }
+
     if (selectedSeats.length === 0) {
-      return alert("Please select at least one seat");
+      toast.error("Please select at least one seat");
+      return;
     }
-    if (!token) return alert("You must be logged in to book");
+
+    if (!token) {
+      toast.error("You must be logged in to book");
+      return;
+    }
 
     try {
       const res = await axios.post(
@@ -428,7 +440,8 @@ const SeatSelection = () => {
       const booking = res.data;
 
       if (!booking || !booking._id) {
-        return alert("Booking failed");
+        toast.error("Booking failed");
+        return;
       }
 
       setBookingId(booking._id);
@@ -447,7 +460,7 @@ const SeatSelection = () => {
 
       await refreshSeatStatus();
     } catch (err) {
-      alert(err.response?.data?.message || "Booking failed");
+      toast.error(err.response?.data?.message || "Booking failed");
     }
   }, [
     movieId,
@@ -459,8 +472,15 @@ const SeatSelection = () => {
   ]);
 
   const handleBuyClick = useCallback(() => {
-    if (selectedSeats.length === 0) return alert("Please select seats first");
-    if (!token) return alert("You must be logged in to buy");
+    if (selectedSeats.length === 0) {
+      toast.error("Please select seats first");
+      return;
+    }
+
+    if (!token) {
+      toast.error("You must be logged in to buy");
+      return;
+    }
 
     setPurchaseSeats([...selectedSeats]);
     setPurchaseSummary({
@@ -484,15 +504,27 @@ const SeatSelection = () => {
       setSelectedSeats([]);
       setExpiresAt(null);
       await refreshSeatStatus();
+      toast.success("Selected seat locks cleared");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to clear seat locks");
+      toast.error(err.response?.data?.message || "Failed to clear seat locks");
     }
   }, [selectedShowtime, token, refreshSeatStatus]);
 
   const handleConfirmBuy = useCallback(async () => {
-    if (!agreeTerms) return alert("You must agree to terms");
-    if (purchaseSeats.length === 0) return alert("No seats selected");
-    if (!token) return alert("You must be logged in to buy");
+    if (!agreeTerms) {
+      toast.error("You must agree to terms");
+      return;
+    }
+
+    if (purchaseSeats.length === 0) {
+      toast.error("No seats selected");
+      return;
+    }
+
+    if (!token) {
+      toast.error("You must be logged in to buy");
+      return;
+    }
 
     try {
       setBuying(true);
@@ -512,7 +544,8 @@ const SeatSelection = () => {
       const booking = res.data;
 
       if (!booking || !booking._id) {
-        return alert("Buy failed");
+        toast.error("Buy failed");
+        return;
       }
 
       setBookingId(booking._id);
@@ -525,10 +558,11 @@ const SeatSelection = () => {
       setSelectedSeats([]);
       await refreshSeatStatus();
 
+      toast.success("Purchase confirmed");
       navigate(`/foods/${booking._id}`);
     } catch (err) {
       console.error("Confirm buy error:", err.response?.data || err.message);
-      alert(err.response?.data?.message || "Buy failed");
+      toast.error(err.response?.data?.message || "Buy failed");
     } finally {
       setBuying(false);
     }

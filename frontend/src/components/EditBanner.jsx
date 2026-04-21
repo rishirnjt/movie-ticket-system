@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
+import "./EditBanner.css";
 
 const EditBanner = () => {
   const { id } = useParams();
@@ -87,10 +88,11 @@ const EditBanner = () => {
   }
 };
   return (
-    <div className="admin-form-page">
+  <div className="edit-banner-page">
+    <div className="edit-banner-wrapper">
       <h2>Edit Banner</h2>
 
-      <form onSubmit={handleSubmit} className="admin-form">
+      <form onSubmit={handleSubmit} className="edit-banner-form">
         <input
           type="text"
           placeholder="Banner title"
@@ -128,7 +130,7 @@ const EditBanner = () => {
           onChange={(e) => setOrder(e.target.value)}
         />
 
-        <label>
+        <label className="banner-checkbox">
           <input
             type="checkbox"
             checked={isActive}
@@ -137,24 +139,32 @@ const EditBanner = () => {
           Active
         </label>
 
-        {currentBannerUrl && (
-          <img
-            src={`${API_URL}${currentBannerUrl}`}
-            alt="Current banner"
-            style={{ width: "300px", borderRadius: "12px" }}
-          />
-        )}
+        <div className="banner-upload-section">
+          {currentBannerUrl && (
+            <img
+              className="banner-preview"
+              src={`${API_URL}${currentBannerUrl}`}
+              alt="Current banner"
+            />
+          )}
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setBanner(e.target.files[0])}
-        />
+          <label htmlFor="banner-upload" className="banner-upload-box">
+            <span>{banner ? banner.name : "Click to choose a new banner image"}</span>
+          </label>
+
+          <input
+            id="banner-upload"
+            className="hidden-file-input"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setBanner(e.target.files[0])}
+          />
+        </div>
 
         <button type="submit">Update Banner</button>
       </form>
     </div>
-  );
+  </div>
+);
 };
-
 export default EditBanner;

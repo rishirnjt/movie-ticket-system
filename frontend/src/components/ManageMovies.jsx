@@ -6,6 +6,8 @@ import "./ManageMovies.css";
 const ManageMovies = () => {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [movieToDelete, setMovieToDelete] = useState(null);
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -27,14 +29,24 @@ const ManageMovies = () => {
     fetchMovies();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this movie?")) return;
+  const openDeletePopup = (movie) => {
+    setMovieToDelete(movie);
+  };
+
+  const closeDeletePopup = () => {
+    setMovieToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!movieToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:5001/api/movies/${id}`, {
+      await axios.delete(`http://localhost:5001/api/movies/${movieToDelete._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setMovies((prev) => prev.filter((m) => m._id !== id));
+
+      setMovies((prev) => prev.filter((m) => m._id !== movieToDelete._id));
+      closeDeletePopup();
     } catch (err) {
       console.error("Delete failed", err);
       alert("Failed to delete movie");
@@ -102,7 +114,7 @@ const ManageMovies = () => {
                     <button
                       type="button"
                       className="movie-btn movie-btn-delete"
-                      onClick={() => handleDelete(movie._id)}
+                      onClick={() => openDeletePopup(movie)}
                     >
                       Delete
                     </button>
@@ -112,6 +124,36 @@ const ManageMovies = () => {
             ))}
           </tbody>
         </table>
+      )}
+
+      {movieToDelete && (
+        <div className="delete-modal-overlay">
+          <div className="delete-modal">
+            <h3>Delete Movie</h3>
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>{movieToDelete.title}</strong>?
+            </p>
+
+            <div className="delete-modal-actions">
+              <button
+                type="button"
+                className="movie-btn cancel-btn"
+                onClick={closeDeletePopup}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="movie-btn movie-btn-delete"
+                onClick={confirmDelete}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

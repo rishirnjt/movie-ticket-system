@@ -1,38 +1,76 @@
-
-
 const Movie = require("../models/Movie");
 const Showtime = require("../models/Showtime");
 
 const getDayStart = (value = new Date()) => {
-  return new Date(Date.UTC(
-    value.getUTCFullYear(),
-    value.getUTCMonth(),
-    value.getUTCDate(),
-    0, 0, 0, 0
-  ));
+  return new Date(
+    value.getFullYear(),
+    value.getMonth(),
+    value.getDate(),
+    0,
+    0,
+    0,
+    0
+  );
 };
 
 const getDayEnd = (value = new Date()) => {
-  return new Date(Date.UTC(
-    value.getUTCFullYear(),
-    value.getUTCMonth(),
-    value.getUTCDate(),
-    23, 59, 59, 999
-  ));
+  return new Date(
+    value.getFullYear(),
+    value.getMonth(),
+    value.getDate(),
+    23,
+    59,
+    59,
+    999
+  );
 };
 
 const parseDateStart = (dateStr) => {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
-  d.setHours(0, 0, 0, 0);
-  return d;
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day, 0, 0, 0, 0);
 };
 
 const parseDateEnd = (dateStr) => {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
-  d.setHours(23, 59, 59, 999);
-  return d;
+
+  const [year, month, day] = dateStr.split("-").map(Number);
+  if (!year || !month || !day) return null;
+
+  return new Date(year, month - 1, day, 23, 59, 59, 999);
+};
+
+const validateMovieDates = ({ movieStartDate, movieEndDate, releaseDate }) => {
+  const parsedReleaseDate = releaseDate ? parseDateStart(releaseDate) : null;
+  const parsedStartDate = parseDateStart(movieStartDate);
+  const parsedEndDate = parseDateEnd(movieEndDate);
+
+  if (!parsedStartDate || !parsedEndDate) {
+    return {
+      error: "Movie start date and end date are required",
+    };
+  }
+
+  if (parsedStartDate > parsedEndDate) {
+    return {
+      error: "Movie start date cannot be after movie end date",
+    };
+  }
+
+  if (parsedReleaseDate && parsedReleaseDate > parsedEndDate) {
+    return {
+      error: "Release date cannot be after movie end date",
+    };
+  }
+
+  return {
+    parsedReleaseDate,
+    parsedStartDate,
+    parsedEndDate,
+  };
 };
 
 // Search Movie
@@ -82,11 +120,10 @@ exports.getComingSoon = async (req, res) => {
     res.status(500).json({ message: "Error fetching coming soon movies" });
   }
 };
-// Now Showing
+
 exports.getNowShowing = async (req, res) => {
   try {
-    const todayStart = getDayStart();
-    const todayEnd = getDayEnd();
+    const now = new Date();
 
     const movies = await Movie.find({
       $and: [
@@ -113,7 +150,7 @@ exports.getNowShowing = async (req, res) => {
 
     const moviesWithShowtimes = movies.map((movie) => {
       const movieShowtimes = showtimes.filter(
-        (st) => st.movieId.toString() === movie._id.toString()
+        (st) => String(st.movieId) === String(movie._id)
       );
 
       return {
@@ -129,10 +166,9 @@ exports.getNowShowing = async (req, res) => {
   }
 };
 
-// Archived Movies
 exports.getArchivedMovies = async (req, res) => {
   try {
-    const todayStart = getDayStart();
+    const now = new Date();
 
     const movies = await Movie.find({
       $and: [

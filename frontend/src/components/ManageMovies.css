@@ -180,6 +180,51 @@
   transform: translateY(-1px);
   background: rgba(255, 255, 255, 0.08);
 }
+
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.delete-modal {
+  width: 90%;
+  max-width: 420px;
+  background: #1b1b1b;
+  color: #fff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.delete-modal h3 {
+  margin-bottom: 12px;
+  font-size: 22px;
+}
+
+.delete-modal p {
+  margin-bottom: 20px;
+  color: #d1d1d1;
+  line-height: 1.5;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cancel-btn {
+  background: #444;
+  color: #fff;
+}
+
+
 /* responsive */
 @media (max-width: 1100px) {
   .content-wrapper.manage-movies {

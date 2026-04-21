@@ -39,11 +39,10 @@ const Dashboard = () => {
   }, []);
 
   const loadDashboard = async () => {
-
     try {
       const token = localStorage.getItem("token");
 
-      //notification
+      // ===== CONTACT NOTIFICATIONS =====
       const contactRes = await fetch("http://localhost:5001/api/contact", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -53,13 +52,14 @@ const Dashboard = () => {
         ? contactsData.filter((msg) => (msg.status || "new") === "new").length
         : 0;
       setUnreadContacts(newMessages);
+
       // ===== RECENT MOVIES =====
       const moviesRes = await fetch("http://localhost:5001/api/movies/recent");
       const movies = await moviesRes.json();
 
       const today = new Date();
 
-      const recentMoviesWithStatus = movies.map((m) => {
+      const recentMoviesWithStatus = (movies || []).map((m) => {
         const start = m.movieStartDate ? new Date(m.movieStartDate) : null;
         const end = m.movieEndDate ? new Date(m.movieEndDate) : null;
 
@@ -78,7 +78,7 @@ const Dashboard = () => {
         return { ...m, displayStatus };
       });
 
-      setRecentMovies(recentMoviesWithStatus.slice(0, 5) || []);
+      setRecentMovies(recentMoviesWithStatus.slice(0, 5));
 
       // ===== USERS COUNT =====
       const usersRes = await fetch("http://localhost:5001/api/users/count", {
@@ -94,21 +94,27 @@ const Dashboard = () => {
         }
       );
 
-      const bookingsData = await bookingRes.json();
+      const bookingsResData = await bookingRes.json();
 
-      const latestBookings =
-        bookingsData
-          ?.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5)
-          .map((b) => ({
-            _id: b._id,
-            user: b.user
-              ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
-              : "Unknown",
-            movie: b.movie?.title || "Unknown",
-            seats: b.seatLabels || [],
-            status: b.status || "unknown",
-          })) || [];
+      // FIX: ensure it's always an array
+      const bookingsArray = Array.isArray(bookingsResData)
+        ? bookingsResData
+        : bookingsResData.bookings || [];
+
+      // ===== RECENT BOOKINGS =====
+      const latestBookings = bookingsArray
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+        .map((b) => ({
+          _id: b._id,
+          user: b.user
+            ? `${b.user.firstName || ""} ${b.user.lastName || ""}`
+            : "Unknown",
+          movie: b.movie?.title || b.movieTitle || "Unknown",
+          seats: b.seatLabels || [],
+          status: b.status || "unknown",
+        }));
+
       setRecentBookings(latestBookings);
 
       // ===== REVENUE =====
@@ -122,40 +128,35 @@ const Dashboard = () => {
 
       // ===== STATS =====
       setStats({
-        bookings: bookingsData?.length || 0,
+        bookings: bookingsArray.length || 0,
         revenue: revenueData?.revenue || 0,
         movies: movies?.length || 0,
         users: usersData?.totalUsers || 0,
       });
 
-      // ===== DYNAMIC MONTHLY SALES CHART =====
+      // ===== MONTHLY SALES =====
       const monthNames = [
         "Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
       ];
 
       const monthlySales = {};
+      monthNames.forEach((m) => (monthlySales[m] = 0));
 
-      // Initialize all months with 0
-      monthNames.forEach((m) => {
-        monthlySales[m] = 0;
-      });
-
-      // Sum bookings into months
-      bookingsData.forEach((booking) => {
+      bookingsArray.forEach((booking) => {
         const date = new Date(booking.createdAt);
         const month = monthNames[date.getMonth()];
         const amount = booking.totalPrice || booking.totalAmount || 0;
         monthlySales[month] += amount;
       });
 
-      // Create chart data
       const chartData = monthNames.map((month) => ({
         month,
         sales: monthlySales[month],
       }));
 
       setSalesData(chartData);
+
     } catch (err) {
       console.error("Dashboard load error:", err);
     }
@@ -174,7 +175,6 @@ const Dashboard = () => {
 
           <div className="admin-topbar-right">
 
-           
             <button className="topbar-icon-btn" aria-label="Notifications" onClick={() => navigate("/admin/contacts")}>
               <i className="fa-regular fa-bell" />
               {unreadContacts > 0 && (

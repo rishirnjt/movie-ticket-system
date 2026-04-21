@@ -117,6 +117,8 @@ const Foods = () => {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  console.log("Cart items:", cart);
+  console.log("Calculated food total:", foodTotal);
   const total = ticketTotal + foodTotal;
 
   const handleCheckout = async () => {

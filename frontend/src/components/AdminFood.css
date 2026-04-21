@@ -1,137 +1,157 @@
 .admin-foods {
-  width: 90%;
-  max-width: 1200px;
-  margin: 30px auto;
-  padding: 20px;
-  font-family: "Poppins", sans-serif;
-  color: #222;
-}
-
-.admin-foods h2 {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 32px;
-  color: #f7f5f5;
-  letter-spacing:  1px;
-}
-
-.admin-foods h3 {
-  color: white;
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 15px;
-}
-
-
-/* ---------- Form Styling ---------- */
-.food-form {
+  min-height: 100vh;
+  padding: 40px 20px;
+  color: #fff;
   display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 20px;
-  border-radius: 14px;
-  margin-bottom: 30px;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.05);
+  flex-direction: column;
+  align-items: center;
 }
 
+/* Heading */
+.admin-foods h2 {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #f7dede;
+}
+
+/* Form */
+.food-form {
+  width: 100%;
+  max-width: 700px;
+  background: linear-gradient(
+    180deg,
+    rgba(90, 0, 18, 0.9),
+    rgba(30, 8, 12, 0.95)
+  );
+  border: 1px solid rgba(255, 90, 90, 0.2);
+  border-radius: 20px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Inputs */
 .food-form input,
 .food-form select {
-  padding: 12px, 14px;
-  font-size: 16px;
-  background: #f9fafb;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  flex: 1;
-  min-width: 180px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #111;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: 0.2s ease;
 }
 
 .food-form input:focus,
 .food-form select:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-  background: white;
+  border-color: #ff3b4a;
+  box-shadow: 0 0 0 2px rgba(255, 59, 74, 0.15);
 }
 
-.food-form button {
-  background: linear-gradient(135deg, #501020, #b81b1b);
+/* File input */
+.food-form input[type="file"] {
+  background: transparent;
   border: none;
-  padding: 13px 22px;
-  color: white;
-  border-radius: 12px;
-  cursor: pointer;
+  padding: 6px 0;
+}
+
+/* Button */
+.food-form button {
+  margin-top: 5px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #ff2d45, #b50d1b);
+  color: #fff;
   font-weight: 600;
-  font-size: 15px;
-  transition: 0.3s ease;
-  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.3);
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .food-form button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(213, 58, 58, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(181, 13, 27, 0.3);
 }
 
-/* --------- Cards Grid --------- */
+/* List heading */
+.admin-foods h3 {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  font-size: 26px;
+}
+
+/* Food cards container */
 .foods-list {
+  width: 100%;
+  max-width: 1100px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
 }
 
-/* --------- Food Card --------- */
+/* Card */
 .food-card {
-  background: white;
-  padding: 18px;
-  border-radius: 15px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  transition: 0.3s ease;
-  border: 1px solid #eee;
+  background: rgba(20, 12, 14, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px;
   text-align: center;
+  transition: 0.2s ease;
 }
 
 .food-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
 }
 
+/* Image */
 .food-card img {
   width: 100%;
-  height: 170px;
+  height: 140px;
   object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
+/* Text */
 .food-card h4 {
-  margin: 8px 0 5px;
-  font-weight: 600;
+  margin: 6px 0;
   font-size: 18px;
 }
 
 .food-card p {
   margin: 4px 0;
+  color: #d1c1c3;
   font-size: 14px;
-  color: #4b5563;
 }
 
-/* --------- Delete Button --------- */
+/* Delete button */
 .food-card button {
-  margin-top: 12px;
-  background: #ef4444;
-  color: white;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: 8px;
   border: none;
-  padding: 9px 14px;
-  border-radius: 10px;
+  background: #c62828;
+  color: #fff;
   cursor: pointer;
-  font-size: 14px;
-  transition: 0.25s;
-  font-weight: 500;
-  box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3);
+  transition: 0.2s ease;
 }
 
 .food-card button:hover {
-  background: #dc2626;
-  transform: scale(1.05);
+  background: #e53935;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-foods h2 {
+    font-size: 30px;
+  }
+
+  .food-form {
+    padding: 18px;
+  }
 }

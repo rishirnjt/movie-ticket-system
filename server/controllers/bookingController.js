@@ -615,25 +615,51 @@ exports.getBookedSeats = async (req, res) => {
   }
 };
 
-/* =========================
-   ADMIN
-========================= */
+//Admin
 exports.getAllBookingsAdmin = async (req, res) => {
   try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const total = await Booking.countDocuments();
+
     const bookings = await Booking.find()
       .populate("user", "firstName lastName email")
       .populate("movie", "title")
-      .populate({
-        path: "showtime",
-        populate: {
-          path: "screenId",
-          select: "name format",
-        },
-      })
+      .populate("showtime", "startTime screenId")
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
-    const allSeatIds = bookings.flatMap((b) => b.seats || []);
+    const screenIds = bookings
+      .map((b) => b.showtime?.screenId)
+      .filter(Boolean);
+
+    const Screen = require("../models/Screen");
+
+    const screens = await Screen.find({ _id: { $in: screenIds } })
+      .select("_id name screenName format")
+      .lean();
+
+    const screenMap = new Map(
+      screens.map((screen) => [String(screen._id), screen])
+    );
+
+    const bookingsWithScreens = bookings.map((booking) => ({
+      ...booking,
+      showtime: booking.showtime
+        ? {
+            ...booking.showtime,
+            screenId: booking.showtime.screenId
+              ? screenMap.get(String(booking.showtime.screenId)) || booking.showtime.screenId
+              : null,
+          }
+        : null,
+    }));
+
+    const allSeatIds = bookings.flatMap((booking) => booking.seats || []);
     const uniqueSeatIds = [...new Set(allSeatIds.map(String))];
 
     const seatDocs = await Seat.find({ _id: { $in: uniqueSeatIds } })
@@ -641,17 +667,27 @@ exports.getAllBookingsAdmin = async (req, res) => {
       .lean();
 
     const seatMap = new Map(
-      seatDocs.map((seat) => [seat._id.toString(), seat.label])
+      seatDocs.map((seat) => [
+        String(seat._id),
+        seat.label || `${seat.row || ""}${seat.number || ""}`,
+      ])
     );
 
-    const bookingsWithSeatLabels = bookings.map((booking) => ({
+    const finalBookings = bookingsWithScreens.map((booking) => ({
       ...booking,
-      seatLabels: (booking.seats || []).map(
-        (seatId) => seatMap.get(String(seatId)) || String(seatId)
-      ),
+      seatLabels: Array.isArray(booking.seats)
+        ? booking.seats.map((seatId) => seatMap.get(String(seatId)) || "N/A")
+        : [],
     }));
 
-    res.json(bookingsWithSeatLabels);
+    console.log("ADMIN SAMPLE:", finalBookings[0]);
+
+    res.json({
+      bookings: finalBookings,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (err) {
     console.error("Failed to fetch bookings:", err);
     res.status(500).json({ message: "Failed to fetch bookings" });

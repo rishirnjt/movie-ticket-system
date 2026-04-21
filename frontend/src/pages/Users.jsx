@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./Users.css";
+import { toast } from "react-toastify";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -19,7 +21,6 @@ const Users = () => {
     };
   };
 
-  // Fetch users
   const fetchUsers = async () => {
     try {
       const res = await axios.get(
@@ -31,7 +32,8 @@ const Users = () => {
 
       const normalizedUsers = data.map((user) => ({
         _id: user._id,
-        name:`${user.firstName || ""} ${user.lastName || ""}`.trim() || "No Name",
+        name:
+          `${user.firstName || ""} ${user.lastName || ""}`.trim() || "No Name",
         email: user.email || "No Email",
         role: user.userType?.type || "User",
         status: user.status || "active",
@@ -40,11 +42,10 @@ const Users = () => {
       setUsers(normalizedUsers);
     } catch (err) {
       console.error("Failed to fetch users:", err);
-      alert("Failed to load users");
+      toast.error("Failed to load users");
     }
   };
 
-  // Search filter
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -52,28 +53,27 @@ const Users = () => {
       user.role.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Edit user
   const handleEdit = (id) => {
     console.log("Edit user:", id);
-    // navigate(`/admin/users/edit/${id}`)
   };
 
-  // Block / Unblock user
-  const handleToggleBlock = async (user) => {
-    const isBlocked = user.status === "blocked";
+  const openPopup = (user) => {
+    setSelectedUser(user);
+  };
 
-    const confirmAction = window.confirm(
-      isBlocked
-        ? `Unblock ${user.name}?`
-        : `Block ${user.name}?`
-    );
+  const closePopup = () => {
+    setSelectedUser(null);
+  };
 
-    if (!confirmAction) return;
+  const confirmToggleBlock = async () => {
+    if (!selectedUser) return;
+
+    const isBlocked = selectedUser.status === "blocked";
 
     try {
       const endpoint = isBlocked
-        ? `http://localhost:5001/api/users/${user._id}/unblock`
-        : `http://localhost:5001/api/users/${user._id}/block`;
+        ? `http://localhost:5001/api/users/${selectedUser._id}/unblock`
+        : `http://localhost:5001/api/users/${selectedUser._id}/block`;
 
       const res = await axios.put(endpoint, {}, getAuthConfig());
 
@@ -81,19 +81,25 @@ const Users = () => {
 
       setUsers((prev) =>
         prev.map((u) =>
-          u._id === user._id
+          u._id === selectedUser._id
             ? {
-                ...u,
-                status: updatedUser?.status || (isBlocked ? "active" : "blocked"),
-              }
+              ...u,
+              status:
+                updatedUser?.status || (isBlocked ? "active" : "blocked"),
+            }
             : u
         )
       );
 
-      alert(isBlocked ? "User unblocked successfully" : "User blocked successfully");
+      toast.success(
+        isBlocked
+          ? "User unblocked successfully"
+          : "User blocked successfully"
+      );
+      closePopup();
     } catch (err) {
       console.error("Block/unblock failed:", err);
-      alert("Failed to update user status");
+      toast.error("Failed to update user status");
     }
   };
 
@@ -150,10 +156,8 @@ const Users = () => {
                   </button>
 
                   <button
-                    className={
-                      user.status === "blocked" ? "unblock" : "block"
-                    }
-                    onClick={() => handleToggleBlock(user)}
+                    className={user.status === "blocked" ? "unblock" : "block"}
+                    onClick={() => openPopup(user)}
                   >
                     {user.status === "blocked" ? "Unblock" : "Block"}
                   </button>
@@ -163,6 +167,37 @@ const Users = () => {
           )}
         </tbody>
       </table>
+
+      {selectedUser && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal">
+            <h3>
+              {selectedUser.status === "blocked" ? "Unblock User" : "Block User"}
+            </h3>
+            <p>
+              Are you sure you want to{" "}
+              <strong>
+                {selectedUser.status === "blocked" ? "unblock" : "block"}
+              </strong>{" "}
+              <strong>{selectedUser.name}</strong>?
+            </p>
+
+            <div className="confirm-modal-actions">
+              <button className="cancel-btn" onClick={closePopup}>
+                Cancel
+              </button>
+
+              <button
+                className={`confirm-btn ${selectedUser.status === "blocked" ? "unblock-btn" : "block-btn"
+                  }`}
+                onClick={confirmToggleBlock}
+              >
+                {selectedUser.status === "blocked" ? "Yes, Unblock" : "Yes, Block"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

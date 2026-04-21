@@ -15,7 +15,8 @@ const Bookings = () => {
             setLoading(true);
 
             const token = localStorage.getItem("token");
-            const res = await fetch("http://localhost:5001/api/admin/bookings", {
+
+            const res = await fetch("http://localhost:5001/api/bookings/admin/all", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -24,6 +25,8 @@ const Bookings = () => {
 
             const data = await res.json();
             console.log("BOOKINGS API:", data);
+            console.log("seatLabels:", data.bookings[0]?.seatLabels);
+            console.log("showtime:", data.bookings[0]?.showtime);
 
             setBookings(data.bookings || []);
         } catch (err) {
@@ -33,28 +36,36 @@ const Bookings = () => {
             setLoading(false);
         }
     };
+
     const filteredBookings = bookings.filter((b) => {
         const customer =
             `${b.user?.firstName || ""} ${b.user?.lastName || ""}`.toLowerCase();
+
         const movie = (b.movie?.title || "").toLowerCase();
         const q = search.toLowerCase();
 
         return customer.includes(q) || movie.includes(q);
     });
 
+    const formatCustomer = (booking) => {
+        const fullName =
+            `${booking.user?.firstName || ""} ${booking.user?.lastName || ""}`.trim();
+
+        return fullName || "N/A";
+    };
+
+    const formatMovie = (booking) => {
+        return booking.movie?.title || "N/A";
+    };
+
+    const formatScreen = (showtime) => {
+        return showtime?.screenId?.name || showtime?.screenId?.screenName || "N/A";
+    };
+
     const formatShowtime = (showtime) => {
-        if (!showtime) return "N/A";
+        if (!showtime?.startTime) return "N/A";
 
-        const rawTime =
-            showtime.startTime ||
-            showtime.time ||
-            showtime.showTime ||
-            showtime.dateTime ||
-            showtime.date;
-
-        if (!rawTime) return "N/A";
-
-        const d = new Date(rawTime);
+        const d = new Date(showtime.startTime);
         if (Number.isNaN(d.getTime())) return "N/A";
 
         return d.toLocaleString("en-IN", {
@@ -63,21 +74,20 @@ const Bookings = () => {
         });
     };
 
-    const formatScreen = (showtime) => {
-        return (
-            showtime?.screenId?.name ||
-            showtime?.screen?.name ||
-            showtime?.hall ||
-            showtime?.screenName ||
-            "N/A"
-        );
-    };
-
     const formatSeats = (booking) => {
         if (Array.isArray(booking.seatLabels) && booking.seatLabels.length > 0) {
             return booking.seatLabels.join(", ");
         }
+
         return "N/A";
+    };
+
+    const formatTotal = (booking) => {
+        return `Rs. ${booking.totalPrice ?? 0}`;
+    };
+
+    const formatStatus = (booking) => {
+        return booking.status || "N/A";
     };
 
     return (
@@ -113,17 +123,15 @@ const Bookings = () => {
                         {filteredBookings.length > 0 ? (
                             filteredBookings.map((b) => (
                                 <tr key={b._id}>
-                                    <td>{b._id?.slice(-6)}</td>
-                                    <td>
-                                        {b.user?.firstName} {b.user?.lastName}
-                                    </td>
-                                    <td>{b.movie?.title || "N/A"}</td>
+                                    <td>{b._id?.slice(-6) || "N/A"}</td>
+                                    <td>{formatCustomer(b)}</td>
+                                    <td>{formatMovie(b)}</td>
                                     <td>
                                         {formatScreen(b.showtime)} • {formatShowtime(b.showtime)}
                                     </td>
                                     <td>{formatSeats(b)}</td>
-                                    <td>Rs. {b.totalPrice ?? 0}</td>
-                                    <td>{b.status || "N/A"}</td>
+                                    <td>{formatTotal(b)}</td>
+                                    <td>{formatStatus(b)}</td>
                                 </tr>
                             ))
                         ) : (

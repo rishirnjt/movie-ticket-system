@@ -12,7 +12,6 @@ const isValidEmail = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-// Helper to generate JWT
 const generateToken = (user) => {
     return jwt.sign(
         { id: user._id, role: user.userType.type },

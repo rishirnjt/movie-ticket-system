@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import "./GenerateSeats.css";
+import { toast } from "react-toastify";
 
 const GenerateSeats = () => {
   const [screens, setScreens] = useState([]);
   const [loadingScreens, setLoadingScreens] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
   const [errors, setErrors] = useState({});
 
   const [form, setForm] = useState({
@@ -30,8 +29,7 @@ const GenerateSeats = () => {
       setScreens(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to load screens", err);
-      setMessage("Failed to load screens");
-      setMessageType("error");
+      toast.error("Failed to load screens");
     } finally {
       setLoadingScreens(false);
     }
@@ -40,8 +38,6 @@ const GenerateSeats = () => {
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
-    setMessage("");
-    setMessageType("");
   };
 
   const parsedRows = useMemo(() => {
@@ -96,8 +92,6 @@ const GenerateSeats = () => {
       overwrite: false,
     });
     setErrors({});
-    setMessage("");
-    setMessageType("");
   };
 
   const handleSubmit = async (e) => {
@@ -107,8 +101,7 @@ const GenerateSeats = () => {
 
     try {
       setSubmitting(true);
-      setMessage("");
-      setMessageType("");
+    
 
       await axios.post(
         `http://localhost:5001/api/screens/${form.screenId}/generate-seats`,
@@ -122,18 +115,15 @@ const GenerateSeats = () => {
         }
       );
 
-      setMessage("Seats generated successfully");
-      setMessageType("success");
+      toast.success("Seats generated successfully");
     } catch (err) {
       console.error("Generate seats failed", err.response?.data || err.message);
-      setMessage(err.response?.data?.message || "Failed to generate seats");
-      setMessageType("error");
+      toast.error(err.response?.data?.message || "Failed to generate seats");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const middleIndex = Math.ceil(seatsPerRow / 2);
 
   return (
     <div className="generate-seats-page">
@@ -153,9 +143,7 @@ const GenerateSeats = () => {
           </div>
         </div>
 
-        {message && (
-          <div className={`seats-message ${messageType}`}>{message}</div>
-        )}
+      
 
         <form className="generate-seats-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -242,7 +230,6 @@ const GenerateSeats = () => {
               </div>
               <div className="preview-legend">
                 <span><i></i> Seat</span>
-                <span><b></b> Aisle gap</span>
               </div>
             </div>
 
@@ -255,15 +242,10 @@ const GenerateSeats = () => {
                     <div className="row-label">{rowData.row}</div>
 
                     <div className="row-seats">
-                      {rowData.seats.map((seat, index) => (
-                        <React.Fragment key={seat.label}>
-                          {index === middleIndex && (
-                            <div className="aisle-gap" aria-hidden="true"></div>
-                          )}
-                          <div className="seat-box" title={seat.label}>
-                            {seat.number}
-                          </div>
-                        </React.Fragment>
+                      {rowData.seats.map((seat) => (
+                        <div key={seat.label} className="seat-box" title={seat.label}>
+                          {seat.number}
+                        </div>
                       ))}
                     </div>
 

@@ -4,7 +4,6 @@ import axios from "axios";
 import "./NowShowing.css";
 
 const API_URL = "http://localhost:5001";
-const NEPAL_TIMEZONE = "Asia/Kathmandu";
 
 const formatDuration = (minutes) => {
   if (!minutes) return "";
@@ -16,42 +15,39 @@ const formatDuration = (minutes) => {
   return `${hours}h ${mins}m`;
 };
 
-const getDateKeyInNepal = (value) => {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: NEPAL_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(value));
+const getDateKey = (value) => {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
-const getTodayKeyInNepal = () => {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: NEPAL_TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
+const getTodayKey = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
 const formatTabDate = (dateKey) => {
   const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
 
-  return new Intl.DateTimeFormat("en-GB", {
-    timeZone: NEPAL_TIMEZONE,
+  return date.toLocaleDateString("en-GB", {
     weekday: "short",
     day: "numeric",
     month: "short",
-  }).format(new Date(Date.UTC(year, month - 1, day)));
+  });
 };
 
-const formatShowtimeInNepal = (value) => {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: NEPAL_TIMEZONE,
+const formatShowtime = (value) => {
+  return new Date(value).toLocaleTimeString([], {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-  }).format(new Date(value));
+  });
 };
 
 const getPosterUrl = (posterUrl) => {
@@ -84,15 +80,14 @@ const NowShowing = () => {
 
   const allDates = useMemo(() => {
     const uniqueDates = new Set();
-    const todayKey = getTodayKeyInNepal();
+    const todayKey = getTodayKey();
 
     movies.forEach((movie) => {
       (movie.showtimes || []).forEach((showtime) => {
         if (!showtime.startTime) return;
 
-        const showDateKey = getDateKeyInNepal(showtime.startTime);
+        const showDateKey = getDateKey(showtime.startTime);
 
-        // only today/future Nepal dates create tabs
         if (showDateKey >= todayKey) {
           uniqueDates.add(showDateKey);
         }
@@ -108,7 +103,7 @@ const NowShowing = () => {
       return;
     }
 
-    const todayKey = getTodayKeyInNepal();
+    const todayKey = getTodayKey();
 
     if (allDates.includes(todayKey)) {
       setSelectedDate((prev) =>
@@ -125,7 +120,7 @@ const NowShowing = () => {
   const moviesForSelectedDate = useMemo(() => {
     if (!selectedDate) return [];
 
-    const todayKey = getTodayKeyInNepal();
+    const todayKey = getTodayKey();
 
     return movies
       .map((movie) => {
@@ -133,8 +128,7 @@ const NowShowing = () => {
           .filter((showtime) => {
             if (!showtime.startTime) return false;
 
-            const showDateKey = getDateKeyInNepal(showtime.startTime);
-
+            const showDateKey = getDateKey(showtime.startTime);
             const sameSelectedDate = showDateKey === selectedDate;
             const isUpcomingDate = showDateKey >= todayKey;
 
@@ -229,7 +223,7 @@ const NowShowing = () => {
                           }
                         }}
                       >
-                        {formatShowtimeInNepal(showtime.startTime)}
+                        {formatShowtime(showtime.startTime)}
                       </span>
                     );
                   })}

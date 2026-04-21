@@ -17,7 +17,7 @@ const emptyMovie = {
   duration: "",
   rating: "",
   language: "",
-  showtimes: [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
+  showtimes: [{ screenId: "", startTime: "", endTime: "" }],
 };
 
 const formatDateForInput = (dateValue) => {
@@ -46,24 +46,6 @@ const formatDateTimeForInput = (dateValue) => {
   const minutes = String(d.getMinutes()).padStart(2, "0");
 
   return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
-
-const toStartOfDayISOString = (dateStr) => {
-  if (!dateStr) return undefined;
-
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day, 0, 0, 0, 0);
-
-  return date.toISOString();
-};
-
-const toEndOfDayISOString = (dateStr) => {
-  if (!dateStr) return undefined;
-
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day, 23, 59, 59, 999);
-
-  return date.toISOString();
 };
 
 const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
@@ -97,12 +79,11 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         showtimes:
           res.data.showtimes?.length > 0
             ? res.data.showtimes.map((s) => ({
-                screenId: s.screenId?._id || s.screenId || "",
-                startTime: formatDateTimeForInput(s.startTime),
-                endTime: formatDateTimeForInput(s.endTime),
-                basePrice: s.basePrice ?? "",
-              }))
-            : [{ screenId: "", startTime: "", endTime: "", basePrice: "" }],
+              screenId: s.screenId?._id || s.screenId || "",
+              startTime: formatDateTimeForInput(s.startTime),
+              endTime: formatDateTimeForInput(s.endTime),
+            }))
+            : [{ screenId: "", startTime: "", endTime: "" }],
       });
     } catch (err) {
       console.error("Error loading movie:", err);
@@ -153,7 +134,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       ...prev,
       showtimes: [
         ...prev.showtimes,
-        { screenId: "", startTime: "", endTime: "", basePrice: "" },
+        { screenId: "", startTime: "", endTime: "" },
       ],
     }));
   };
@@ -214,19 +195,12 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
 
     for (let i = 0; i < movie.showtimes.length; i++) {
       const s = movie.showtimes[i];
-
-      const hasAnyValue =
-        s.screenId || s.startTime || s.endTime || s.basePrice !== "";
+      const hasAnyValue = s.screenId || s.startTime || s.endTime;
 
       if (!hasAnyValue) continue;
 
-      if (!s.screenId || !s.startTime || !s.endTime || s.basePrice === "") {
+      if (!s.screenId || !s.startTime || !s.endTime) {
         toast.error(`Please complete all fields for showtime ${i + 1}`);
-        return false;
-      }
-
-      if (Number(s.basePrice) < 0) {
-        toast.error(`Base price cannot be negative for showtime ${i + 1}`);
         return false;
       }
 
@@ -251,15 +225,9 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         genre: movie.genre.trim(),
         posterUrl: movie.posterUrl || undefined,
         trailerUrl: movie.trailerUrl.trim() || undefined,
-        releaseDate: movie.releaseDate
-          ? toStartOfDayISOString(movie.releaseDate)
-          : undefined,
-        movieStartDate: movie.movieStartDate
-          ? toStartOfDayISOString(movie.movieStartDate)
-          : undefined,
-        movieEndDate: movie.movieEndDate
-          ? toEndOfDayISOString(movie.movieEndDate)
-          : undefined,
+        releaseDate: movie.releaseDate || undefined,
+        movieStartDate: movie.movieStartDate || undefined,
+        movieEndDate: movie.movieEndDate || undefined,
         duration: movie.duration ? Number(movie.duration) : undefined,
         rating: movie.rating?.toString().trim() || "",
         language: movie.language.trim(),
@@ -281,9 +249,7 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
       }
 
       for (const s of movie.showtimes) {
-        const hasAnyValue =
-          s.screenId || s.startTime || s.endTime || s.basePrice !== "";
-
+        const hasAnyValue = s.screenId || s.startTime || s.endTime;
         if (!hasAnyValue) continue;
 
         const payload = {
@@ -291,7 +257,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
           screenId: s.screenId,
           startTime: new Date(s.startTime).toISOString(),
           endTime: new Date(s.endTime).toISOString(),
-          basePrice: Number(s.basePrice),
         };
 
         await axios.post(`${API_URL}/api/showtimes`, payload, {
@@ -434,21 +399,28 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
         <div className="form-right">
           <div className="poster-upload">
             <label htmlFor="movie-poster">Movie Poster</label>
-            <div className="upload-box">
+
+            <label htmlFor="movie-poster" className="upload-box">
               <p>Click to Upload</p>
-              <input
-                id="movie-poster"
-                type="file"
-                accept="image/*"
-                onChange={(e) => uploadPoster(e.target.files[0])}
-              />
-            </div>
+            </label>
+
+            <input
+              id="movie-poster"
+              type="file"
+              accept="image/*"
+              className="hidden-file-input"
+              onChange={(e) => uploadPoster(e.target.files[0])}
+            />
 
             {movie.posterUrl && (
               <img
                 id="poster-preview"
                 className="poster-preview"
-                src={`${API_URL}${movie.posterUrl}`}
+                src={
+                  movie.posterUrl.startsWith("http")
+                    ? movie.posterUrl
+                    : `${API_URL}${movie.posterUrl}`
+                }
                 alt="Poster"
               />
             )}
@@ -496,16 +468,6 @@ const MovieForm = ({ mode = "add", movieId, onSuccess }) => {
                   value={s.endTime}
                   onChange={(e) =>
                     handleShowtimeChange(i, "endTime", e.target.value)
-                  }
-                />
-
-                <input
-                  type="number"
-                  min="0"
-                  placeholder="Base Price"
-                  value={s.basePrice}
-                  onChange={(e) =>
-                    handleShowtimeChange(i, "basePrice", e.target.value)
                   }
                 />
 
