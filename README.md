@@ -58,56 +58,32 @@ server/
  ├── controllers/
  └── middleware/
 ```
+---
 🐳 Docker Deployment
-
 This project is fully containerized using Docker and Docker Compose.
-
 📦 Services
-Frontend (React)
-Backend (Node.js + Express)
-Database (MongoDB)
+- Frontend (React)
+- Backend (Node.js + Express)
+- Database (MongoDB)
+
+---
 🚀 Run Project with Docker
+Build and Start containers
+``` text
+docker-compose up--build
 
-Build and start containers:
-
-docker-compose up --build
-
-Run in background:
-
+```
+Run in background
+``` text
 docker-compose up -d
+```
+---
+👨‍💻 Author
+Rishi Ranjit
+- GitHub: https://github.com/rishirnjt
+- LinkedIn: https://www.linkedin.com/in/rishi-ranjit-571740359/
 
-Stop containers:
 
-docker-compose down
-⚙️ Environment Variables
 
-Create a .env file inside the server/ directory:
 
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-📌 API Overview
-Auth Routes
-POST /api/auth/register
-POST /api/auth/login
-Movie Routes
-GET /api/movies
-POST /api/movies
-PUT /api/movies/:id
-DELETE /api/movies/:id
-Booking Routes
-POST /api/bookings
-GET /api/bookings
-⭐ Project Highlights
-Full-stack MERN architecture
-Role-based system (User & Admin)
-RESTful API design
-Dockerized deployment setup
-Modular and scalable backend structure
-Real-world booking logic implementation
-🧠 What I Learned
-Building full-stack MERN applications
-API design and integration
-Authentication using JWT
-Docker containerization
-Structuring scalable backend systems
+
