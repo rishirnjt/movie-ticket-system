@@ -1,12 +1,54 @@
-# React + Vite
+# Movie Ticket Booking System
+A full-stack movie ticket booking web application built using the MERN stack. It allows users to browse movies, view details, book tickets and buy foods directly while admin can manage movies and schedules.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+----
+## 🚀 Features
 
-Currently, two official plugins are available:
+### 👤 User Side
+- Browse available movies
+- View movie details
+- Select show timings
+- Book tickets
+- View booking confirmation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🛠️ Admin Side
+- Add / update / delete movies
+- Manage show timings
+- Control movie listings
+- View bookings
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🧑‍💻 Tech Stack
+
+**Frontend:**
+- React.js
+-  CSS
+
+**Backend:**
+- Node.js
+- Express.js
+
+**Database:**
+- MongoDB
+
+**Other Tools:**
+- Git & GitHub
+- Postman
+- JWT Authentication
+- Docker
+
+---
+
+## 📁 Project Structure
+client/
+src/
+components/
+pages/
+services/
+
+server/
+models/
+routes/
+controllers/
+middleware/
